@@ -7,9 +7,9 @@ namespace CyborgianStates.Commands
 {
     public class PingCommand : ICommand
     {
-        public string Execute(Dictionary<string, object> @params)
+        public string Execute(params string[] parameters)
         {
-            throw new NotImplementedException();
+            return "Pong !";
         }
     }
 }

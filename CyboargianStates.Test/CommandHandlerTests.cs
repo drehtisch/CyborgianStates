@@ -14,7 +14,7 @@ namespace CyboargianStates.Test
         public void TestRegisterCommand()
         {
             var commandHandler = new CommandHandler();
-            commandHandler.Register(new CommandDefinition(typeof(ICommand), new List<string>() { "ping" }));
+            commandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             Assert.True(commandHandler.Count == 1, $"Expected CommandCount to be 1 but was: {commandHandler.Count}");
         }
         [Fact]
@@ -41,6 +41,21 @@ namespace CyboargianStates.Test
             Assert.Throws<ArgumentNullException>(() => commandHandler.Resolve(null));
             Assert.Throws<ArgumentNullException>(() => commandHandler.Resolve(string.Empty));
             Assert.Throws<ArgumentNullException>(() => commandHandler.Resolve("    "));
+        }
+        [Fact]
+        public void TestResolveUnknownCommand()
+        {
+            var commandHandler = new CommandHandler();
+            var result = commandHandler.Resolve("unknownCommand");
+            Assert.Null(result);
+        }
+        [Fact]
+        public void TestExecutePingCommand()
+        {
+            var commandHandler = new CommandHandler();
+            commandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
+            var result = commandHandler.Execute("ping");
+            Assert.Equal("Pong !", result);
         }
     }
 }

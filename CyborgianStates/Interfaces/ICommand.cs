@@ -6,6 +6,6 @@ namespace CyborgianStates.Interfaces
 {
     public interface ICommand
     {
-        string Execute(Dictionary<string, object> parameter);
+        string Execute(params string[] parameters);
     }
 }

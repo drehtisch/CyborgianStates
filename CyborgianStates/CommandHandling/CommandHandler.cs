@@ -44,5 +44,11 @@ namespace CyborgianStates.CommandHandling
                 return null;
             }
         }
+
+        public string Execute(string trigger, params string[] parameters)
+        {
+            var command = Resolve(trigger);
+            return command.Execute(parameters);
+        }
     }
 }
