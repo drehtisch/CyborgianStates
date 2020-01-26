@@ -29,6 +29,10 @@ namespace CyborgianStates.CommandHandling
 
         public ICommand Resolve(string trigger)
         {
+            if (string.IsNullOrWhiteSpace(trigger))
+            {
+                throw new ArgumentNullException(nameof(trigger));
+            }
             var def = definitions.Where(cd => cd.Trigger.Contains(trigger)).FirstOrDefault();
             if (def != null)
             {
