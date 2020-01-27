@@ -1,4 +1,5 @@
-﻿using CyborgianStates.Interfaces;
+﻿using CyborgianStates.CommandHandling;
+using CyborgianStates.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,9 +8,9 @@ namespace CyborgianStates.Commands
 {
     public class PingCommand : ICommand
     {
-        public string Execute(params string[] parameters)
+        public CommandResponse Execute(params string[] parameters)
         {
-            return "Pong !";
+            return new CommandResponse(CommandStatus.Success, "Pong !");
         }
     }
 }

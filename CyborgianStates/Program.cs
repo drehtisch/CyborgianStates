@@ -2,11 +2,13 @@
 
 namespace CyborgianStates
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args)
+        static ILauncher Launcher = new Launcher();
+        public static void Main() => Launcher.Run();
+        public static void SetLauncher(ILauncher launcher)
         {
-            Console.WriteLine("Hello World!");
+            Launcher = launcher;
         }
     }
 }
