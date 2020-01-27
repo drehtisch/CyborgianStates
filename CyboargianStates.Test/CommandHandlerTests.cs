@@ -56,6 +56,7 @@ namespace CyboargianStates.Test
             commandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             var result = commandHandler.Execute("ping");
             Assert.True(result is CommandResponse);
+            Assert.Equal(CommandStatus.Success, result.Status);
         }
     }
 }

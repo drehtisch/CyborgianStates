@@ -15,7 +15,9 @@ namespace CyboargianStates.Test
             var commandHandler = new CommandHandler();
             commandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             var result = commandHandler.Execute("ping");
+            Assert.Equal(CommandStatus.Success, result.Status);
             Assert.Equal("Pong !", result.Content);
+            
         }
     }
 }
