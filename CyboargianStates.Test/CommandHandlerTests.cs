@@ -27,39 +27,39 @@ namespace CyboargianStates.Test
             Assert.Throws<InvalidOperationException>(() => CommandHandler.Register(new CommandDefinition(typeof(string), new List<string>() { "ping" })));
         }
         [Fact]
-        public void TestResolvePingCommand()
+        public async Task TestResolvePingCommand()
         {
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            var resolved = CommandHandler.Resolve("ping");
+            var resolved = await CommandHandler.Resolve("ping").ConfigureAwait(false);
             Assert.True(resolved is PingCommand);
         }
         [Fact]
         public void TestResolveWithEmptyTrigger()
         {
-            Assert.Throws<ArgumentNullException>(() => CommandHandler.Resolve(null));
-            Assert.Throws<ArgumentNullException>(() => CommandHandler.Resolve(string.Empty));
-            Assert.Throws<ArgumentNullException>(() => CommandHandler.Resolve("    "));
+            Assert.ThrowsAsync<ArgumentNullException>(() => CommandHandler.Resolve(null));
+            Assert.ThrowsAsync<ArgumentNullException>(() => CommandHandler.Resolve(string.Empty));
+            Assert.ThrowsAsync<ArgumentNullException>(() => CommandHandler.Resolve("    "));
         }
         [Fact]
-        public void TestResolveUnknownCommand()
+        public async Task TestResolveUnknownCommand()
         {
-            var result = CommandHandler.Resolve("unknownCommand");
+            var result = await CommandHandler.Resolve("unknownCommand").ConfigureAwait(false);
             Assert.Null(result);
         }
         [Fact]
-        public void TestExecutePingCommand()
+        public async Task TestExecutePingCommand()
         {
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            var result = CommandHandler.Execute(new Message(0, "ping", new ConsoleMessageChannel(false)));
+            var result = await CommandHandler.Execute(new Message(0, "ping", new ConsoleMessageChannel(false))).ConfigureAwait(false);
             Assert.True(result is CommandResponse);
             Assert.Equal(CommandStatus.Success, result.Status);
         }
         [Fact]
         public void TestExecuteWithEmptyMessage()
         {
-            Assert.Throws<ArgumentNullException>(() => CommandHandler.Execute(null));
+            Assert.ThrowsAsync<ArgumentNullException>(() => CommandHandler.Execute(null));
         }
     }
 }

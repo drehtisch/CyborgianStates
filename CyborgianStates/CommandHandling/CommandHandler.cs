@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CyborgianStates.CommandHandling
 {
@@ -28,7 +29,7 @@ namespace CyborgianStates.CommandHandling
             definitions.Add(definition);
         }
 
-        public static ICommand Resolve(string trigger)
+        public static async Task<ICommand> Resolve(string trigger)
         {
             if (string.IsNullOrWhiteSpace(trigger))
             {
@@ -38,23 +39,23 @@ namespace CyborgianStates.CommandHandling
             if (def != null)
             {
                 ICommand instance = (ICommand)Activator.CreateInstance(def.Type);
-                return instance;
+                return await Task.FromResult(instance).ConfigureAwait(false);
             }
             else
             {
-                return null;
+                return await Task.FromResult<ICommand>(null).ConfigureAwait(false);
             }
         }
 
-        public static CommandResponse Execute(Message message)
+        public static async Task<CommandResponse> Execute(Message message)
         {
             if (message is null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
-            var trigger = message.Content.Contains(' ', StringComparison.InvariantCulture) ? message.Content.Split(' ')[0] : message.Content;
-            var command = Resolve(trigger);
-            return command.Execute(message);
+            string trigger = message.Content.Contains(' ', StringComparison.InvariantCulture) ? message.Content.Split(' ')[0] : message.Content;
+            ICommand command = await Resolve(trigger).ConfigureAwait(false);
+            return await command.Execute(message).ConfigureAwait(false);
         }
 
         public static void Clear()

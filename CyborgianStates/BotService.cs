@@ -18,14 +18,14 @@ namespace CyborgianStates
 
         public async Task InitAsync()
         {
-            _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(s, e).ConfigureAwait(false);
+            _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
-        private async Task ProgressMessage(object sender, MessageReceivedEventArgs e)
+        private async Task ProgressMessage(MessageReceivedEventArgs e)
         {
             //TODO: Relevance and Permission Check
-            if (sender is IMessageHandler)
+            if (IsRunning)
             {
                 await Task.Run(() => CommandHandler.Execute(e.Message)).ConfigureAwait(false);
             }
@@ -34,11 +34,13 @@ namespace CyborgianStates
         public async Task RunAsync()
         {
             await _messageHandler.RunAsync().ConfigureAwait(false);
+            IsRunning = true;
         }
 
         public async Task ShutdownAsync()
         {
             await _messageHandler.ShutdownAsync().ConfigureAwait(false);
+            IsRunning = false;
         }
     }
 }
