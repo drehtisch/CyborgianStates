@@ -1,4 +1,5 @@
 ﻿using CyborgianStates.Interfaces;
+using CyborgianStates.MessageHandling;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,11 +7,11 @@ using System.Text;
 
 namespace CyborgianStates.CommandHandling
 {
-    public class CommandHandler
+    public static class CommandHandler
     {
-        private readonly List<CommandDefinition> definitions = new List<CommandDefinition>();
-        public int Count { get => definitions.Count; }
-        public void Register(CommandDefinition definition)
+        private static readonly List<CommandDefinition> definitions = new List<CommandDefinition>();
+        public static int Count { get => definitions.Count; }
+        public static void Register(CommandDefinition definition)
         {
             if (definition == null)
             {
@@ -27,7 +28,7 @@ namespace CyborgianStates.CommandHandling
             definitions.Add(definition);
         }
 
-        public ICommand Resolve(string trigger)
+        public static ICommand Resolve(string trigger)
         {
             if (string.IsNullOrWhiteSpace(trigger))
             {
@@ -45,10 +46,20 @@ namespace CyborgianStates.CommandHandling
             }
         }
 
-        public CommandResponse Execute(string trigger, params string[] parameters)
+        public static CommandResponse Execute(Message message)
         {
+            if (message is null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+            var trigger = message.Content.Contains(' ', StringComparison.InvariantCulture) ? message.Content.Split(' ')[0] : message.Content;
             var command = Resolve(trigger);
-            return command.Execute(parameters);
+            return command.Execute(message);
+        }
+
+        public static void Clear()
+        {
+            definitions.Clear();
         }
     }
 }

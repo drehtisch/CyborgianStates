@@ -1,6 +1,7 @@
 using CyborgianStates.CommandHandling;
 using CyborgianStates.Commands;
 using CyborgianStates.Interfaces;
+using CyborgianStates.MessageHandling;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,50 +14,52 @@ namespace CyboargianStates.Test
         [Fact]
         public void TestRegisterCommand()
         {
-            var commandHandler = new CommandHandler();
-            commandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            Assert.True(commandHandler.Count == 1, $"Expected CommandCount to be 1 but was: {commandHandler.Count}");
+            CommandHandler.Clear();
+            CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
+            Assert.True(CommandHandler.Count == 1, $"Expected CommandCount to be 1 but was: {CommandHandler.Count}");
         }
         [Fact]
         public void TestRegisterCommandWithInvalidCommandDefinition()
         {
-            var commandHandler = new CommandHandler();
-            Assert.Throws<ArgumentNullException>(() => commandHandler.Register(null));
-            Assert.Throws<InvalidOperationException>(() => commandHandler.Register(new CommandDefinition(typeof(ICommand), new List<string>())));
-            Assert.Throws<InvalidOperationException>(() => commandHandler.Register(new CommandDefinition(null, new List<string>() { "ping" })));
-            Assert.Throws<InvalidOperationException>(() => commandHandler.Register(new CommandDefinition(typeof(string), new List<string>() { "ping" })));
+            Assert.Throws<ArgumentNullException>(() => CommandHandler.Register(null));
+            Assert.Throws<InvalidOperationException>(() => CommandHandler.Register(new CommandDefinition(typeof(ICommand), new List<string>())));
+            Assert.Throws<InvalidOperationException>(() => CommandHandler.Register(new CommandDefinition(null, new List<string>() { "ping" })));
+            Assert.Throws<InvalidOperationException>(() => CommandHandler.Register(new CommandDefinition(typeof(string), new List<string>() { "ping" })));
         }
         [Fact]
         public void TestResolvePingCommand()
         {
-            var commandHandler = new CommandHandler();
-            commandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            var resolved = commandHandler.Resolve("ping");
+            CommandHandler.Clear();
+            CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
+            var resolved = CommandHandler.Resolve("ping");
             Assert.True(resolved is PingCommand);
         }
         [Fact]
         public void TestResolveWithEmptyTrigger()
         {
-            var commandHandler = new CommandHandler();
-            Assert.Throws<ArgumentNullException>(() => commandHandler.Resolve(null));
-            Assert.Throws<ArgumentNullException>(() => commandHandler.Resolve(string.Empty));
-            Assert.Throws<ArgumentNullException>(() => commandHandler.Resolve("    "));
+            Assert.Throws<ArgumentNullException>(() => CommandHandler.Resolve(null));
+            Assert.Throws<ArgumentNullException>(() => CommandHandler.Resolve(string.Empty));
+            Assert.Throws<ArgumentNullException>(() => CommandHandler.Resolve("    "));
         }
         [Fact]
         public void TestResolveUnknownCommand()
         {
-            var commandHandler = new CommandHandler();
-            var result = commandHandler.Resolve("unknownCommand");
+            var result = CommandHandler.Resolve("unknownCommand");
             Assert.Null(result);
         }
         [Fact]
         public void TestExecutePingCommand()
         {
-            var commandHandler = new CommandHandler();
-            commandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            var result = commandHandler.Execute("ping");
+            CommandHandler.Clear();
+            CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
+            var result = CommandHandler.Execute(new Message(0, "ping", new ConsoleMessageChannel(false)));
             Assert.True(result is CommandResponse);
             Assert.Equal(CommandStatus.Success, result.Status);
+        }
+        [Fact]
+        public void TestExecuteWithEmptyMessage()
+        {
+            Assert.Throws<ArgumentNullException>(() => CommandHandler.Execute(null));
         }
     }
 }
