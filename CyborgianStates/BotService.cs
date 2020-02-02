@@ -9,29 +9,27 @@ namespace CyborgianStates
 {
     public class BotService
     {
-        IMessageHandler _messageHandler;
+        readonly IMessageHandler _messageHandler;
         public BotService(IMessageHandler messageHandler)
         {
             _messageHandler = messageHandler;
         }
         public bool IsRunning { get; private set; }
 
-        public async Task InitAsync()
+        public async Task InitAsync() 
         {
-            _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(e).ConfigureAwait(false);
+            _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(s, e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
-        private async Task ProgressMessage(MessageReceivedEventArgs e)
+        private async Task ProgressMessage(object sender, MessageReceivedEventArgs e) 
         {
-            //TODO: Relevance and Permission Check
             if (IsRunning)
             {
                 await Task.Run(() => CommandHandler.Execute(e.Message)).ConfigureAwait(false);
             }
         }
-
-        public async Task RunAsync()
+        public async Task RunAsync() 
         {
             await _messageHandler.RunAsync().ConfigureAwait(false);
             IsRunning = true;
