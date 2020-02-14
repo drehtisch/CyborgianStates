@@ -52,7 +52,8 @@ namespace CyboargianStates.Test
         {
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            var result = await CommandHandler.Execute(new Message(0, "ping", new ConsoleMessageChannel(false))).ConfigureAwait(false);
+            await CommandHandler.Execute(new Message(0, "ping ", new ConsoleMessageChannel(false))).ConfigureAwait(false);
+            var result = await CommandHandler.Execute(new Message(0, "ping ", new ConsoleMessageChannel(false))).ConfigureAwait(false);
             Assert.True(result is CommandResponse);
             Assert.Equal(CommandStatus.Success, result.Status);
         }

@@ -14,9 +14,8 @@ namespace CyboargianStates.Test
         [Fact]
         public async Task TestPingCommand()
         {
-            CommandHandler.Clear();
-            CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            var result = await CommandHandler.Execute(new Message(0, "ping", new ConsoleMessageChannel(false))).ConfigureAwait(false);
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await new PingCommand().Execute(null).ConfigureAwait(false)).ConfigureAwait(false);
+            var result = await new PingCommand().Execute(new Message(0, "ping", new ConsoleMessageChannel(false))).ConfigureAwait(false);
             Assert.Equal(CommandStatus.Success, result.Status);
             Assert.Equal("Pong !", result.Content);
         }

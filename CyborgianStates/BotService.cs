@@ -16,20 +16,23 @@ namespace CyborgianStates
         }
         public bool IsRunning { get; private set; }
 
-        public async Task InitAsync() 
+        public async Task InitAsync()
         {
             _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(s, e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
-        private async Task ProgressMessage(object sender, MessageReceivedEventArgs e) 
+        private async Task ProgressMessage(object sender, MessageReceivedEventArgs e)
         {
             if (IsRunning)
             {
-                await Task.Run(() => CommandHandler.Execute(e.Message)).ConfigureAwait(false);
+                if (e.Message.AuthorId == 0)
+                {
+                    await CommandHandler.Execute(e.Message).ConfigureAwait(false);
+                }
             }
         }
-        public async Task RunAsync() 
+        public async Task RunAsync()
         {
             await _messageHandler.RunAsync().ConfigureAwait(false);
             IsRunning = true;
