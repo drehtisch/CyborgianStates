@@ -1,8 +1,10 @@
 ﻿using CyborgianStates.CommandHandling;
+using CyborgianStates.Commands;
 using CyborgianStates.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CyborgianStates
@@ -22,6 +24,7 @@ namespace CyborgianStates
 
         public async Task InitAsync()
         {
+            CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }

@@ -8,7 +8,7 @@ namespace CyborgianStates
     {
         private static ILoggerFactory _factory = null;
 
-        public static ILoggerFactory CreateLoggerFactory()
+        private static ILoggerFactory CreateLoggerFactory()
         {
             return LoggerFactory.Create(builder =>
             {
@@ -16,6 +16,7 @@ namespace CyborgianStates
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
                     .AddConsole()
+                    .SetMinimumLevel(LogLevel.Debug)
                     .AddFile(opt =>
                     {
                         opt.RetainedFileCountLimit = null;

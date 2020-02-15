@@ -1,5 +1,6 @@
 ﻿using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,8 +10,10 @@ namespace CyborgianStates.MessageHandling
 {
     public class ConsoleMessageChannel : IMessageChannel
     {
+        ILogger _logger;
         public ConsoleMessageChannel(bool isPrivate)
         {
+            _logger = ApplicationLogging.CreateLogger(typeof(ConsoleMessageChannel));
             IsPrivate = isPrivate;
         }
         public bool IsPrivate { get; }
@@ -20,7 +23,7 @@ namespace CyborgianStates.MessageHandling
             {
                 throw new ArgumentNullException(nameof(response));
             }
-            Console.WriteLine(response.Content);
+            _logger.LogInformation(response.Content);
             await Task.CompletedTask.ConfigureAwait(false);
         }
     }
