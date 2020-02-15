@@ -57,7 +57,11 @@ namespace CyborgianStates.Test
             Message message = new Message(0, "ping", msgChannelMock.Object);
             MessageReceivedEventArgs eventArgs = new MessageReceivedEventArgs(message);
             msgHandlerMock.Raise(m => m.MessageReceived += null, this, eventArgs);
-            
+
+            message = new Message(0, "test", msgChannelMock.Object);
+            eventArgs = new MessageReceivedEventArgs(message);
+            msgHandlerMock.Raise(m => m.MessageReceived += null, this, eventArgs);
+
             await Task.Delay(1000).ConfigureAwait(false);
 
             Assert.True(isPublic);
