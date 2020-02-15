@@ -12,6 +12,7 @@ namespace CyborgianStates
         {
             IsRunning = true;
             _botService = Program.ServiceProvider.GetService<IBotService>();
+            await _botService.InitAsync().ConfigureAwait(false);
             await _botService.RunAsync().ConfigureAwait(false);
         }
     }

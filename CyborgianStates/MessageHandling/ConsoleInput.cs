@@ -7,7 +7,15 @@ namespace CyborgianStates.MessageHandling
     {
         public string GetInput()
         {
-            return Console.ReadLine().Trim();
+            if (Console.KeyAvailable)
+            {
+                Console.Write("> ");
+                return Console.ReadLine().Trim();
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
     }
 

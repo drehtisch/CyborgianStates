@@ -1,4 +1,5 @@
 ﻿using CyborgianStates.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -7,9 +8,11 @@ namespace CyborgianStates.MessageHandling
     public class ConsoleMessageHandler : IMessageHandler
     {
         IUserInput _input;
+        ILogger _logger;
         public ConsoleMessageHandler(IUserInput input)
         {
             _input = input;
+            _logger = ApplicationLogging.CreateLogger(typeof(ConsoleMessageHandler));
         }
 
         public bool IsRunning { get; private set; }
@@ -18,7 +21,7 @@ namespace CyborgianStates.MessageHandling
 
         public Task InitAsync()
         {
-            Console.WriteLine("ConsoleMessageHandler Init");
+            _logger.LogInformation("-- ConsoleMessageHandler Init --");
             return Task.CompletedTask;
         }
 
@@ -32,7 +35,7 @@ namespace CyborgianStates.MessageHandling
                 {
                     MessageReceived?.Invoke(this, new MessageReceivedEventArgs(new Message(0, input, new ConsoleMessageChannel(true))));
                 }
-                Task.Delay(1000).Wait();
+                Task.Delay(50).Wait();
             }
             return Task.CompletedTask;
         }
