@@ -1,14 +1,17 @@
 ﻿using CyborgianStates.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.MessageHandling
 {
     public class ConsoleMessageHandler : IMessageHandler
     {
+        IUserInput _input;
+        public ConsoleMessageHandler(IUserInput input)
+        {
+            _input = input;
+        }
+
         public bool IsRunning { get; private set; }
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
@@ -24,14 +27,12 @@ namespace CyborgianStates.MessageHandling
             IsRunning = true;
             while (IsRunning)
             {
-                if (Console.KeyAvailable)
+                var input = _input.GetInput();
+                if (!string.IsNullOrWhiteSpace(input))
                 {
-                    var input = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(input))
-                    {
-                        MessageReceived?.Invoke(this, new MessageReceivedEventArgs(new Message(0, input, new ConsoleMessageChannel(true))));
-                    }
+                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(new Message(0, input, new ConsoleMessageChannel(true))));
                 }
+                Task.Delay(1000).Wait();
             }
             return Task.CompletedTask;
         }

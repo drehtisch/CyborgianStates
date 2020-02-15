@@ -1,4 +1,4 @@
-﻿namespace CyboargianStates.Test
+﻿namespace CyborgianStates.Interfaces
 {
     public interface IUserInput
     {

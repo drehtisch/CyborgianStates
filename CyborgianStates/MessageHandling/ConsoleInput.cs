@@ -1,6 +1,7 @@
-﻿using System;
+﻿using CyborgianStates.Interfaces;
+using System;
 
-namespace CyboargianStates.Test
+namespace CyboargianStates.MessageHandling
 {
     public class ConsoleInput : IUserInput
     {
