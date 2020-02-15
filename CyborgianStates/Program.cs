@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using NetEscapades.Extensions.Logging.RollingFile;
 using System;
 using System.IO;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace CyborgianStates
 {
@@ -59,16 +60,16 @@ namespace CyborgianStates
             serviceCollection.AddOptions();
             serviceCollection.Configure<AppSettings>(configuration.GetSection("Configuration"));
             var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
-            serviceCollection.AddLogging(loggingBuilder =>
-            {
-                loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
-                loggingBuilder.SetMinimumLevel(LogLevel.Information);
-                loggingBuilder.AddFile(options => { options.FileName = "bot-"; options.Extension = "log"; options.RetainedFileCountLimit = null; options.Periodicity = PeriodicityOptions.Daily; });
-                loggingBuilder.AddConsole();
-            });
+            ConfigureLogging(serviceCollection);
             // add services
             serviceCollection.AddSingleton(typeof(IUserInput), userInput);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+        }
+
+        private static void ConfigureLogging(ServiceCollection serviceCollection)
+        {
+            serviceCollection.AddSingleton(typeof(ILoggerFactory), ApplicationLogging.Factory);
+            serviceCollection.TryAddSingleton(typeof(ILogger<>), typeof(Logger<>));
         }
     }
 }

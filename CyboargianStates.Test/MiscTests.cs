@@ -1,5 +1,6 @@
 ﻿using CyborgianStates.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Threading.Tasks;
@@ -40,6 +41,24 @@ namespace CyborgianStates.Test
             launcher.SetBotService(botService);
             await launcher.RunAsync().ConfigureAwait(false);
             Assert.True(launcher.IsRunning);
+        }
+
+        [Fact]
+        public void TestGetLoggerByName()
+        {
+            ILogger logger = ApplicationLogging.CreateLogger("TestLogger");
+            Type type = logger.GetType();
+            Assert.Equal("Logger", type.Name);
+            Assert.Equal("Microsoft.Extensions.Logging.Logger", type.FullName);
+        }
+
+        [Fact]
+        public void TestGetLoggerByType()
+        {
+            ILogger logger = ApplicationLogging.CreateLogger(typeof(Program));
+            Type type = logger.GetType();
+            Assert.Equal("Logger", type.Name);
+            Assert.Equal("Microsoft.Extensions.Logging.Logger", type.FullName);
         }
     }
 }
