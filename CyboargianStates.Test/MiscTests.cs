@@ -31,16 +31,15 @@ namespace CyborgianStates.Test
         public async Task TestLauncher()
         {
             var serviceCollection = new ServiceCollection();
-            var messageHandler = new Mock<IMessageHandler>().Object;
-            
-            serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+            var messageHandler = new Mock<IMessageHandler>();
+            var botService = new Mock<IBotService>();
+            serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler.Object);
+            serviceCollection.AddSingleton(typeof(IBotService), botService.Object);
             Program.ServiceProvider = serviceCollection.BuildServiceProvider();
-
-            var botService = new Mock<IBotService>().Object;
             Launcher launcher = new Launcher();
-            launcher.SetBotService(botService);
             await launcher.RunAsync().ConfigureAwait(false);
             Assert.True(launcher.IsRunning);
+            botService.Verify(m => m.RunAsync(), Times.Once);
         }
 
         [Fact]

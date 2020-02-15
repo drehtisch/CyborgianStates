@@ -12,7 +12,7 @@ namespace CyborgianStates
 {
     public static class Program
     {
-        static ILauncher Launcher;
+        static ILauncher Launcher = new Launcher();
         static IUserInput userInput = new ConsoleInput();
         static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
         public static IServiceProvider ServiceProvider { get; set; }
@@ -64,6 +64,7 @@ namespace CyborgianStates
             // add services
             serviceCollection.AddSingleton(typeof(IUserInput), userInput);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+            serviceCollection.AddSingleton<IBotService, BotService>();
         }
 
         private static void ConfigureLogging(ServiceCollection serviceCollection)

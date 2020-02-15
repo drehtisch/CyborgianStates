@@ -6,17 +6,13 @@ namespace CyborgianStates
 {
     public class Launcher : ILauncher
     {
-        IBotService _botService = new BotService(Program.ServiceProvider.GetService<IMessageHandler>());
+        IBotService _botService;
         public bool IsRunning { get; private set; }
         public async Task RunAsync()
-        {   
-            IsRunning = true;
-            await _botService.RunAsync().ConfigureAwait(false);
-        }
-
-        public void SetBotService(IBotService botService)
         {
-            _botService = botService;
+            IsRunning = true;
+            _botService = Program.ServiceProvider.GetService<IBotService>();
+            await _botService.RunAsync().ConfigureAwait(false);
         }
     }
 }
