@@ -55,7 +55,14 @@ namespace CyborgianStates.CommandHandling
             }
             string trigger = message.Content.Contains(' ', StringComparison.InvariantCulture) ? message.Content.Split(' ')[0] : message.Content;
             ICommand command = await Resolve(trigger).ConfigureAwait(false);
-            return await command.Execute(message).ConfigureAwait(false);
+            if (command != null)
+            {
+                return await command.Execute(message).ConfigureAwait(false);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public static void Clear()

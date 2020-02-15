@@ -1,10 +1,11 @@
 ﻿using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Moq;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyboargianStates.Test
+namespace CyborgianStates.Test
 {
     public class ConsoleMessageHandlerTests
     {
@@ -15,9 +16,10 @@ namespace CyboargianStates.Test
             mockInput.Setup(m => m.GetInput()).Returns("ping");
             IUserInput userInput = mockInput.Object;
             ConsoleMessageHandler consoleMessageHandler = new ConsoleMessageHandler(userInput);
+            consoleMessageHandler.MessageReceived += ConsoleMessageHandler_MessageReceived;
             await consoleMessageHandler.InitAsync().ConfigureAwait(false);
             var task = Task.Run(async () => await consoleMessageHandler.RunAsync().ConfigureAwait(false));
-            await Task.Delay(1000).ConfigureAwait(false);
+            await Task.Delay(50).ConfigureAwait(false);
             Assert.True(consoleMessageHandler.IsRunning);
             mockInput.Verify(m => m.GetInput(), Times.AtLeastOnce);
             await consoleMessageHandler.ShutdownAsync().ConfigureAwait(false);
@@ -26,7 +28,7 @@ namespace CyboargianStates.Test
         }
 
         [Fact]
-        public async Task ConsoleMessageHandlerTest_WithEmptyMessage()
+        public async Task ConsoleMessageHandlerTestWithEmptyMessage()
         {
             var mockInput = new Mock<IUserInput>();
             mockInput.Setup(m => m.GetInput()).Returns(string.Empty);
@@ -40,6 +42,11 @@ namespace CyboargianStates.Test
             await consoleMessageHandler.ShutdownAsync().ConfigureAwait(false);
             task.Wait();
             Assert.False(consoleMessageHandler.IsRunning);
+        }
+
+        private void ConsoleMessageHandler_MessageReceived(object sender, MessageReceivedEventArgs e)
+        {
+            Console.WriteLine($"MessageReceived -> AuthorId: {e.Message.AuthorId} Channel: {e.Message.Channel.GetType().Name} Content: {e.Message.Content}");
         }
     }
 }

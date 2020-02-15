@@ -1,21 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CyborgianStates.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 
 namespace CyborgianStates
 {
     public class Launcher : ILauncher
     {
+        IBotService _botService = new BotService(Program.ServiceProvider.GetService<IMessageHandler>());
         public bool IsRunning { get; private set; }
-        public void Run()
-        {
+        public async Task RunAsync()
+        {   
             IsRunning = true;
+            await _botService.RunAsync().ConfigureAwait(false);
         }
-    }
 
-    public interface ILauncher
-    {
-        bool IsRunning { get; }
-        void Run();
+        public void SetBotService(IBotService botService)
+        {
+            _botService = botService;
+        }
     }
 }

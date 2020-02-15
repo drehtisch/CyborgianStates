@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyboargianStates.Test
+namespace CyborgianStates.Test
 {
     public class CommandHandlerTests
     {
@@ -52,7 +52,6 @@ namespace CyboargianStates.Test
         {
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            await CommandHandler.Execute(new Message(0, "ping ", new ConsoleMessageChannel(false))).ConfigureAwait(false);
             var result = await CommandHandler.Execute(new Message(0, "ping ", new ConsoleMessageChannel(false))).ConfigureAwait(false);
             Assert.True(result is CommandResponse);
             Assert.Equal(CommandStatus.Success, result.Status);
@@ -61,6 +60,14 @@ namespace CyboargianStates.Test
         public void TestExecuteWithEmptyMessage()
         {
             Assert.ThrowsAsync<ArgumentNullException>(() => CommandHandler.Execute(null));
+        }
+
+        [Fact]
+        public async Task TestExecuteWithUnresolveableMessage()
+        {
+            CommandHandler.Clear();
+            var result = await CommandHandler.Execute(new Message(0, "unknown ", new ConsoleMessageChannel(false))).ConfigureAwait(false);
+            Assert.Null(result);
         }
     }
 }

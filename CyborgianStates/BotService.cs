@@ -1,28 +1,29 @@
 ﻿using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CyborgianStates
 {
-    public class BotService
+    public class BotService : IBotService
     {
         readonly IMessageHandler _messageHandler;
         public BotService(IMessageHandler messageHandler)
         {
+            if (messageHandler is null)
+                throw new ArgumentNullException(nameof(messageHandler));
             _messageHandler = messageHandler;
         }
         public bool IsRunning { get; private set; }
 
         public async Task InitAsync()
         {
-            _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(s, e).ConfigureAwait(false);
+            _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
-        private async Task ProgressMessage(object sender, MessageReceivedEventArgs e)
+        private async Task ProgressMessage(MessageReceivedEventArgs e)
         {
             if (IsRunning)
             {

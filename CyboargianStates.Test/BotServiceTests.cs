@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyboargianStates.Test
+namespace CyborgianStates.Test
 {
     public class BotServiceTests
     {
@@ -67,6 +67,11 @@ namespace CyboargianStates.Test
             await botService.ShutdownAsync().ConfigureAwait(false);
             Assert.False(botService.IsRunning);
             msgHandlerMock.Verify(m => m.ShutdownAsync(), Times.Once);
+        }
+        [Fact]
+        public void TestBotServiceWithNullMessageHandler()
+        {
+            Assert.Throws<ArgumentNullException>(() => new BotService(null));
         }
     }
 }

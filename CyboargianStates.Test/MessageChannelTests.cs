@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyboargianStates.Test
+namespace CyborgianStates.Test
 {
     public class MessageChannelTests
     {
@@ -18,13 +18,4 @@ namespace CyboargianStates.Test
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await channel.WriteToAsync(true, null).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
-
-    //// Unit Test
-    //public class FakeUserInput : IUserInput
-    //{
-    //    public string GetInput()
-    //    {
-    //        return "ABC_123";
-    //    }
-    //}
 }

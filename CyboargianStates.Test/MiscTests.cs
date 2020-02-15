@@ -1,11 +1,11 @@
-﻿using CyborgianStates;
+﻿using CyborgianStates.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 
-namespace CyboargianStates.Test
+namespace CyborgianStates.Test
 {
     public class MiscTests
     {
@@ -16,15 +16,29 @@ namespace CyboargianStates.Test
             mock.SetupGet(l => l.IsRunning).Returns(true);
             ILauncher launcher = mock.Object;
             Program.SetLauncher(launcher);
+            IMessageHandler messageHandler = new Mock<IMessageHandler>().Object;
+            IUserInput userInput = new Mock<IUserInput>().Object;
+            Assert.Throws<ArgumentNullException>(() => Program.SetUserInput(null));
+            Assert.Throws<ArgumentNullException>(() => Program.SetMessageHandler(null));
+            Program.SetUserInput(userInput);
+            Program.SetMessageHandler(messageHandler);
             Program.Main();
-            mock.Verify(l => l.Run(), Times.Once);
+            mock.Verify(l => l.RunAsync(), Times.Once);
             Assert.True(launcher.IsRunning);
         }
         [Fact]
-        public void TestLauncher()
+        public async Task TestLauncher()
         {
-            ILauncher launcher = new Launcher();
-            launcher.Run();
+            var serviceCollection = new ServiceCollection();
+            var messageHandler = new Mock<IMessageHandler>().Object;
+            
+            serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
+
+            var botService = new Mock<IBotService>().Object;
+            Launcher launcher = new Launcher();
+            launcher.SetBotService(botService);
+            await launcher.RunAsync().ConfigureAwait(false);
             Assert.True(launcher.IsRunning);
         }
     }
