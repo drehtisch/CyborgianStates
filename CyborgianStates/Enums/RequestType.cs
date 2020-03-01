@@ -2,6 +2,6 @@
 {
     public enum RequestType
     {
-        BasicNationStats
+        GetBasicNationStats
     }
 }

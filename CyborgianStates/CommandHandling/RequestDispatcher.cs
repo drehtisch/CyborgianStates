@@ -21,7 +21,7 @@ namespace CyborgianStates.CommandHandling
             }
             else
             {
-                throw new InvalidOperationException($"Unable to dispatch this request to a queue. No queue of dataSourceType: {request.DataSourceType} registered.");
+                throw new InvalidOperationException($"Unable to dispatch this request to any queue. No queue of dataSourceType: {request.DataSourceType} registered.");
             }
         }
 

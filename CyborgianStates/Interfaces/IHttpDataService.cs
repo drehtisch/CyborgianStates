@@ -1,4 +1,5 @@
 ﻿using CyborgianStates.Enums;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,10 +10,10 @@ using System.Xml;
 
 namespace CyborgianStates.Interfaces
 {
-    public interface IHttpDataService: IDataService
+    public interface IHttpDataService
     {
-        Task<HttpResponseMessage> ExecuteRequest(HttpRequestMessage httpRequest);
-        Task<XmlDocument> ExecuteRequestWithXmlResult(HttpRequestMessage httpRequest);
-        Task<Stream> ExecuteRequestWithStreamResult(HttpRequestMessage httpRequest);
+        Task<HttpResponseMessage> ExecuteRequest(HttpRequestMessage httpRequest, EventId eventId);
+        Task<XmlDocument> ExecuteRequestWithXmlResult(HttpRequestMessage httpRequest, EventId eventId);
+        Task<Stream> ExecuteRequestWithStreamResult(HttpRequestMessage httpRequest, EventId eventId);
     }
 }
