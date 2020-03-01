@@ -14,15 +14,17 @@ namespace CyborgianStates.Services
     public class NationStatesApiDataService : IDataService
     {
         public const int API_VERSION = 10;
+        public const long API_REQUEST_INTERVAL = 6500000; //0,6 s + additional 0,05 s as buffer -> 0,65 s
         public const long REQUEST_NEW_NATIONS_INTERVAL = 18000000000; //30 m 18000000000
         public const long REQUEST_REGION_NATIONS_INTERVAL = 432000000000; //12 h 432000000000
+        public const long SEND_RECRUITMENTTELEGRAM_INTERVAL = 1800000000; //3 m 1800000000
 
         IHttpDataService _dataService;
         ILogger<NationStatesApiDataService> _logger;
 
         DateTime LastAPIRequest;
-        DateTime LastTelegramSending;
-        DateTime LastNewNationsRequest;
+        //DateTime LastTelegramSending;
+        //DateTime LastNewNationsRequest;
 
         public NationStatesApiDataService(IHttpDataService dataService, ILogger<NationStatesApiDataService> logger)
         {
@@ -31,19 +33,37 @@ namespace CyborgianStates.Services
         }
         public Task<bool> IsActionReady(RequestType requestType)
         {
-            throw new NotImplementedException();
+            if (requestType == RequestType.GetBasicNationStats)
+            {
+                return Task.FromResult(DateTime.UtcNow.Ticks - LastAPIRequest.Ticks > API_REQUEST_INTERVAL);
+            }
+            else
+            {
+                _logger.LogCritical($"Unrecognized RequestType '{requestType.ToString()}'");
+                return Task.FromResult(false);
+            }
         }
         public async Task WaitForAction(RequestType requestType, TimeSpan interval, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            while (!await IsActionReady(requestType).ConfigureAwait(false))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                await Task.Delay(interval.Milliseconds, cancellationToken).ConfigureAwait(false);
+            }
         }
         public async Task WaitForAction(RequestType requestType, TimeSpan interval)
         {
-            throw new NotImplementedException();
+            while (!await IsActionReady(requestType).ConfigureAwait(false))
+            {
+                await Task.Delay(interval.Milliseconds).ConfigureAwait(false);
+            }
         }
         public async Task WaitForAction(RequestType requestType)
         {
-            throw new NotImplementedException();
+            await WaitForAction(requestType, TimeSpan.FromTicks(API_REQUEST_INTERVAL)).ConfigureAwait(false);
         }
         public async Task<XmlDocument> GetNationStatsAsync(string nationName, EventId eventId)
         {
