@@ -9,6 +9,6 @@ namespace CyborgianStates.Interfaces
     public interface IRequestDispatcher
     {
         Task Register(DataSourceType dataSource, IRequestQueue requestQueue);
-        Task Dispatch(IRequest request);
+        Task Dispatch(Request request);
     }
 }

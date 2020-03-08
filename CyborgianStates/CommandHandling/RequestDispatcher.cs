@@ -10,7 +10,7 @@ namespace CyborgianStates.CommandHandling
     public class RequestDispatcher : IRequestDispatcher
     {
         readonly Dictionary<DataSourceType, IRequestQueue> Queues = new Dictionary<DataSourceType, IRequestQueue>();
-        public async Task Dispatch(IRequest request)
+        public async Task Dispatch(Request request)
         {
             if (request is null) throw new ArgumentNullException(nameof(request));
                 

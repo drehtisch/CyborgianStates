@@ -8,6 +8,6 @@ namespace CyborgianStates.Interfaces
     public interface IRequestQueue
     {
         int Size { get; }
-        Task Enqueue(IRequest request);
+        Task Enqueue(Request request);
     }
 }
