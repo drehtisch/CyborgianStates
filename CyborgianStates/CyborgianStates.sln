@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CyborgianStates", "CyborgianStates.csproj", "{F631E931-1D4A-4FD6-9FD0-4DAED872D680}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CyboargianStates.Test", "..\CyboargianStates.Test\CyboargianStates.Test.csproj", "{EEDCA772-9F98-493F-8782-306EEAC9BE50}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CyborgianStates.Test", "..\CyborgianStates.Test\CyborgianStates.Test.csproj", "{EEDCA772-9F98-493F-8782-306EEAC9BE50}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

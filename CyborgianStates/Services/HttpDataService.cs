@@ -2,11 +2,9 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace CyborgianStates.Services
 {
@@ -39,57 +37,6 @@ namespace CyborgianStates.Services
                 }
                 return response;
             }
-        }
-
-        public async Task<Stream> ExecuteRequestWithStreamResult(HttpRequestMessage httpRequest, EventId eventId)
-        {
-            HttpResponseMessage response = await ExecuteRequest(httpRequest, eventId).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-            }
-            else if(response.StatusCode == HttpStatusCode.NotFound)
-            {
-                throw new NotFoundException();
-            }
-            else
-            {
-                throw new ApplicationException("The request failed. No stream could be returned.");
-            }
-        }
-
-        public async Task<XmlDocument> ExecuteRequestWithXmlResult(HttpRequestMessage httpRequest, EventId eventId)
-        {
-            using (var stream = await ExecuteRequestWithStreamResult(httpRequest, eventId).ConfigureAwait(false))
-            {
-                try
-                {
-                    XmlDocument xml = new XmlDocument();
-                    xml.Load(stream);
-                    var stringxml = xml.ToString();
-                    return xml;
-                }
-                catch (XmlException ex)
-                {
-                    string xml;
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        xml = await reader.ReadToEndAsync().ConfigureAwait(false);
-                    }
-                    _logger.LogCritical(eventId, ex, LogMessageBuilder.Build(eventId, $"A critical error while loading xml occured. XML:{Environment.NewLine}{xml}"));
-                    throw;
-                }
-            }
-        }
-    }
-
-    public static class HttpClientExtensions
-    {
-        public static void AddCyborgianStatesUserAgent(this HttpClient client, string version, string contact)
-        {
-            if (client is null) throw new ArgumentNullException(nameof(client));
-            client.DefaultRequestHeaders.Add("User-Agent", $"CyborgianStates/{version}");
-            client.DefaultRequestHeaders.Add("User-Agent", $"(contact {contact};)");
         }
     }
 }

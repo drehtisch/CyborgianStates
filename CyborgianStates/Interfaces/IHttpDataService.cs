@@ -13,7 +13,5 @@ namespace CyborgianStates.Interfaces
     public interface IHttpDataService
     {
         Task<HttpResponseMessage> ExecuteRequest(HttpRequestMessage httpRequest, EventId eventId);
-        Task<XmlDocument> ExecuteRequestWithXmlResult(HttpRequestMessage httpRequest, EventId eventId);
-        Task<Stream> ExecuteRequestWithStreamResult(HttpRequestMessage httpRequest, EventId eventId);
     }
 }

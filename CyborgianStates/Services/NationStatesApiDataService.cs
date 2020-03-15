@@ -65,7 +65,7 @@ namespace CyborgianStates.Services
         {
             await WaitForAction(requestType, TimeSpan.FromTicks(API_REQUEST_INTERVAL)).ConfigureAwait(false);
         }
-        public async Task<XmlDocument> GetNationStatsAsync(string nationName, EventId eventId)
+        public async Task<HttpResponseMessage> GetNationStatsAsync(string nationName, EventId eventId)
         {
             _logger.LogDebug(eventId, LogMessageBuilder.Build(eventId, $"Waiting for NationStats-Request: {nationName}"));
             await WaitForAction(RequestType.GetBasicNationStats).ConfigureAwait(false);
@@ -74,7 +74,7 @@ namespace CyborgianStates.Services
             LastAPIRequest = DateTime.UtcNow;
             try
             {
-                return await _dataService.ExecuteRequestWithXmlResult(message, eventId).ConfigureAwait(false);
+                return await _dataService.ExecuteRequest(message, eventId).ConfigureAwait(false);
             }
             finally
             {

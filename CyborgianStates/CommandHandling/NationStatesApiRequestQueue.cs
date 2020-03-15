@@ -51,7 +51,8 @@ namespace CyborgianStates.CommandHandling
                     case RequestType.GetBasicNationStats:
                         var eventId = Helpers.GetEventIdByType(LoggingEvent.GetNationStats);
                         var response = await _dataService.GetNationStatsAsync(request.Params["nationName"].ToString(), eventId).ConfigureAwait(false);
-                        request.Complete(response);
+                        var xml = await response.ReadXml();
+                        request.Complete(xml);
                         break;
                     default:
                         request.Fail($"RequestType: {request.Type} not implemented.");
@@ -67,17 +68,6 @@ namespace CyborgianStates.CommandHandling
             {
                 _logger.LogError(e, $"A error occured while executing request '{request.Type}'");
                 request.Fail("Couldn't process malformed response.");
-            }
-            catch (NotFoundException)
-            {
-                if (request.Type == RequestType.GetBasicNationStats)
-                {
-                    request.Fail("No such nation.");
-                }
-                else
-                {
-                    request.Fail("Not found. :(");
-                }
             }
             catch (Exception e)
             {
