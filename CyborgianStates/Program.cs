@@ -7,6 +7,8 @@ using NetEscapades.Extensions.Logging.RollingFile;
 using System;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using CyborgianStates.CommandHandling;
+using CyborgianStates.Services;
 
 namespace CyborgianStates
 {
@@ -15,6 +17,7 @@ namespace CyborgianStates
         static ILauncher Launcher = new Launcher();
         static IUserInput userInput = new ConsoleInput();
         static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
+        
         public static IServiceProvider ServiceProvider { get; set; }
         public static void Main()
         {
@@ -64,6 +67,8 @@ namespace CyborgianStates
             // add services
             serviceCollection.AddSingleton(typeof(IUserInput), userInput);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+            serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
+            serviceCollection.AddSingleton<IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();
         }
 

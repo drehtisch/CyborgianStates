@@ -20,7 +20,7 @@ namespace CyborgianStates.Interfaces
         public ResponseFormat ExpectedReponseFormat { get; }
         public int Priority { get; set; }
         public DataSourceType DataSourceType { get; }
-        public string FailureReason { get; set; }
+        public string FailureReason { get; private set; }
         public void Complete(object response)
         {
             Response = response;
@@ -31,11 +31,11 @@ namespace CyborgianStates.Interfaces
             FailureReason = failReason;
             Status = RequestStatus.Failed;
         }
-        public async Task WaitForResponse(CancellationToken cancelationToken)
+        public async Task WaitForResponse(CancellationToken cancellationToken)
         {
             while (Status == RequestStatus.Pending)
             {
-                if (cancelationToken.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested)
                 {
                     Status = RequestStatus.Canceled;
                 }

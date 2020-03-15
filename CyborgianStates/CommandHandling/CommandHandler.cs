@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.CommandHandling
@@ -12,6 +13,8 @@ namespace CyborgianStates.CommandHandling
     {
         private static readonly List<CommandDefinition> definitions = new List<CommandDefinition>();
         public static int Count { get => definitions.Count; }
+
+        private static readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         public static void Register(CommandDefinition definition)
         {
             if (definition == null)
@@ -39,6 +42,7 @@ namespace CyborgianStates.CommandHandling
             if (def != null)
             {
                 ICommand instance = (ICommand)Activator.CreateInstance(def.Type);
+                instance.SetCancellationToken(tokenSource.Token);
                 return await Task.FromResult(instance).ConfigureAwait(false);
             }
             else
@@ -68,6 +72,11 @@ namespace CyborgianStates.CommandHandling
         public static void Clear()
         {
             definitions.Clear();
+        }
+
+        public static void Cancel()
+        {
+            tokenSource.Cancel();
         }
     }
 }

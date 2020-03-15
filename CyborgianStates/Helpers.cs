@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CyborgianStates.Enums;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -18,13 +20,23 @@ namespace CyborgianStates
         }
 
         /// <summary>
-        /// An API Id back to nation/region name
+        /// Converts a API Id back to nation/region name
         /// </summary>
-        /// <param name="text"></param>
+        /// <param name="text">The API Id to format back</param>
         /// <returns>Formated string convert back to name</returns>
         public static string FromID(string text)
         {
             return text?.Trim().ToLower(CultureInfo.InvariantCulture).Replace('_', ' ');
+        }
+
+        /// <summary>
+        /// Creates a EventId from LoggingEvent
+        /// </summary>
+        /// <param name="loggingEvent">LoggingEvent to create a EventId from.</param>
+        /// <returns>The created EventId</returns>
+        public static EventId GetEventIdByType(LoggingEvent loggingEvent)
+        {
+            return new EventId((int)loggingEvent, loggingEvent.ToString());
         }
     }
 }

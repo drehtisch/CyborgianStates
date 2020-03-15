@@ -20,16 +20,16 @@ namespace CyborgianStates.Services
         public const long SEND_RECRUITMENTTELEGRAM_INTERVAL = 1800000000; //3 m 1800000000
 
         IHttpDataService _dataService;
-        ILogger<NationStatesApiDataService> _logger;
+        ILogger _logger;
 
         DateTime LastAPIRequest;
         //DateTime LastTelegramSending;
         //DateTime LastNewNationsRequest;
 
-        public NationStatesApiDataService(IHttpDataService dataService, ILogger<NationStatesApiDataService> logger)
+        public NationStatesApiDataService(IHttpDataService dataService)
         {
             _dataService = dataService;
-            _logger = logger;
+            _logger = ApplicationLogging.CreateLogger(typeof(NationStatesApiDataService));
         }
         public Task<bool> IsActionReady(RequestType requestType)
         {
@@ -71,6 +71,7 @@ namespace CyborgianStates.Services
             await WaitForAction(RequestType.GetBasicNationStats).ConfigureAwait(false);
             Uri url = BuildApiRequestUrl($"nation={Helpers.ToID(nationName)}&q=flag+wa+gavote+scvote+fullname+freedom+demonym2plural+category+population+region+founded+influence+lastactivity+census;mode=score;scale=0+1+2+65+66+80");
             var message = new HttpRequestMessage(HttpMethod.Get, url);
+            LastAPIRequest = DateTime.UtcNow;
             try
             {
                 return await _dataService.ExecuteRequestWithXmlResult(message, eventId).ConfigureAwait(false);

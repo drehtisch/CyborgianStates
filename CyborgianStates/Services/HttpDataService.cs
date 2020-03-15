@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
@@ -46,6 +47,10 @@ namespace CyborgianStates.Services
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            }
+            else if(response.StatusCode == HttpStatusCode.NotFound)
+            {
+                throw new NotFoundException();
             }
             else
             {

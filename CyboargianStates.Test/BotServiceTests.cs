@@ -3,6 +3,7 @@ using CyborgianStates.CommandHandling;
 using CyborgianStates.Commands;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
+using CyborgianStates.Services;
 using Moq;
 using System;
 using System.Collections.Generic;

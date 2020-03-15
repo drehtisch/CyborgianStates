@@ -3,6 +3,7 @@ using CyborgianStates.MessageHandling;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.Interfaces
@@ -10,5 +11,6 @@ namespace CyborgianStates.Interfaces
     public interface ICommand
     {
         Task<CommandResponse> Execute(Message message);
+        void SetCancellationToken(CancellationToken cancellationToken);
     }
 }
