@@ -51,7 +51,7 @@ namespace CyborgianStates.CommandHandling
                     case RequestType.GetBasicNationStats:
                         var eventId = Helpers.GetEventIdByType(LoggingEvent.GetNationStats);
                         var response = await _dataService.GetNationStatsAsync(request.Params["nationName"].ToString(), eventId).ConfigureAwait(false);
-                        var xml = await response.ReadXml();
+                        var xml = await response.ReadXml().ConfigureAwait(false);
                         request.Complete(xml);
                         break;
                     default:
