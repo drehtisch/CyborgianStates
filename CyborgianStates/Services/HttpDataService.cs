@@ -66,6 +66,7 @@ namespace CyborgianStates.Services
                 {
                     XmlDocument xml = new XmlDocument();
                     xml.Load(stream);
+                    var stringxml = xml.ToString();
                     return xml;
                 }
                 catch (XmlException ex)

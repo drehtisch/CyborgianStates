@@ -1,13 +1,12 @@
-﻿using CyborgianStates;
-using CyborgianStates.CommandHandling;
+﻿using CyborgianStates.CommandHandling;
 using CyborgianStates.Commands;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using CyborgianStates.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,6 +19,9 @@ namespace CyborgianStates.Test
         {
             var msgHandlerMock = new Mock<IMessageHandler>();
             var msgHandler = msgHandlerMock.Object;
+            ServiceCollection serviceCollection = ConfigureServicesForTests();
+            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
+
             var botService = new BotService(msgHandler);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
@@ -27,9 +29,22 @@ namespace CyborgianStates.Test
             await botService.ShutdownAsync().ConfigureAwait(false);
             Assert.False(botService.IsRunning);
         }
+
+        private static ServiceCollection ConfigureServicesForTests()
+        {
+            var serviceCollection = new ServiceCollection();
+            var httpServiceMock = new Mock<IHttpDataService>();
+            serviceCollection.AddSingleton(typeof(IHttpDataService), httpServiceMock.Object);
+            serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
+            return serviceCollection;
+        }
+
         [Fact]
         public async Task TestStartupProgressMessageAndShutDown()
         {
+            ServiceCollection serviceCollection = ConfigureServicesForTests();
+            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
+
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             Assert.True(CommandHandler.Count == 1);
