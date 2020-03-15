@@ -89,6 +89,7 @@ namespace CyborgianStates.Services
 
         public async Task ShutdownAsync()
         {
+            CommandHandler.Cancel();
             await _messageHandler.ShutdownAsync().ConfigureAwait(false);
             IsRunning = false;
         }

@@ -1,4 +1,5 @@
-﻿using CyborgianStates.Interfaces;
+﻿using CyborgianStates.CommandHandling;
+using CyborgianStates.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -35,6 +36,7 @@ namespace CyborgianStates.Test
             var botService = new Mock<IBotService>();
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler.Object);
             serviceCollection.AddSingleton(typeof(IBotService), botService.Object);
+            //serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
             Program.ServiceProvider = serviceCollection.BuildServiceProvider();
             Launcher launcher = new Launcher();
             await launcher.RunAsync().ConfigureAwait(false);

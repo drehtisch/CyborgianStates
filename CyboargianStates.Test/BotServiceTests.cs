@@ -14,14 +14,17 @@ namespace CyborgianStates.Test
 {
     public class BotServiceTests
     {
+        Mock<IMessageHandler> msgHandlerMock;
+        public BotServiceTests()
+        {
+            msgHandlerMock = new Mock<IMessageHandler>();
+            ServiceCollection serviceCollection = ConfigureServicesForTests();
+            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
+        }
         [Fact]
         public async Task TestInitRunAndShutDownBotService()
         {
-            var msgHandlerMock = new Mock<IMessageHandler>();
             var msgHandler = msgHandlerMock.Object;
-            ServiceCollection serviceCollection = ConfigureServicesForTests();
-            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
-
             var botService = new BotService(msgHandler);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
@@ -42,14 +45,10 @@ namespace CyborgianStates.Test
         [Fact]
         public async Task TestStartupProgressMessageAndShutDown()
         {
-            ServiceCollection serviceCollection = ConfigureServicesForTests();
-            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
-
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             Assert.True(CommandHandler.Count == 1);
 
-            Mock<IMessageHandler> msgHandlerMock = new Mock<IMessageHandler>();
             msgHandlerMock.Setup(m => m.InitAsync());
             msgHandlerMock.Setup(m => m.RunAsync());
             msgHandlerMock.Setup(m => m.ShutdownAsync());
