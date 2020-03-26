@@ -19,7 +19,10 @@ jobs:
         dotnet-version: 3.1.101
     - name: Build with dotnet
       working-directory: ./CyborgianStates.Test
-      run: dotnet build ../CyborgianStates/CyborgianStates.sln
+      run: |
+        dotnet build ../CyborgianStates/CyborgianStates.sln
+        # temporary: copy settings so tests pass. this should be removed before release
+        cp ../CyborgianStates/appsettings.json bin/Debug/netcoreapp3.1/appsettings.development.json
     - name: Run tests
       working-directory: ./CyborgianStates.Test
       run: |
