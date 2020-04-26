@@ -18,13 +18,13 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: Build with dotnet
-      working-directory: ./CyborgianStates.Test
+      working-directory: ./CyborgianStates.Tests
       run: |
         dotnet build ../CyborgianStates/CyborgianStates.sln
         # temporary: copy settings so tests pass. this should be removed before release
         cp ../CyborgianStates/appsettings.json bin/Debug/netcoreapp3.1/appsettings.development.json
     - name: Run tests
-      working-directory: ./CyborgianStates.Test
+      working-directory: ./CyborgianStates.Tests
       run: |
         dotnet tool install --global coverlet.console
         ~/.dotnet/tools/coverlet bin/Debug/netcoreapp3.1/CyborgianStates.Tests.dll --target "dotnet" --targetargs "test --no-build" --exclude "[*]CyborgianStates.MessageHandling.ConsoleInput" --exclude "[*]CyborgianStates.AppSettings" --exclude "[*]CyborgianStates.Models.*" --format opencover --output "./TestResults//"
