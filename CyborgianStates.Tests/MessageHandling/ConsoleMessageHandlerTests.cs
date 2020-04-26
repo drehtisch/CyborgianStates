@@ -5,14 +5,14 @@ using System;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyborgianStates.Test
+namespace CyborgianStates.Tests.MessageHandling
 {
     public class ConsoleMessageHandlerTests
     {
         [Fact]
         public async Task ConsoleMessageHandlerTest()
         {
-            var mockInput = new Mock<IUserInput>();
+            var mockInput = new Mock<IUserInput>(MockBehavior.Strict);
             mockInput.Setup(m => m.GetInput()).Returns("ping");
             IUserInput userInput = mockInput.Object;
             ConsoleMessageHandler consoleMessageHandler = new ConsoleMessageHandler(userInput);
@@ -30,7 +30,7 @@ namespace CyborgianStates.Test
         [Fact]
         public async Task ConsoleMessageHandlerTestWithEmptyMessage()
         {
-            var mockInput = new Mock<IUserInput>();
+            var mockInput = new Mock<IUserInput>(MockBehavior.Strict);
             mockInput.Setup(m => m.GetInput()).Returns(string.Empty);
             IUserInput userInput = mockInput.Object;
             ConsoleMessageHandler consoleMessageHandler = new ConsoleMessageHandler(userInput);

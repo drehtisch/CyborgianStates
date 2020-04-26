@@ -10,14 +10,17 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyborgianStates.Test
+namespace CyborgianStates.Tests.Services
 {
     public class BotServiceTests
     {
         Mock<IMessageHandler> msgHandlerMock;
         public BotServiceTests()
         {
-            msgHandlerMock = new Mock<IMessageHandler>();
+            msgHandlerMock = new Mock<IMessageHandler>(MockBehavior.Strict);
+            msgHandlerMock.Setup(m => m.InitAsync()).Returns(Task.CompletedTask);
+            msgHandlerMock.Setup(m => m.RunAsync()).Returns(Task.CompletedTask);
+            msgHandlerMock.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
             ServiceCollection serviceCollection = ConfigureServicesForTests();
             Program.ServiceProvider = serviceCollection.BuildServiceProvider();
         }
@@ -36,8 +39,7 @@ namespace CyborgianStates.Test
         private static ServiceCollection ConfigureServicesForTests()
         {
             var serviceCollection = new ServiceCollection();
-            var httpServiceMock = new Mock<IHttpDataService>();
-            serviceCollection.AddSingleton(typeof(IHttpDataService), httpServiceMock.Object);
+            serviceCollection.AddSingleton<HttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
             return serviceCollection;
         }
@@ -48,10 +50,6 @@ namespace CyborgianStates.Test
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             Assert.True(CommandHandler.Count == 1);
-
-            msgHandlerMock.Setup(m => m.InitAsync());
-            msgHandlerMock.Setup(m => m.RunAsync());
-            msgHandlerMock.Setup(m => m.ShutdownAsync());
             BotService botService = new BotService(msgHandlerMock.Object);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
@@ -61,13 +59,16 @@ namespace CyborgianStates.Test
             bool isPublic = false;
             CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, "");
 
-            Mock<IMessageChannel> msgChannelMock = new Mock<IMessageChannel>();
+            Mock<IMessageChannel> msgChannelMock = new Mock<IMessageChannel>(MockBehavior.Strict);
+            msgChannelMock.SetupGet(m => m.IsPrivate).Returns(true);
+
             msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<bool>(), It.IsAny<CommandResponse>()))
                 .Callback<bool, CommandResponse>((b, cr) =>
                 {
                     isPublic = b;
                     commandResponse = cr;
-                });
+                })
+                .Returns(Task.CompletedTask);
 
             Message message = new Message(0, "ping", msgChannelMock.Object);
             MessageReceivedEventArgs eventArgs = new MessageReceivedEventArgs(message);

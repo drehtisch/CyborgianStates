@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyborgianStates.Test
+namespace CyborgianStates.Tests.CommandHandling
 {
     public class CommandHandlerTests
     {

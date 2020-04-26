@@ -37,6 +37,7 @@ namespace CyborgianStates
         }
         public static ILogger CreateLogger(Type type) => Factory.CreateLogger(type);
         public static ILogger CreateLogger(string name) => Factory.CreateLogger(name);
+        public static ILogger<T> CreateLogger<T>() => Factory.CreateLogger<T>();
     }
 
 }

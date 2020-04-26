@@ -1,4 +1,4 @@
-﻿using CyborgianStates.CommandHandling;
+﻿using CyborgianStates;
 using CyborgianStates.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -7,19 +7,20 @@ using System;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyborgianStates.Test
+namespace CyborgianStates.Tests
 {
     public class MiscTests
     {
         [Fact]
         public void TestMain()
         {
-            Mock<ILauncher> mock = new Mock<ILauncher>();
+            Mock<ILauncher> mock = new Mock<ILauncher>(MockBehavior.Strict);
             mock.SetupGet(l => l.IsRunning).Returns(true);
+            mock.Setup(m => m.RunAsync()).Returns(Task.CompletedTask);
             ILauncher launcher = mock.Object;
             Program.SetLauncher(launcher);
-            IMessageHandler messageHandler = new Mock<IMessageHandler>().Object;
-            IUserInput userInput = new Mock<IUserInput>().Object;
+            IMessageHandler messageHandler = new Mock<IMessageHandler>(MockBehavior.Strict).Object;
+            IUserInput userInput = new Mock<IUserInput>(MockBehavior.Strict).Object;
             Assert.Throws<ArgumentNullException>(() => Program.SetUserInput(null));
             Assert.Throws<ArgumentNullException>(() => Program.SetMessageHandler(null));
             Program.SetUserInput(userInput);
@@ -32,8 +33,10 @@ namespace CyborgianStates.Test
         public async Task TestLauncher()
         {
             var serviceCollection = new ServiceCollection();
-            var messageHandler = new Mock<IMessageHandler>();
-            var botService = new Mock<IBotService>();
+            var messageHandler = new Mock<IMessageHandler>(MockBehavior.Strict);
+            var botService = new Mock<IBotService>(MockBehavior.Strict);
+            botService.Setup(m => m.InitAsync()).Returns(Task.CompletedTask);
+            botService.Setup(m => m.RunAsync()).Returns(Task.CompletedTask);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler.Object);
             serviceCollection.AddSingleton(typeof(IBotService), botService.Object);
             //serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
@@ -43,7 +46,6 @@ namespace CyborgianStates.Test
             Assert.True(launcher.IsRunning);
             botService.Verify(m => m.RunAsync(), Times.Once);
         }
-
         [Fact]
         public void TestGetLoggerByName()
         {
@@ -52,7 +54,6 @@ namespace CyborgianStates.Test
             Assert.Equal("Logger", type.Name);
             Assert.Equal("Microsoft.Extensions.Logging.Logger", type.FullName);
         }
-
         [Fact]
         public void TestGetLoggerByType()
         {
@@ -60,6 +61,32 @@ namespace CyborgianStates.Test
             Type type = logger.GetType();
             Assert.Equal("Logger", type.Name);
             Assert.Equal("Microsoft.Extensions.Logging.Logger", type.FullName);
+        }
+        [Fact]
+        public void TestIdMethods()
+        {
+            var res = Helpers.ToID("Hello World");
+            Assert.Equal("hello_world", res);
+            res = Helpers.FromID(res);
+            Assert.Equal("hello world", res);
+        }
+        [Fact]
+        public void TestGetEventId()
+        {
+            var res = Helpers.GetEventIdByType(Enums.LoggingEvent.GetNationStats);
+            Assert.IsType<EventId>(res);
+            Assert.Equal(10300, res.Id);
+            Assert.Equal("GetNationStats", res.Name);
+        }
+        [Fact]
+        public void TestLogMessageBuilder()
+        {
+            var res = Helpers.GetEventIdByType(Enums.LoggingEvent.GetNationStats);
+            Assert.IsType<EventId>(res);
+            Assert.Equal(10300, res.Id);
+            Assert.Equal("GetNationStats", res.Name);
+            var logString = LogMessageBuilder.Build(res,"Test");
+            Assert.Equal("[10300] Test", logString);
         }
     }
 }

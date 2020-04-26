@@ -3,12 +3,10 @@ using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using Moq;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyborgianStates.Test
+namespace CyborgianStates.Tests.CommandHandling
 {
     public class RequestDispatcherTests
     {
@@ -16,8 +14,8 @@ namespace CyborgianStates.Test
         public async Task TestReqisterAndDispatch()
         {
             RequestDispatcher dispatcher = new RequestDispatcher();
-            var requestQueue = new Mock<IRequestQueue>();
-            requestQueue.Setup(r => r.Enqueue(It.IsAny<Request>()));
+            var requestQueue = new Mock<IRequestQueue>(MockBehavior.Strict);
+            requestQueue.Setup(r => r.Enqueue(It.IsAny<Request>())).Returns(Task.CompletedTask);
             await dispatcher.Register(DataSourceType.NationStatesAPI, requestQueue.Object).ConfigureAwait(false);
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
             await dispatcher.Dispatch(request).ConfigureAwait(false);

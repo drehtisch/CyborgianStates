@@ -12,17 +12,36 @@ namespace CyborgianStates.Services
     {
         AppSettings _config;
         ILogger<HttpDataService> _logger;
+        private HttpMessageHandler _httpMessageHandler = null;
         public HttpDataService(IOptions<AppSettings> config, ILogger<HttpDataService> logger)
         {
             if (config is null) throw new ArgumentNullException(nameof(config));
             _config = config.Value;
             _logger = logger;
         }
+
+        private HttpClient GetHttpClient()
+        {
+            if(_httpMessageHandler != null)
+            {
+                return new HttpClient(_httpMessageHandler);
+            }
+            else
+            {
+                return new HttpClient();
+            }
+        }
+
+        public void SetHttpMessageHandler(HttpMessageHandler httpMessageHandler)
+        {
+            _httpMessageHandler = httpMessageHandler;
+        }
+
         public async Task<HttpResponseMessage> ExecuteRequest(HttpRequestMessage httpRequest, EventId eventId)
         {
             if (httpRequest is null) throw new ArgumentNullException(nameof(httpRequest));
             if (string.IsNullOrWhiteSpace(_config.Contact)) throw new InvalidOperationException("No Request can be send when contact info hasn't been provided.");
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = GetHttpClient())
             {
                 client.AddCyborgianStatesUserAgent(AppSettings.VERSION, _config.Contact);
                 _logger.LogDebug(eventId, LogMessageBuilder.Build(eventId, $"Executing {httpRequest.Method}-Request to {httpRequest.RequestUri}"));

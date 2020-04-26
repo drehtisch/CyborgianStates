@@ -1,12 +1,10 @@
 ﻿using CyborgianStates.CommandHandling;
 using CyborgianStates.MessageHandling;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CyborgianStates.Test
+namespace CyborgianStates.Tests.MessageHandling
 {
     public class MessageChannelTests
     {
