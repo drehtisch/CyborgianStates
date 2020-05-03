@@ -73,6 +73,10 @@ namespace CyborgianStates.Tests
             Assert.Equal("hello_world", res);
             res = Helpers.FromID(res);
             Assert.Equal("hello world", res);
+            res = Helpers.FromID(null);
+            Assert.Null(res);
+            res = Helpers.ToID(null);
+            Assert.Null(res);
         }
         [Fact]
         public void TestGetEventId()
