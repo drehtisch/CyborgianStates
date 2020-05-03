@@ -1,4 +1,5 @@
 ﻿using CyborgianStates;
+using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,7 +44,7 @@ namespace CyborgianStates.Tests
             botService.Setup(m => m.RunAsync()).Returns(Task.CompletedTask);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler.Object);
             serviceCollection.AddSingleton(typeof(IBotService), botService.Object);
-            //serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
+            serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
             Program.ServiceProvider = serviceCollection.BuildServiceProvider();
             Launcher launcher = new Launcher();
             await launcher.RunAsync().ConfigureAwait(false);

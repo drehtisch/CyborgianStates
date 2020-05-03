@@ -21,8 +21,7 @@ namespace CyborgianStates.Tests.Services
             msgHandlerMock.Setup(m => m.InitAsync()).Returns(Task.CompletedTask);
             msgHandlerMock.Setup(m => m.RunAsync()).Returns(Task.CompletedTask);
             msgHandlerMock.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
-            ServiceCollection serviceCollection = ConfigureServicesForTests();
-            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
+            ConfigureServicesForTests();
         }
         [Fact]
         public async Task TestInitRunAndShutDownBotService()
@@ -36,12 +35,12 @@ namespace CyborgianStates.Tests.Services
             Assert.False(botService.IsRunning);
         }
 
-        private static ServiceCollection ConfigureServicesForTests()
+        private static void ConfigureServicesForTests()
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<HttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
-            return serviceCollection;
+            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
         }
 
         [Fact]
@@ -50,6 +49,7 @@ namespace CyborgianStates.Tests.Services
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             Assert.True(CommandHandler.Count == 1);
+            ConfigureServicesForTests();
             BotService botService = new BotService(msgHandlerMock.Object);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
