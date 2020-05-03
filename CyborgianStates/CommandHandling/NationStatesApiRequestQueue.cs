@@ -4,6 +4,7 @@ using CyborgianStates.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -12,9 +13,9 @@ namespace CyborgianStates.CommandHandling
 {
     public class NationStatesApiRequestQueue : IRequestQueue
     {
-        NationStatesApiDataService _dataService;
+        IDataService _dataService;
         ILogger _logger;
-        public NationStatesApiRequestQueue(NationStatesApiDataService dataService)
+        public NationStatesApiRequestQueue(IDataService dataService)
         {
             _dataService = dataService;
             _logger = ApplicationLogging.CreateLogger(typeof(NationStatesApiRequestQueue));
@@ -46,17 +47,15 @@ namespace CyborgianStates.CommandHandling
         {
             try
             {
-                switch (request.Type)
+                if (await _dataService.ExecuteRequest(request).ConfigureAwait(false) is HttpResponseMessage response)
                 {
-                    case RequestType.GetBasicNationStats:
-                        var eventId = Helpers.GetEventIdByType(LoggingEvent.GetNationStats);
-                        var response = await _dataService.GetNationStatsAsync(request.Params["nationName"].ToString(), eventId).ConfigureAwait(false);
-                        var xml = await response.ReadXml().ConfigureAwait(false);
-                        request.Complete(xml);
-                        break;
-                    default:
-                        request.Fail($"RequestType: {request.Type} not implemented.");
-                        break;
+                    var xml = await response.ReadXml().ConfigureAwait(false);
+                    request.Complete(xml);
+                    response.Dispose();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Response of DataService was not of type HttpResponseMessage");
                 }
             }
             catch (ApplicationException e)

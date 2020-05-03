@@ -1,10 +1,14 @@
 ﻿using CyborgianStates;
 using CyborgianStates.Interfaces;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
+using System.Xml;
 using Xunit;
 
 namespace CyborgianStates.Tests
@@ -85,8 +89,29 @@ namespace CyborgianStates.Tests
             Assert.IsType<EventId>(res);
             Assert.Equal(10300, res.Id);
             Assert.Equal("GetNationStats", res.Name);
-            var logString = LogMessageBuilder.Build(res,"Test");
+            var logString = LogMessageBuilder.Build(res, "Test");
             Assert.Equal("[10300] Test", logString);
+        }
+        [Fact]
+        public void TestHttpExtensionsUserAgent()
+        {
+            Assert.Throws<ArgumentNullException>(() => HttpExtensions.AddCyborgianStatesUserAgent(null, "", ""));
+        }
+        [Fact]
+        public async Task TestHttpExtensionsReadXml()
+        {
+            using (var res = new HttpResponseMessage(HttpStatusCode.OK))
+            {
+                res.Content = new StringContent("<test>test</test>");
+                var ret = await res.ReadXml().ConfigureAwait(false);
+                ret.Should().BeOfType<XmlDocument>();
+            }
+            using (var res = new HttpResponseMessage(HttpStatusCode.OK))
+            {
+                res.Content = new StringContent("<test>test</test");
+                await Assert.ThrowsAsync<ApplicationException>(async () => { await res.ReadXml().ConfigureAwait(false); }).ConfigureAwait(false);
+            }
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => { await HttpExtensions.ReadXml(null).ConfigureAwait(false); }).ConfigureAwait(false);
         }
     }
 }

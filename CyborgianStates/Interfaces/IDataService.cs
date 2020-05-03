@@ -11,6 +11,8 @@ namespace CyborgianStates.Interfaces
     {
         Task WaitForAction(RequestType requestType, TimeSpan interval, CancellationToken cancellationToken);
         Task WaitForAction(RequestType requestType, TimeSpan interval);
+        Task WaitForAction(RequestType requestType);
         Task<bool> IsActionReady(RequestType requestType);
+        Task<object> ExecuteRequest(Request request);
     }
 }

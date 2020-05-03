@@ -38,5 +38,16 @@ namespace CyborgianStates
         {
             return new EventId((int)loggingEvent, loggingEvent.ToString());
         }
+
+        public static EventId GetEventIdByRequestType(RequestType requestType)
+        {
+            switch (requestType)
+            {
+                case RequestType.GetBasicNationStats:
+                    return GetEventIdByType(LoggingEvent.GetNationStats);
+                default:
+                    return new EventId(new Random().Next(), $"Unknown [{requestType.ToString()}]");
+            }
+        }
     }
 }

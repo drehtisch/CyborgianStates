@@ -65,7 +65,7 @@ namespace CyborgianStates.Services
         {
             await WaitForAction(requestType, TimeSpan.FromTicks(API_REQUEST_INTERVAL)).ConfigureAwait(false);
         }
-        public async Task<HttpResponseMessage> GetNationStatsAsync(string nationName, EventId eventId)
+        private async Task<HttpResponseMessage> GetNationStatsAsync(string nationName, EventId eventId)
         {
             _logger.LogDebug(eventId, LogMessageBuilder.Build(eventId, $"Waiting for NationStats-Request: {nationName}"));
             await WaitForAction(RequestType.GetBasicNationStats).ConfigureAwait(false);
@@ -81,9 +81,21 @@ namespace CyborgianStates.Services
                 message.Dispose();
             }
         }
-        private static Uri BuildApiRequestUrl(string parameters)
+        public static Uri BuildApiRequestUrl(string parameters)
         {
             return new Uri($"http://www.nationstates.net/cgi-bin/api.cgi?{parameters}&v={API_VERSION}");
+        }
+
+        public async Task<object> ExecuteRequest(Request request)
+        {
+            if (request is null) throw new ArgumentNullException(nameof(request));
+            switch (request.Type)
+            {
+                case RequestType.GetBasicNationStats:
+                    return await GetNationStatsAsync(request.Params["nationName"].ToString(), request.EventId).ConfigureAwait(false);
+                default:
+                    throw new InvalidOperationException($"Unknown request type: {request.Type}");
+            }
         }
     }
 }

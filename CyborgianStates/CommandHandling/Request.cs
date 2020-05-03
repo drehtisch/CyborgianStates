@@ -1,4 +1,5 @@
 ﻿using CyborgianStates.Enums;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,9 @@ namespace CyborgianStates.Interfaces
             Type = type;
             ExpectedReponseFormat = format;
             DataSourceType = dataSource;
+            EventId = Helpers.GetEventIdByRequestType(type);
         }
+        public EventId EventId { get; private set; }
         public RequestStatus Status { get; private set; }
         public RequestType Type { get; }
         public Dictionary<string, object> Params { get; } = new Dictionary<string, object>();
