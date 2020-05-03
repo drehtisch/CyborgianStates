@@ -92,7 +92,7 @@ namespace CyborgianStates.Tests.Services
                 ),
                 ItExpr.IsAny<CancellationToken>()
            );
-           message.Dispose();
+            message.Dispose();
         }
         [Fact]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "<Ausstehend>")]
@@ -134,6 +134,25 @@ namespace CyborgianStates.Tests.Services
                 ItExpr.IsAny<CancellationToken>()
            );
             message.Dispose();
+        }
+        [Fact]
+        public void TestConstructorNullCheck()
+        {
+            ILogger<HttpDataService> logger = ApplicationLogging.CreateLogger<HttpDataService>();
+            var options = new Mock<IOptions<AppSettings>>(MockBehavior.Strict);
+            options.Setup(m => m.Value).Returns(new AppSettings() { Contact = "contact@example.com" });
+            Assert.Throws<ArgumentNullException>(() => { var x = new HttpDataService(null, logger); });
+            Assert.Throws<ArgumentNullException>(() => { var x = new HttpDataService(options.Object, null); });
+        }
+        [Fact]
+        public void TestGetHttpClient()
+        {
+            ILogger<HttpDataService> logger = ApplicationLogging.CreateLogger<HttpDataService>();
+            var options = new Mock<IOptions<AppSettings>>(MockBehavior.Strict);
+            options.Setup(m => m.Value).Returns(new AppSettings() { Contact = "contact@example.com" });
+            var service = new HttpDataService(options.Object, logger);
+            var res = service.GetHttpClient();
+            res.Should().BeOfType<HttpClient>();
         }
     }
 }

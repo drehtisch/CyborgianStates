@@ -16,11 +16,12 @@ namespace CyborgianStates.Services
         public HttpDataService(IOptions<AppSettings> config, ILogger<HttpDataService> logger)
         {
             if (config is null) throw new ArgumentNullException(nameof(config));
+            if (logger is null) throw new ArgumentNullException(nameof(logger));
             _config = config.Value;
             _logger = logger;
         }
 
-        private HttpClient GetHttpClient()
+        public HttpClient GetHttpClient()
         {
             if(_httpMessageHandler != null)
             {
