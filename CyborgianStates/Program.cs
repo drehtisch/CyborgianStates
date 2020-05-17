@@ -9,6 +9,7 @@ using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using CyborgianStates.CommandHandling;
 using CyborgianStates.Services;
+using System.Threading.Tasks;
 
 namespace CyborgianStates
 {
@@ -17,14 +18,23 @@ namespace CyborgianStates
         static ILauncher Launcher = new Launcher();
         static IUserInput userInput = new ConsoleInput();
         static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
-        
+
         public static IServiceProvider ServiceProvider { get; set; }
-        public static void Main()
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Required to be able to log fatal exceptions causing the bot to crash.")]
+        public static async Task Main()
         {
-            var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
-            ServiceProvider = serviceCollection.BuildServiceProvider();
-            Launcher.RunAsync();
+            try
+            {
+                var serviceCollection = new ServiceCollection();
+                ConfigureServices(serviceCollection);
+                ServiceProvider = serviceCollection.BuildServiceProvider();
+                await Launcher.RunAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"A fatal error caused the bot to crash: {ex}");
+            }
         }
         public static void SetLauncher(ILauncher launcher)
         {
