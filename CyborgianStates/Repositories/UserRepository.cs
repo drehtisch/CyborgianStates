@@ -14,31 +14,24 @@ namespace CyborgianStates.Repositories
     public class UserRepository : IUserRepository
     {
         #region SQLs
-        const string IsUserInDbSql = "SELECT 1 FROM User as u WHERE u.DiscordUserId = @DiscordUserId";
-        const string GetUserByDiscordIdSql = "SELECT * FROM User WHERE DiscordUserId = @DiscordUserId";
-        const string RolePermissionsPerUserSql =
-            @"SELECT 
-	            DISTINCT p.Name
-            FROM
-	            Permission p
-	        JOIN RolePermission rp ON rp.PermissionId = p.Id
-	        JOIN UserRole ur ON ur.RoleId = rp.RoleId
-	        JOIN User u on u.Id = ur.UserId
-            WHERE u.ExternalUserId = @ExternalUserId";
-        const string UserPermissionsSql =
-            @"SELECT 
-	            DISTINCT p.Name
-              FROM
-	            Permission p
-	          JOIN UserPermission up ON up.PermissionId = p.Id
-	          JOIN User u on u.Id = up.UserId
-              WHERE u.ExternalUserId = @ExternalUserId";
+        readonly string IsUserInDbSql;
+        readonly string GetUserByExternalIdSql;
+        readonly string RolePermissionsSql;
+        readonly string UserPermissionsSql;
         #endregion
 
         IDbConnection _dbConnection;
-        public UserRepository(IDbConnection dbConnection)
+        ISqlProvider _sql;
+        public UserRepository(IDbConnection dbConnection, ISqlProvider sql)
         {
+            if (dbConnection is null) throw new ArgumentNullException(nameof(dbConnection));
+            if (sql is null) throw new ArgumentNullException(nameof(sql));
             _dbConnection = dbConnection;
+            _sql = sql;
+            IsUserInDbSql = _sql.GetSql("User.IsInDb");
+            GetUserByExternalIdSql = _sql.GetSql("User.GetByExternalId");
+            RolePermissionsSql = _sql.GetSql("User.RolePermissions");
+            UserPermissionsSql = _sql.GetSql("User.Permissions");
         }
 
         public async Task AddUserToDbAsync(ulong userId)
@@ -52,7 +45,7 @@ namespace CyborgianStates.Repositories
             {
                 throw new ArgumentNullException(nameof(permissionType), "The permissionType can't be empty.");
             }
-            IEnumerable<dynamic> res1 = await _dbConnection.QueryAsync(RolePermissionsPerUserSql, new { ExternalUserId = userId }).ConfigureAwait(false);
+            IEnumerable<dynamic> res1 = await _dbConnection.QueryAsync(RolePermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
             IEnumerable<dynamic> res2 = await _dbConnection.QueryAsync(UserPermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
             var perms = res1.Select<dynamic, string>(r => r.Name).ToHashSet();
             perms.UnionWith(res2.Select<dynamic, string>(r => r.Name));
@@ -98,7 +91,7 @@ namespace CyborgianStates.Repositories
 
         public async Task<User> GetUserByExternalUserIdAsync(ulong externalUserId)
         {
-            return await _dbConnection.QueryFirstOrDefaultAsync<User>(GetUserByDiscordIdSql, new { ExternalUserId = externalUserId }).ConfigureAwait(false);
+            return await _dbConnection.QueryFirstOrDefaultAsync<User>(GetUserByExternalIdSql, new { ExternalUserId = externalUserId }).ConfigureAwait(false);
         }
 
         public async Task<User> GetUserByIdAsync(ulong userId)
