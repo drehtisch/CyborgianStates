@@ -1,0 +1,11 @@
+INSERT INTO "Permission"("Id","Name") VALUES (NULL,'*.*');
+INSERT INTO "Permission"("Id","Name") VALUES (NULL,'Commands.Execute');
+INSERT INTO "Role"("Id","Name") VALUES (NULL,"BotAdmin");
+INSERT INTO "StatusNames"("Id","Name") VALUES (NULL,'created');
+INSERT INTO "StatusNames"("Id","Name") VALUES (NULL,'recruit pending');
+INSERT INTO "StatusNames"("Id","Name") VALUES (NULL,'recruit reserved api');
+INSERT INTO "StatusNames"("Id","Name") VALUES (NULL,'recruit reserved manual');
+INSERT INTO "StatusNames"("Id","Name") VALUES (NULL,'recruit send');
+INSERT INTO "StatusNames"("Id","Name") VALUES (NULL,'recruit skipped');
+INSERT INTO "StatusNames"("Id","Name") VALUES (NULL,'resident');
+INSERT INTO "StatusNames"("Id","Name") VALUES (NULL,'citizen');

@@ -352,3 +352,4 @@ MigrationBackup/
 
 # Ignore JetBrains files
 .idea
+/CyborgianStates/*.db

@@ -144,7 +144,7 @@ namespace CyborgianStates.Commands
             }
         }
 
-        private async Task<CommandResponse> FailCommand(IMessageChannel channel, string reason)
+        private static async Task<CommandResponse> FailCommand(IMessageChannel channel, string reason)
         {
             CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, reason);
             await channel.WriteToAsync(channel.IsPrivate, commandResponse).ConfigureAwait(false);

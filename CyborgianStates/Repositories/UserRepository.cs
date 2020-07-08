@@ -2,6 +2,8 @@
 using CyborgianStates.Models;
 using Dapper;
 using Dapper.Contrib.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -22,12 +24,18 @@ namespace CyborgianStates.Repositories
 
         IDbConnection _dbConnection;
         ISqlProvider _sql;
-        public UserRepository(IDbConnection dbConnection, ISqlProvider sql)
+        AppSettings appSettings;
+        public UserRepository(IDbConnection dbConnection, ISqlProvider sql, IConfiguration configuration)
         {
             if (dbConnection is null) throw new ArgumentNullException(nameof(dbConnection));
             if (sql is null) throw new ArgumentNullException(nameof(sql));
+            //if (options is null) throw new ArgumentNullException(nameof(options));
             _dbConnection = dbConnection;
             _sql = sql;
+            var section = configuration.GetSection("Configuration");
+            var con = section.GetValue<string>("DbConnection");
+            //appSettings = section.Get<AppSettings>();
+            _dbConnection.ConnectionString = con;
             IsUserInDbSql = _sql.GetSql("User.IsInDb");
             GetUserByExternalIdSql = _sql.GetSql("User.GetByExternalId");
             RolePermissionsSql = _sql.GetSql("User.RolePermissions");
@@ -41,10 +49,13 @@ namespace CyborgianStates.Repositories
 
         public async Task<bool> IsAllowedAsync(string permissionType, ulong userId)
         {
-            if (permissionType is null || !string.IsNullOrWhiteSpace(permissionType))
+            if (string.IsNullOrWhiteSpace(permissionType))
             {
                 throw new ArgumentNullException(nameof(permissionType), "The permissionType can't be empty.");
             }
+            
+            //if (appSettings.ExternalAdminUserId == userId) return true;
+            
             IEnumerable<dynamic> res1 = await _dbConnection.QueryAsync(RolePermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
             IEnumerable<dynamic> res2 = await _dbConnection.QueryAsync(UserPermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
             var perms = res1.Select<dynamic, string>(r => r.Name).ToHashSet();
@@ -81,7 +92,7 @@ namespace CyborgianStates.Repositories
 
         public async Task<bool> IsUserInDbAsync(ulong userId)
         {
-            return await _dbConnection.QueryFirstOrDefaultAsync(IsUserInDbSql, new { DiscordUserId = userId }).ConfigureAwait(false) != null;
+            return await _dbConnection.QueryFirstOrDefaultAsync(IsUserInDbSql, new { ExternalUserId = userId }).ConfigureAwait(false) != null;
         }
 
         public async Task RemoveUserFromDbAsync(User user)

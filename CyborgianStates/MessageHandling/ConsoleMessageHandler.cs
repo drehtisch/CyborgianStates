@@ -33,7 +33,7 @@ namespace CyborgianStates.MessageHandling
                 var input = _input.GetInput();
                 if (!string.IsNullOrWhiteSpace(input))
                 {
-                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(new Message(0, input, new ConsoleMessageChannel(true))));
+                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(new Message(1, input, new ConsoleMessageChannel(true))));
                 }
                 Task.Delay(50).Wait();
             }

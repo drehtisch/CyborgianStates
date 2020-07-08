@@ -5,6 +5,7 @@ using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SQLitePCL;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -38,23 +39,30 @@ namespace CyborgianStates.Services
         {
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             CommandHandler.Register(new CommandDefinition(typeof(NationStatsCommand), new List<string>() { "nation", "n" }));
-            _messageHandler.MessageReceived += async (s, e) => await ProgressMessage(e).ConfigureAwait(false);
+            _messageHandler.MessageReceived += async (s, e) => await ProcessMessage(e).ConfigureAwait(false);
             await _requestDispatcher.Register(DataSourceType.NationStatesAPI, _nationStatesApiQueue).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
-        private async Task ProgressMessage(MessageReceivedEventArgs e)
+        private async Task ProcessMessage(MessageReceivedEventArgs e)
         {
-            if (IsRunning)
+            try
             {
-                if (await IsRelevantAsync(e.Message).ConfigureAwait(false))
+                if (IsRunning)
                 {
-                    var result = await CommandHandler.Execute(e.Message).ConfigureAwait(false);
-                    if (result == null)
+                    if (await IsRelevantAsync(e.Message).ConfigureAwait(false))
                     {
-                        _logger.LogError($"Unknown command trigger {e.Message.Content}");
+                        var result = await CommandHandler.Execute(e.Message).ConfigureAwait(false);
+                        if (result == null)
+                        {
+                            _logger.LogError($"Unknown command trigger {e.Message.Content}");
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex,$"Unexpected error occured while Processing Message -> {e.Message}: ");
             }
         }
 
@@ -68,16 +76,14 @@ namespace CyborgianStates.Services
             if (AppSettings.Configuration == "development")
             {
                 return value &&
-                    (message.AuthorId == 0 || 
-                    await _userRepo.IsBotAdminAsync(message.AuthorId).ConfigureAwait(false) ||
-                    await _userRepo.IsAllowedAsync("ExecuteDevCommands", message.AuthorId).ConfigureAwait(false));
+                    (message.AuthorId == 0 ||
+                    await _userRepo.IsAllowedAsync("Commands.Preview.Execute", message.AuthorId).ConfigureAwait(false));
             }
             else
             {
                 return value &&
                     (message.AuthorId == 0 ||
-                    await _userRepo.IsBotAdminAsync(message.AuthorId).ConfigureAwait(false) ||
-                    await _userRepo.IsAllowedAsync("ExecuteCommands", message.AuthorId).ConfigureAwait(false));
+                    await _userRepo.IsAllowedAsync("Commands.Execute", message.AuthorId).ConfigureAwait(false));
             }
         }
 
