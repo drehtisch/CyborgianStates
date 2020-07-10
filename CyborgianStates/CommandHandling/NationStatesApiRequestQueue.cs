@@ -22,13 +22,16 @@ namespace CyborgianStates.CommandHandling
         }
         private Queue<Request> requestQueue = new Queue<Request>();
         private bool isRunning = false;
-        public Task Enqueue(Request request)
+
+        public int Size => requestQueue.Count;
+
+        public Task<int> Enqueue(Request request)
         {
             if (request is null) throw new ArgumentNullException(nameof(request));
             requestQueue.Enqueue(request);
             _logger.LogInformation($"Request '{request.Type}' has been queued. Queue Size: {requestQueue.Count}");
             Task.Run(() => Run());
-            return Task.CompletedTask;
+            return Task.FromResult(Size);
         }
 
         private async Task Run()
@@ -36,6 +39,7 @@ namespace CyborgianStates.CommandHandling
             if (isRunning) return;
             while (requestQueue.Count > 0)
             {
+                isRunning = true;
                 var type = requestQueue.Peek().Type;
                 await _dataService.WaitForAction(type).ConfigureAwait(false);
                 await ExecuteRequest(requestQueue.Dequeue()).ConfigureAwait(false);
@@ -62,11 +66,6 @@ namespace CyborgianStates.CommandHandling
             {
                 _logger.LogError(e, $"A error occured while executing request '{request.Type}'");
                 request.Fail(e.Message);
-            }
-            catch (XmlException e)
-            {
-                _logger.LogError(e, $"A error occured while executing request '{request.Type}'");
-                request.Fail("Couldn't process malformed response.");
             }
             catch (Exception e)
             {

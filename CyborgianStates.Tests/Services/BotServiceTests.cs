@@ -12,6 +12,7 @@ using Xunit;
 
 namespace CyborgianStates.Tests.Services
 {
+
     public class BotServiceTests
     {
         Mock<IMessageHandler> msgHandlerMock;

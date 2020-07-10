@@ -97,10 +97,7 @@ namespace CyborgianStates
                 loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
                 loggingBuilder.SetMinimumLevel(LogLevel.Information);
                 loggingBuilder.AddConsole();
-                loggingBuilder.AddFile(options =>
-                {
-                    options = loggerOptions;
-                });
+                loggingBuilder.AddFile(options => options = loggerOptions);
             });
             serviceCollection.AddSingleton(typeof(ILoggerFactory), ApplicationLogging.Factory);
             serviceCollection.TryAddSingleton(typeof(ILogger<>), typeof(Logger<>));

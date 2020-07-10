@@ -25,17 +25,15 @@ namespace CyborgianStates.Repositories
         IDbConnection _dbConnection;
         ISqlProvider _sql;
         AppSettings appSettings;
-        public UserRepository(IDbConnection dbConnection, ISqlProvider sql, IConfiguration configuration)
+        public UserRepository(IDbConnection dbConnection, ISqlProvider sql, IOptions<AppSettings> options)
         {
             if (dbConnection is null) throw new ArgumentNullException(nameof(dbConnection));
             if (sql is null) throw new ArgumentNullException(nameof(sql));
-            //if (options is null) throw new ArgumentNullException(nameof(options));
+            if (options is null) throw new ArgumentNullException(nameof(options));
             _dbConnection = dbConnection;
             _sql = sql;
-            var section = configuration.GetSection("Configuration");
-            var con = section.GetValue<string>("DbConnection");
-            //appSettings = section.Get<AppSettings>();
-            _dbConnection.ConnectionString = con;
+            appSettings = options.Value;
+            _dbConnection.ConnectionString = appSettings.DbConnection;
             IsUserInDbSql = _sql.GetSql("User.IsInDb");
             GetUserByExternalIdSql = _sql.GetSql("User.GetByExternalId");
             RolePermissionsSql = _sql.GetSql("User.RolePermissions");
@@ -53,9 +51,9 @@ namespace CyborgianStates.Repositories
             {
                 throw new ArgumentNullException(nameof(permissionType), "The permissionType can't be empty.");
             }
-            
-            //if (appSettings.ExternalAdminUserId == userId) return true;
-            
+
+            if (appSettings.ExternalAdminUserId == userId) return true;
+
             IEnumerable<dynamic> res1 = await _dbConnection.QueryAsync(RolePermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
             IEnumerable<dynamic> res2 = await _dbConnection.QueryAsync(UserPermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
             var perms = res1.Select<dynamic, string>(r => r.Name).ToHashSet();

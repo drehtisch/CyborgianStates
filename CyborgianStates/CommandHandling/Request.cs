@@ -1,5 +1,6 @@
 ﻿using CyborgianStates.Enums;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,6 +35,7 @@ namespace CyborgianStates.Interfaces
             FailureReason = failReason;
             Status = RequestStatus.Failed;
         }
+
         public async Task WaitForResponse(CancellationToken cancellationToken)
         {
             while (Status == RequestStatus.Pending)

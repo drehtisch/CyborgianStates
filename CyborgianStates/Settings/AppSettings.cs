@@ -13,11 +13,11 @@ namespace CyborgianStates
         public const long SEND_RECRUITMENTTELEGRAM_INTERVAL = 1800000000; //3 m
         public const long REQUEST_NEW_NATIONS_INTERVAL = 18000000000; //30 m 
 
-        public ulong ExternalAdminUserId { get; internal set; }
-        public string Contact { get; internal set; }
-        public string DbConnection { get; internal set; }
-        public char SeperatorChar { get; internal set; }
-        public string LocaleString { get; internal set; }
+        public ulong ExternalAdminUserId { get; set; }
+        public string Contact { get; set; }
+        public string DbConnection { get; set; }
+        public char SeperatorChar { get; set; }
+        public string LocaleString { get; set; }
         public CultureInfo Locale
         {
             get
