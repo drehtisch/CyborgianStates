@@ -78,15 +78,18 @@ namespace CyborgianStates.Tests.CommandHandling
             using (var dummyResponseMessage = GetDummyResponse())
             {
                 Mock<IDataService> dataService = new Mock<IDataService>(MockBehavior.Strict);
-                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(Task.FromResult((object)dummyResponseMessage));
-                dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(Task.CompletedTask);
+                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => Task.FromResult((object)GetDummyResponse()));
+                dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(() => Task.Delay(10));
 
                 GetQueueAndRequest(dataService, out NationStatesApiRequestQueue queue, out Request request);
                 GetQueueAndRequest(dataService, out _, out Request request2);
                 await queue.Enqueue(request).ConfigureAwait(false);
-                var pos = await queue.Enqueue(request2).ConfigureAwait(false);
-
-                Assert.Equal(2, pos);
+                var position = await queue.Enqueue(request2).ConfigureAwait(false);
+                Assert.Equal(2, position);
+                await request.WaitForResponse(source.Token).ConfigureAwait(false);
+                Assert.Equal(RequestStatus.Success, request.Status);
+                await request2.WaitForResponse(source.Token).ConfigureAwait(false);
+                Assert.Equal(RequestStatus.Success, request2.Status);
             }
         }
         #region Helpers

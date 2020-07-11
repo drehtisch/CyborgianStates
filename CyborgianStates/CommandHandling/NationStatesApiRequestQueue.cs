@@ -25,13 +25,14 @@ namespace CyborgianStates.CommandHandling
 
         public int Size => requestQueue.Count;
 
-        public Task<int> Enqueue(Request request)
+        public async Task<int> Enqueue(Request request)
         {
             if (request is null) throw new ArgumentNullException(nameof(request));
             requestQueue.Enqueue(request);
+            var position = Size;
             _logger.LogInformation($"Request '{request.Type}' has been queued. Queue Size: {requestQueue.Count}");
-            Task.Run(() => Run());
-            return Task.FromResult(Size);
+            _ = Run();
+            return await Task.FromResult(position).ConfigureAwait(false);
         }
 
         private async Task Run()
