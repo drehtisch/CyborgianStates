@@ -32,15 +32,29 @@ namespace CyborgianStates
                 }
             }
         }
+
+        static internal bool IsTesting = false;
+        static string config = "development";
         public static string Configuration
         {
             get
             {
+                if (IsTesting)
+                {
+                    return config;
+                }
+                else
+                {
 #if RELEASE
                 return "production";
 #elif DEBUG
-                return "development";
+                 return "development";
+                }
 #endif
+            }
+            internal set
+            {
+                config = value;
             }
         }
     }

@@ -40,7 +40,7 @@ namespace CyborgianStates.Tests.CommandHandling
             using (var dummyResponseMessage = GetDummyResponse())
             {
                 Mock<IDataService> dataService = new Mock<IDataService>(MockBehavior.Strict);
-                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => throw new ApplicationException(""));
+                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => throw new ApplicationException("Unit Test: Forced Execution Failure"));
                 dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(Task.CompletedTask);
 
                 await ExecuteWithExpectedResult(dataService, RequestStatus.Failed).ConfigureAwait(false);
@@ -53,7 +53,7 @@ namespace CyborgianStates.Tests.CommandHandling
             using (var dummyResponseMessage = GetDummyResponse())
             {
                 Mock<IDataService> dataService = new Mock<IDataService>(MockBehavior.Strict);
-                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => throw new Exception("Unit Test: Force Execution Failure"));
+                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => throw new Exception("Unit Test: Forced Execution Failure"));
                 dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(Task.CompletedTask);
                 await ExecuteWithExpectedResult(dataService, RequestStatus.Failed).ConfigureAwait(false);
             }
