@@ -2,6 +2,7 @@
 using CyborgianStates.Models;
 using Dapper;
 using Dapper.Contrib.Extensions;
+using DataAbstractions.Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
@@ -22,18 +23,18 @@ namespace CyborgianStates.Repositories
         readonly string UserPermissionsSql;
         #endregion
 
-        IDbConnection _dbConnection;
+        IDataAccessor _dataAccessor;
         ISqlProvider _sql;
         AppSettings appSettings;
-        public UserRepository(IDbConnection dbConnection, ISqlProvider sql, IOptions<AppSettings> options)
+        public UserRepository(IDataAccessor dbConnection, ISqlProvider sql, IOptions<AppSettings> options)
         {
             if (dbConnection is null) throw new ArgumentNullException(nameof(dbConnection));
             if (sql is null) throw new ArgumentNullException(nameof(sql));
             if (options is null) throw new ArgumentNullException(nameof(options));
-            _dbConnection = dbConnection;
+            _dataAccessor = dbConnection;
             _sql = sql;
             appSettings = options.Value;
-            _dbConnection.ConnectionString = appSettings.DbConnection;
+            _dataAccessor.ConnectionString = appSettings.DbConnection;
             IsUserInDbSql = _sql.GetSql("User.IsInDb");
             GetUserByExternalIdSql = _sql.GetSql("User.GetByExternalId");
             RolePermissionsSql = _sql.GetSql("User.RolePermissions");
@@ -42,7 +43,7 @@ namespace CyborgianStates.Repositories
 
         public async Task AddUserToDbAsync(ulong userId)
         {
-            await _dbConnection.InsertAsync(new User() { ExternalUserId = (long)userId }).ConfigureAwait(false);
+            await _dataAccessor.InsertAsync(new User() { ExternalUserId = (long)userId }).ConfigureAwait(false);
         }
 
         public async Task<bool> IsAllowedAsync(string permissionType, ulong userId)
@@ -54,8 +55,8 @@ namespace CyborgianStates.Repositories
 
             if (appSettings.ExternalAdminUserId == userId) return true;
 
-            IEnumerable<dynamic> res1 = await _dbConnection.QueryAsync(RolePermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
-            IEnumerable<dynamic> res2 = await _dbConnection.QueryAsync(UserPermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
+            IEnumerable<dynamic> res1 = await _dataAccessor.QueryAsync(RolePermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
+            IEnumerable<dynamic> res2 = await _dataAccessor.QueryAsync(UserPermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
             var perms = res1.Select<dynamic, string>(r => r.Name).ToHashSet();
             perms.UnionWith(res2.Select<dynamic, string>(r => r.Name));
             perms = perms.Distinct().ToHashSet();
@@ -90,22 +91,22 @@ namespace CyborgianStates.Repositories
 
         public async Task<bool> IsUserInDbAsync(ulong userId)
         {
-            return await _dbConnection.QueryFirstOrDefaultAsync(IsUserInDbSql, new { ExternalUserId = userId }).ConfigureAwait(false) != null;
+            return await _dataAccessor.QueryFirstOrDefaultAsync(IsUserInDbSql, new { ExternalUserId = userId }).ConfigureAwait(false) != null;
         }
 
         public async Task RemoveUserFromDbAsync(User user)
         {
-            await _dbConnection.DeleteAsync(user).ConfigureAwait(false);
+            await _dataAccessor.DeleteAsync(user).ConfigureAwait(false);
         }
 
         public async Task<User> GetUserByExternalUserIdAsync(ulong externalUserId)
         {
-            return await _dbConnection.QueryFirstOrDefaultAsync<User>(GetUserByExternalIdSql, new { ExternalUserId = externalUserId }).ConfigureAwait(false);
+            return await _dataAccessor.QueryFirstOrDefaultAsync<User>(GetUserByExternalIdSql, new { ExternalUserId = externalUserId }).ConfigureAwait(false);
         }
 
         public async Task<User> GetUserByIdAsync(ulong userId)
         {
-            return await _dbConnection.GetAsync<User>(userId).ConfigureAwait(false);
+            return await _dataAccessor.GetAsync<User>(userId).ConfigureAwait(false);
         }
     }
 }

@@ -14,6 +14,8 @@ using System.Data;
 using Microsoft.Data.Sqlite;
 using CyborgianStates.Repositories;
 using CyborgianStates.Data;
+using DataAbstractions.Dapper;
+using System.Data.Common;
 
 namespace CyborgianStates
 {
@@ -85,7 +87,8 @@ namespace CyborgianStates
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
             serviceCollection.AddSingleton<IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();
-            serviceCollection.AddSingleton<IDbConnection, SqliteConnection>();
+            serviceCollection.AddSingleton<DbConnection, SqliteConnection>();
+            serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
             serviceCollection.AddSingleton<IUserRepository, UserRepository>();
             serviceCollection.AddSingleton<ISqlProvider, SqliteSqlProvider>();
         }
