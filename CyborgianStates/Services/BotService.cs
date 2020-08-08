@@ -16,7 +16,6 @@ namespace CyborgianStates.Services
         readonly ILogger _logger;
         readonly IUserRepository _userRepo;
         readonly IRequestDispatcher _requestDispatcher;
-        readonly NationStatesApiRequestQueue _nationStatesApiQueue;
         public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository)
         {
             if (messageHandler is null) throw new ArgumentNullException(nameof(messageHandler));
@@ -31,10 +30,17 @@ namespace CyborgianStates.Services
 
         public async Task InitAsync()
         {
-            RegisterCommands();
+            await Register().ConfigureAwait(false);
             _messageHandler.MessageReceived += async (s, e) => await ProcessMessage(e).ConfigureAwait(false);
-            await _requestDispatcher.Register(DataSourceType.NationStatesAPI, _nationStatesApiQueue).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
+        }
+
+        private async Task Register()
+        {
+            RegisterCommands();
+            var dataService = new NationStatesApiDataService(Program.ServiceProvider.GetService(typeof(IHttpDataService)) as IHttpDataService);
+            var queue = new NationStatesApiRequestQueue(dataService);
+            await _requestDispatcher.Register(DataSourceType.NationStatesAPI, queue).ConfigureAwait(false);
         }
 
         private static void RegisterCommands()

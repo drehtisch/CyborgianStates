@@ -46,7 +46,7 @@ namespace CyborgianStates.Interfaces
                 }
                 else
                 {
-                    await Task.Delay(500).ConfigureAwait(false);
+                    await Task.Delay(50).ConfigureAwait(false);
                 }
             }
         }
