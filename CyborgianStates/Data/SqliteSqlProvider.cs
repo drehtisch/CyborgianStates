@@ -33,11 +33,7 @@ namespace CyborgianStates.Data
 	                   Permission p
 	                JOIN UserPermission up ON up.PermissionId = p.Id
 	                JOIN User u on u.Id = up.UserId
-                    WHERE u.ExternalUserId = @ExternalUserId",
-                ["Seeding.CheckRole"] = "SELECT 1 FROM Role as r WHERE r.Name = @RoleName",
-                ["Seeding.CheckPermission"] = "SELECT 1 FROM Permission as p WHERE p.Name = @PermName",
-                ["Seeding.CheckStatusName"] = "SELECT count(*) as Count FROM StatusNames",
-                ["Seeding.CheckTables"] = "SELECT tbl_name as Name FROM sqlite_master WHERE type=\"table\"",
+                    WHERE u.ExternalUserId = @ExternalUserId"
             };
         }
         public string GetSql(string key)

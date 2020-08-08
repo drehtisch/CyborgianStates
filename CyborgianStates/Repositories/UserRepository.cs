@@ -55,8 +55,8 @@ namespace CyborgianStates.Repositories
 
             if (appSettings.ExternalAdminUserId == userId) return true;
 
-            IEnumerable<dynamic> res1 = await _dataAccessor.QueryAsync(RolePermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
-            IEnumerable<dynamic> res2 = await _dataAccessor.QueryAsync(UserPermissionsSql, new { ExternalUserId = userId }).ConfigureAwait(false);
+            IEnumerable<dynamic> res1 = await _dataAccessor.QueryAsync(RolePermissionsSql, new { ExternalUserId = userId }, null, null, null).ConfigureAwait(false);
+            IEnumerable<dynamic> res2 = await _dataAccessor.QueryAsync(UserPermissionsSql, new { ExternalUserId = userId }, null, null, null).ConfigureAwait(false);
             var perms = res1.Select<dynamic, string>(r => r.Name).ToHashSet();
             perms.UnionWith(res2.Select<dynamic, string>(r => r.Name));
             perms = perms.Distinct().ToHashSet();
