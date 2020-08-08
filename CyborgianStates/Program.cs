@@ -33,8 +33,7 @@ namespace CyborgianStates
             try
             {
                 var serviceCollection = new ServiceCollection();
-                ConfigureServices(serviceCollection);
-                ServiceProvider = serviceCollection.BuildServiceProvider();
+                ServiceProvider = ConfigureServices();
                 await Launcher.RunAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -65,9 +64,9 @@ namespace CyborgianStates
             messageHandler = handler;
         }
 
-        private static void ConfigureServices(ServiceCollection serviceCollection)
+        public static IServiceProvider ConfigureServices()
         {
-
+            ServiceCollection serviceCollection = new ServiceCollection();
             string configurationName = "production";
 #if DEBUG
             configurationName = "development";
@@ -91,6 +90,7 @@ namespace CyborgianStates
             serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
             serviceCollection.AddSingleton<IUserRepository, UserRepository>();
             serviceCollection.AddSingleton<ISqlProvider, SqliteSqlProvider>();
+            return serviceCollection.BuildServiceProvider();
         }
 
         private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration, FileLoggerOptions loggerOptions)

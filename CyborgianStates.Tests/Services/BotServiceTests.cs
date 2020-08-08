@@ -39,6 +39,7 @@ namespace CyborgianStates.Tests.Services
         [Fact]
         public async Task TestInitRunAndShutDownBotService()
         {
+            Program.ServiceProvider = Program.ConfigureServices();
             var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
@@ -69,8 +70,6 @@ namespace CyborgianStates.Tests.Services
 
             bool isPublic = false;
             CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, "");
-
-
 
             msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<bool>(), It.IsAny<CommandResponse>()))
                 .Callback<bool, CommandResponse>((b, cr) =>
@@ -107,6 +106,7 @@ namespace CyborgianStates.Tests.Services
         [Fact]
         public async Task TestIsRelevant()
         {
+            Program.ServiceProvider = Program.ConfigureServices();
             userRepositoryMock.Setup(u => u.IsUserInDbAsync(It.IsAny<ulong>())).Returns(() => Task.FromResult(false));
             userRepositoryMock.Setup(u => u.AddUserToDbAsync(It.IsAny<ulong>())).Returns(() => Task.CompletedTask);
             userRepositoryMock.Setup(u => u.IsAllowedAsync(It.IsAny<string>(), It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
