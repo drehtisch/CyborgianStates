@@ -23,9 +23,9 @@ namespace CyborgianStates.Repositories
         readonly string UserPermissionsSql;
         #endregion
 
-        IDataAccessor _dataAccessor;
-        ISqlProvider _sql;
-        AppSettings appSettings;
+        readonly IDataAccessor _dataAccessor;
+        readonly ISqlProvider _sql;
+        readonly AppSettings appSettings;
         public UserRepository(IDataAccessor dbConnection, ISqlProvider sql, IOptions<AppSettings> options)
         {
             if (dbConnection is null) throw new ArgumentNullException(nameof(dbConnection));
@@ -91,7 +91,7 @@ namespace CyborgianStates.Repositories
 
         public async Task<bool> IsUserInDbAsync(ulong userId)
         {
-            return await _dataAccessor.QueryFirstOrDefaultAsync(IsUserInDbSql, new { ExternalUserId = userId }).ConfigureAwait(false) != null;
+            return await _dataAccessor.QueryFirstOrDefaultAsync(IsUserInDbSql, new { ExternalUserId = userId }, null, null, null).ConfigureAwait(false) != null;
         }
 
         public async Task RemoveUserFromDbAsync(User user)

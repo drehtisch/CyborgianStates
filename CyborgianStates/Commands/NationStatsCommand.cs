@@ -16,10 +16,10 @@ namespace CyborgianStates.Commands
 {
     public class NationStatsCommand : ICommand
     {
-        ILogger logger;
-        IRequestDispatcher _dispatcher;
+        readonly ILogger logger;
+        readonly IRequestDispatcher _dispatcher;
         CancellationToken token;
-        AppSettings _config;
+        readonly AppSettings _config;
         public NationStatsCommand()
         {
             logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));

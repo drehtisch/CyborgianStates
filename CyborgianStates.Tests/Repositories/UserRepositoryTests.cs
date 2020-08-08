@@ -140,6 +140,17 @@ namespace CyborgianStates.Tests.Repositories
             var res = await PermissionTest("Commands.Execute", Enumerable.Empty<dynamic>(), rolePermissions).ConfigureAwait(false);
             Assert.False(res);
         }
+        [Fact]
+        public async Task TestIsUserInDb()
+        {
+            var userInDbSql = sqlProvider.GetSql("User.IsInDb");
+            var user = new ExpandoObject();
+            dataAccessorMock
+                .Setup(db => db.QueryFirstOrDefaultAsync(userInDbSql, It.IsAny<object>(), null, null, null))
+                .Returns(Task.FromResult(user as object));
+            var userRepo = new UserRepository(dataAccessorMock.Object, sqlProvider, appSettingsMock.Object);
+            await userRepo.IsUserInDbAsync(1).ConfigureAwait(false);
+        }
 
         private async Task<bool> PermissionTest(string searchedPermission, IEnumerable<dynamic> userPermissions, IEnumerable<dynamic> rolePermissions)
         {

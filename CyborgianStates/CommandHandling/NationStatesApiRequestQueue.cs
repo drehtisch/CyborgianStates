@@ -13,14 +13,14 @@ namespace CyborgianStates.CommandHandling
 {
     public class NationStatesApiRequestQueue : IRequestQueue
     {
-        IDataService _dataService;
-        ILogger _logger;
+        readonly IDataService _dataService;
+        readonly ILogger _logger;
         public NationStatesApiRequestQueue(IDataService dataService)
         {
             _dataService = dataService;
             _logger = ApplicationLogging.CreateLogger(typeof(NationStatesApiRequestQueue));
         }
-        private Queue<Request> requestQueue = new Queue<Request>();
+        private readonly Queue<Request> requestQueue = new Queue<Request>();
         private bool isRunning = false;
 
         public int Size => requestQueue.Count;

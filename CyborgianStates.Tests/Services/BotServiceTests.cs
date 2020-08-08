@@ -51,6 +51,8 @@ namespace CyborgianStates.Tests.Services
         public async Task TestStartupProgressMessageAndShutDown()
         {
             userRepositoryMock.Setup(u => u.IsUserInDbAsync(It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
+            userRepositoryMock.Setup(u => u.AddUserToDbAsync(It.IsAny<ulong>())).Returns(() => Task.CompletedTask);
+            userRepositoryMock.Setup(u => u.IsAllowedAsync(It.IsAny<string>(), It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
 
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
@@ -106,7 +108,8 @@ namespace CyborgianStates.Tests.Services
         public async Task TestIsRelevant()
         {
             userRepositoryMock.Setup(u => u.IsUserInDbAsync(It.IsAny<ulong>())).Returns(() => Task.FromResult(false));
-            userRepositoryMock.Setup(u => u.AddUserToDbAsync(It.IsAny<ulong>())).Returns(() => throw new Exception("Unit Test: Forced Failure."));
+            userRepositoryMock.Setup(u => u.AddUserToDbAsync(It.IsAny<ulong>())).Returns(() => Task.CompletedTask);
+            userRepositoryMock.Setup(u => u.IsAllowedAsync(It.IsAny<string>(), It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
             msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<bool>(), It.IsAny<CommandResponse>())).Returns(Task.CompletedTask);
 
             Message message = new Message(0, "test", msgChannelMock.Object);
