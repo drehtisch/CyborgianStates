@@ -16,10 +16,10 @@ namespace CyborgianStates.Commands
 {
     public class NationStatsCommand : ICommand
     {
-        ILogger logger;
-        IRequestDispatcher _dispatcher;
+        readonly ILogger logger;
+        readonly IRequestDispatcher _dispatcher;
         CancellationToken token;
-        AppSettings _config;
+        readonly AppSettings _config;
         public NationStatsCommand()
         {
             logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));
@@ -144,7 +144,7 @@ namespace CyborgianStates.Commands
             }
         }
 
-        private async Task<CommandResponse> FailCommand(IMessageChannel channel, string reason)
+        private static async Task<CommandResponse> FailCommand(IMessageChannel channel, string reason)
         {
             CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, reason);
             await channel.WriteToAsync(channel.IsPrivate, commandResponse).ConfigureAwait(false);

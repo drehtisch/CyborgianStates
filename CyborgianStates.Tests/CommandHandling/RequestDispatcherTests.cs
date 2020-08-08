@@ -15,7 +15,7 @@ namespace CyborgianStates.Tests.CommandHandling
         {
             RequestDispatcher dispatcher = new RequestDispatcher();
             var requestQueue = new Mock<IRequestQueue>(MockBehavior.Strict);
-            requestQueue.Setup(r => r.Enqueue(It.IsAny<Request>())).Returns(Task.CompletedTask);
+            requestQueue.Setup(r => r.Enqueue(It.IsAny<Request>())).Returns(Task.FromResult(1));
             await dispatcher.Register(DataSourceType.NationStatesAPI, requestQueue.Object).ConfigureAwait(false);
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
             await dispatcher.Dispatch(request).ConfigureAwait(false);

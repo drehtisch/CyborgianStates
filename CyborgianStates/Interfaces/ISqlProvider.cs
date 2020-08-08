@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 namespace CyborgianStates.Interfaces
 {
-    public interface IRequestQueue
+    public interface ISqlProvider
     {
-        Task<int> Enqueue(Request request);
-        int Size { get; }
+        string GetSql(string key);
     }
 }

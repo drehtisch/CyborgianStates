@@ -5,8 +5,8 @@ using System.Text;
 
 namespace CyborgianStates.Models
 {
-    [Table("Permission")]
-    public class Permission
+    [Table("Role")]
+    public class Role
     {
         [Key]
         public long Id { get; set; }

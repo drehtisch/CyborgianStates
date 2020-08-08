@@ -17,7 +17,7 @@ namespace CyborgianStates.Tests
     public class MiscTests
     {
         [Fact]
-        public void TestMain()
+        public async Task TestMain()
         {
             Mock<ILauncher> mock = new Mock<ILauncher>(MockBehavior.Strict);
             mock.SetupGet(l => l.IsRunning).Returns(true);
@@ -30,10 +30,28 @@ namespace CyborgianStates.Tests
             Assert.Throws<ArgumentNullException>(() => Program.SetMessageHandler(null));
             Program.SetUserInput(userInput);
             Program.SetMessageHandler(messageHandler);
-            Program.Main();
+            await Program.Main().ConfigureAwait(false);
             mock.Verify(l => l.RunAsync(), Times.Once);
             Assert.True(launcher.IsRunning);
         }
+
+        [Fact]
+        public async Task TestMainWithLauncherFailure()
+        {
+            Mock<ILauncher> mock = new Mock<ILauncher>(MockBehavior.Strict);
+            mock.SetupGet(l => l.IsRunning).Returns(true);
+            mock.Setup(m => m.RunAsync()).Returns(() => throw new Exception("Unit Test: Forced Launcher Failure"));
+            ILauncher launcher = mock.Object;
+            Program.SetLauncher(launcher);
+            IMessageHandler messageHandler = new Mock<IMessageHandler>(MockBehavior.Strict).Object;
+            IUserInput userInput = new Mock<IUserInput>(MockBehavior.Strict).Object;
+            Program.SetUserInput(userInput);
+            Program.SetMessageHandler(messageHandler);
+            await Program.Main().ConfigureAwait(false);
+            mock.Verify(l => l.RunAsync(), Times.Once);
+            Assert.True(launcher.IsRunning);
+        }
+
         [Fact]
         public async Task TestLauncher()
         {
@@ -45,8 +63,8 @@ namespace CyborgianStates.Tests
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler.Object);
             serviceCollection.AddSingleton(typeof(IBotService), botService.Object);
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
-            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
             Launcher launcher = new Launcher();
+            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
             await launcher.RunAsync().ConfigureAwait(false);
             Assert.True(launcher.IsRunning);
             botService.Verify(m => m.RunAsync(), Times.Once);

@@ -19,8 +19,8 @@ namespace CyborgianStates.Services
         public const long REQUEST_REGION_NATIONS_INTERVAL = 432000000000; //12 h 432000000000
         public const long SEND_RECRUITMENTTELEGRAM_INTERVAL = 1800000000; //3 m 1800000000
 
-        IHttpDataService _dataService;
-        ILogger _logger;
+        readonly IHttpDataService _dataService;
+        readonly ILogger _logger;
 
         DateTime LastAPIRequest;
         //DateTime LastTelegramSending;
@@ -39,7 +39,7 @@ namespace CyborgianStates.Services
             }
             else
             {
-                _logger.LogCritical($"Unrecognized RequestType '{requestType.ToString()}'");
+                _logger.LogCritical($"Unrecognized RequestType '{requestType}'");
                 return Task.FromResult(false);
             }
         }
@@ -93,6 +93,7 @@ namespace CyborgianStates.Services
             {
                 case RequestType.GetBasicNationStats:
                     return await GetNationStatsAsync(request.Params["nationName"].ToString(), request.EventId).ConfigureAwait(false);
+                case RequestType.UnitTest:
                 default:
                     throw new InvalidOperationException($"Unknown request type: {request.Type}");
             }

@@ -1,16 +1,16 @@
-﻿using MongoDB.Bson;
+﻿using Dapper.Contrib.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace CyborgianStates.Models
 {
+
+    [Table("User")]
     public class User
     {
-        public ObjectId Id { get; set; }
-        public ulong DiscordUserId { get; set; }
-        public List<ObjectId> Nations { get; set; } = new List<ObjectId>();
-        public List<Permission> Permissions { get; set; } = new List<Permission>();
-        public List<ObjectId> Roles { get; set; } = new List<ObjectId>();
+        [Key]
+        public long Id { get; set; }
+        public long ExternalUserId { get; set; }
     }
 }

@@ -10,6 +10,12 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using CyborgianStates.CommandHandling;
 using CyborgianStates.Services;
 using System.Threading.Tasks;
+using System.Data;
+using Microsoft.Data.Sqlite;
+using CyborgianStates.Repositories;
+using CyborgianStates.Data;
+using DataAbstractions.Dapper;
+using System.Data.Common;
 
 namespace CyborgianStates
 {
@@ -67,23 +73,35 @@ namespace CyborgianStates
             configurationName = "development";
 #endif
             IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile($"appsettings.{configurationName}.json", false, true)
                 .Build();
             serviceCollection.AddOptions();
             serviceCollection.Configure<AppSettings>(configuration.GetSection("Configuration"));
             var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
-            ConfigureLogging(serviceCollection);
+            ConfigureLogging(serviceCollection, configuration, loggeroptions);
             // add services
+            serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
             serviceCollection.AddSingleton(typeof(IUserInput), userInput);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
             serviceCollection.AddSingleton<IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();
+            serviceCollection.AddSingleton<DbConnection, SqliteConnection>();
+            serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
+            serviceCollection.AddSingleton<IUserRepository, UserRepository>();
+            serviceCollection.AddSingleton<ISqlProvider, SqliteSqlProvider>();
         }
 
-        private static void ConfigureLogging(ServiceCollection serviceCollection)
+        private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration, FileLoggerOptions loggerOptions)
         {
+            serviceCollection.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
+                loggingBuilder.SetMinimumLevel(LogLevel.Information);
+                loggingBuilder.AddConsole();
+                loggingBuilder.AddFile(options => options = loggerOptions);
+            });
             serviceCollection.AddSingleton(typeof(ILoggerFactory), ApplicationLogging.Factory);
             serviceCollection.TryAddSingleton(typeof(ILogger<>), typeof(Logger<>));
         }
