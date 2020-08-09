@@ -1,6 +1,5 @@
 ﻿using CyborgianStates.Enums;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,20 +15,23 @@ namespace CyborgianStates.Interfaces
             DataSourceType = dataSource;
             EventId = Helpers.GetEventIdByRequestType(type);
         }
+
+        public DataSourceType DataSourceType { get; }
         public EventId EventId { get; private set; }
+        public ResponseFormat ExpectedReponseFormat { get; }
+        public string FailureReason { get; private set; }
+        public Dictionary<string, object> Params { get; } = new Dictionary<string, object>();
+        public int Priority { get; set; }
+        public object Response { get; private set; }
         public RequestStatus Status { get; private set; }
         public RequestType Type { get; }
-        public Dictionary<string, object> Params { get; } = new Dictionary<string, object>();
-        public object Response { get; private set; }
-        public ResponseFormat ExpectedReponseFormat { get; }
-        public int Priority { get; set; }
-        public DataSourceType DataSourceType { get; }
-        public string FailureReason { get; private set; }
+
         public void Complete(object response)
         {
             Response = response;
             Status = RequestStatus.Success;
         }
+
         public void Fail(string failReason)
         {
             FailureReason = failReason;

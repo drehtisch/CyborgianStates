@@ -1,8 +1,8 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("CyborgianStates.Tests")]
+
 namespace CyborgianStates
 {
     public class AppSettings
@@ -11,13 +11,14 @@ namespace CyborgianStates
         public const int API_VERSION = 10;
         public const long API_REQUEST_INTERVAL = 6000000; //0,6 s
         public const long SEND_RECRUITMENTTELEGRAM_INTERVAL = 1800000000; //3 m
-        public const long REQUEST_NEW_NATIONS_INTERVAL = 18000000000; //30 m 
+        public const long REQUEST_NEW_NATIONS_INTERVAL = 18000000000; //30 m
 
         public ulong ExternalAdminUserId { get; set; }
         public string Contact { get; set; }
         public string DbConnection { get; set; }
         public char SeperatorChar { get; set; }
         public string LocaleString { get; set; }
+
         public CultureInfo Locale
         {
             get
@@ -34,7 +35,8 @@ namespace CyborgianStates
         }
 
         static internal bool IsTesting = false;
-        static string config = "development";
+        private static string config = "development";
+
         public static string Configuration
         {
             get
@@ -46,9 +48,9 @@ namespace CyborgianStates
                 else
                 {
 #if RELEASE
-                return "production";
+                    return "production";
 #elif DEBUG
-                 return "development";
+                    return "development";
                 }
 #endif
             }

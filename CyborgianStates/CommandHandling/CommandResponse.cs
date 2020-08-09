@@ -1,9 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CyborgianStates.CommandHandling
+﻿namespace CyborgianStates.CommandHandling
 {
+    public enum CommandStatus
+    {
+        Success,
+        Error
+    }
+
     public class CommandResponse
     {
         public CommandResponse(CommandStatus status, string content)
@@ -11,13 +13,8 @@ namespace CyborgianStates.CommandHandling
             Status = status;
             Content = content;
         }
-        public CommandStatus Status { get; }
-        public string Content { get; }
-    }
 
-    public enum CommandStatus
-    {
-        Success,
-        Error
+        public string Content { get; }
+        public CommandStatus Status { get; }
     }
 }

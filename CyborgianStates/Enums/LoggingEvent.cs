@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CyborgianStates.Enums
+﻿namespace CyborgianStates.Enums
 {
     public enum LoggingEvent
     {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 
 namespace CyborgianStates.CommandHandling
 {
@@ -12,7 +11,8 @@ namespace CyborgianStates.CommandHandling
             Trigger = new ReadOnlyCollection<string>(triggers);
             Type = type;
         }
-        public Type Type { get; }
+
         public ReadOnlyCollection<string> Trigger { get; }
+        public Type Type { get; }
     }
 }

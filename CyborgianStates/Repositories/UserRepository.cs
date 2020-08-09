@@ -1,15 +1,11 @@
 ﻿using CyborgianStates.Interfaces;
 using CyborgianStates.Models;
-using Dapper;
-using Dapper.Contrib.Extensions;
 using DataAbstractions.Dapper;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.Repositories
@@ -17,15 +13,18 @@ namespace CyborgianStates.Repositories
     public class UserRepository : IUserRepository
     {
         #region SQLs
-        readonly string IsUserInDbSql;
-        readonly string GetUserByExternalIdSql;
-        readonly string RolePermissionsSql;
-        readonly string UserPermissionsSql;
-        #endregion
 
-        readonly IDataAccessor _dataAccessor;
-        readonly ISqlProvider _sql;
-        readonly AppSettings appSettings;
+        private readonly string GetUserByExternalIdSql;
+        private readonly string IsUserInDbSql;
+        private readonly string RolePermissionsSql;
+        private readonly string UserPermissionsSql;
+
+        #endregion SQLs
+
+        private readonly IDataAccessor _dataAccessor;
+        private readonly ISqlProvider _sql;
+        private readonly AppSettings appSettings;
+
         public UserRepository(IDataAccessor dbConnection, ISqlProvider sql, IOptions<AppSettings> options)
         {
             if (dbConnection is null) throw new ArgumentNullException(nameof(dbConnection));
@@ -44,6 +43,16 @@ namespace CyborgianStates.Repositories
         public async Task AddUserToDbAsync(ulong userId)
         {
             await _dataAccessor.InsertAsync(new User() { ExternalUserId = (long)userId }).ConfigureAwait(false);
+        }
+
+        public async Task<User> GetUserByExternalUserIdAsync(ulong externalUserId)
+        {
+            return await _dataAccessor.QueryFirstOrDefaultAsync<User>(GetUserByExternalIdSql, new { ExternalUserId = externalUserId }).ConfigureAwait(false);
+        }
+
+        public async Task<User> GetUserByIdAsync(ulong userId)
+        {
+            return await _dataAccessor.GetAsync<User>(userId).ConfigureAwait(false);
         }
 
         public async Task<bool> IsAllowedAsync(string permissionType, ulong userId)
@@ -97,16 +106,6 @@ namespace CyborgianStates.Repositories
         public async Task RemoveUserFromDbAsync(User user)
         {
             await _dataAccessor.DeleteAsync(user).ConfigureAwait(false);
-        }
-
-        public async Task<User> GetUserByExternalUserIdAsync(ulong externalUserId)
-        {
-            return await _dataAccessor.QueryFirstOrDefaultAsync<User>(GetUserByExternalIdSql, new { ExternalUserId = externalUserId }).ConfigureAwait(false);
-        }
-
-        public async Task<User> GetUserByIdAsync(ulong userId)
-        {
-            return await _dataAccessor.GetAsync<User>(userId).ConfigureAwait(false);
         }
     }
 }

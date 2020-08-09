@@ -1,29 +1,27 @@
-﻿using CyborgianStates.MessageHandling;
+﻿using CyborgianStates.CommandHandling;
+using CyborgianStates.Data;
 using CyborgianStates.Interfaces;
+using CyborgianStates.MessageHandling;
+using CyborgianStates.Repositories;
+using CyborgianStates.Services;
+using DataAbstractions.Dapper;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using NetEscapades.Extensions.Logging.RollingFile;
 using System;
-using System.IO;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using CyborgianStates.CommandHandling;
-using CyborgianStates.Services;
-using System.Threading.Tasks;
-using System.Data;
-using Microsoft.Data.Sqlite;
-using CyborgianStates.Repositories;
-using CyborgianStates.Data;
-using DataAbstractions.Dapper;
 using System.Data.Common;
+using System.Threading.Tasks;
 
 namespace CyborgianStates
 {
     public static class Program
     {
-        static ILauncher Launcher = new Launcher();
-        static IUserInput userInput = new ConsoleInput();
-        static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
+        private static ILauncher Launcher = new Launcher();
+        private static IUserInput userInput = new ConsoleInput();
+        private static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
 
         public static IServiceProvider ServiceProvider { get; set; }
 
@@ -41,6 +39,7 @@ namespace CyborgianStates
                 Console.Error.WriteLine($"A fatal error caused the bot to crash: {ex}");
             }
         }
+
         public static void SetLauncher(ILauncher launcher)
         {
             Launcher = launcher;

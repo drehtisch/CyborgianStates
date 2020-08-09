@@ -7,17 +7,18 @@ namespace CyborgianStates.MessageHandling
 {
     public class ConsoleMessageHandler : IMessageHandler
     {
-        IUserInput _input;
-        ILogger _logger;
+        private IUserInput _input;
+        private ILogger _logger;
+
         public ConsoleMessageHandler(IUserInput input)
         {
             _input = input;
             _logger = ApplicationLogging.CreateLogger(typeof(ConsoleMessageHandler));
         }
 
-        public bool IsRunning { get; private set; }
-
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+
+        public bool IsRunning { get; private set; }
 
         public Task InitAsync()
         {
@@ -39,6 +40,7 @@ namespace CyborgianStates.MessageHandling
             }
             return Task.CompletedTask;
         }
+
         public Task ShutdownAsync()
         {
             IsRunning = false;

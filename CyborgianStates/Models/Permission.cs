@@ -1,7 +1,4 @@
 ﻿using Dapper.Contrib.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CyborgianStates.Models
 {
@@ -10,6 +7,7 @@ namespace CyborgianStates.Models
     {
         [Key]
         public long Id { get; set; }
+
         public string Name { get; set; }
     }
 }

@@ -1,18 +1,20 @@
 ﻿using CyborgianStates.MessageHandling;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.Interfaces
 {
     public interface IMessageHandler
     {
-        bool IsRunning { get; }
-        Task InitAsync();
-        Task RunAsync();
-        Task ShutdownAsync();
         event EventHandler<MessageReceivedEventArgs> MessageReceived;
+
+        bool IsRunning { get; }
+
+        Task InitAsync();
+
+        Task RunAsync();
+
+        Task ShutdownAsync();
     }
 
     public class MessageReceivedEventArgs
@@ -21,6 +23,7 @@ namespace CyborgianStates.Interfaces
         {
             Message = message;
         }
+
         public Message Message { get; }
     }
 }

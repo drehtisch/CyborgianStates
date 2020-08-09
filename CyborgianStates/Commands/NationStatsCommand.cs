@@ -5,7 +5,6 @@ using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,10 +15,11 @@ namespace CyborgianStates.Commands
 {
     public class NationStatsCommand : ICommand
     {
-        readonly ILogger logger;
-        readonly IRequestDispatcher _dispatcher;
-        CancellationToken token;
-        readonly AppSettings _config;
+        private readonly AppSettings _config;
+        private readonly IRequestDispatcher _dispatcher;
+        private readonly ILogger logger;
+        private CancellationToken token;
+
         public NationStatsCommand()
         {
             logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));
@@ -74,6 +74,18 @@ namespace CyborgianStates.Commands
                 logger.LogError(e.ToString());
                 return await FailCommand(message.Channel, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
             }
+        }
+
+        public void SetCancellationToken(CancellationToken cancellationToken)
+        {
+            token = cancellationToken;
+        }
+
+        private static async Task<CommandResponse> FailCommand(IMessageChannel channel, string reason)
+        {
+            CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, reason);
+            await channel.WriteToAsync(channel.IsPrivate, commandResponse).ConfigureAwait(false);
+            return commandResponse;
         }
 
         private CommandResponse ParseResponse(Request request)
@@ -142,18 +154,6 @@ namespace CyborgianStates.Commands
             {
                 throw new InvalidOperationException("Expected Response to be XmlDocument but wasn't.");
             }
-        }
-
-        private static async Task<CommandResponse> FailCommand(IMessageChannel channel, string reason)
-        {
-            CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, reason);
-            await channel.WriteToAsync(channel.IsPrivate, commandResponse).ConfigureAwait(false);
-            return commandResponse;
-        }
-
-        public void SetCancellationToken(CancellationToken cancellationToken)
-        {
-            token = cancellationToken;
         }
     }
 }

@@ -2,18 +2,18 @@
 using CyborgianStates.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.CommandHandling
 {
     public class RequestDispatcher : IRequestDispatcher
     {
-        readonly Dictionary<DataSourceType, IRequestQueue> Queues = new Dictionary<DataSourceType, IRequestQueue>();
+        private readonly Dictionary<DataSourceType, IRequestQueue> Queues = new Dictionary<DataSourceType, IRequestQueue>();
+
         public async Task Dispatch(Request request)
         {
             if (request is null) throw new ArgumentNullException(nameof(request));
-                
+
             if (Queues.ContainsKey(request.DataSourceType))
             {
                 var queue = Queues[request.DataSourceType];

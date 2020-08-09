@@ -3,7 +3,6 @@ using CyborgianStates.MessageHandling;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,9 +11,37 @@ namespace CyborgianStates.CommandHandling
     public static class CommandHandler
     {
         private static readonly List<CommandDefinition> definitions = new List<CommandDefinition>();
+        private static readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
         public static int Count { get => definitions.Count; }
 
-        private static readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+        public static void Cancel()
+        {
+            tokenSource.Cancel();
+        }
+
+        public static void Clear()
+        {
+            definitions.Clear();
+        }
+
+        public static async Task<CommandResponse> Execute(Message message)
+        {
+            if (message is null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+            string trigger = message.Content.Contains(' ', StringComparison.InvariantCulture) ? message.Content.Split(' ')[0] : message.Content;
+            ICommand command = await Resolve(trigger).ConfigureAwait(false);
+            if (command != null)
+            {
+                return await command.Execute(message).ConfigureAwait(false);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public static void Register(CommandDefinition definition)
         {
             if (definition == null)
@@ -49,34 +76,6 @@ namespace CyborgianStates.CommandHandling
             {
                 return await Task.FromResult<ICommand>(null).ConfigureAwait(false);
             }
-        }
-
-        public static async Task<CommandResponse> Execute(Message message)
-        {
-            if (message is null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
-            string trigger = message.Content.Contains(' ', StringComparison.InvariantCulture) ? message.Content.Split(' ')[0] : message.Content;
-            ICommand command = await Resolve(trigger).ConfigureAwait(false);
-            if (command != null)
-            {
-                return await command.Execute(message).ConfigureAwait(false);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public static void Clear()
-        {
-            definitions.Clear();
-        }
-
-        public static void Cancel()
-        {
-            tokenSource.Cancel();
         }
     }
 }

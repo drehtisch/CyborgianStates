@@ -9,6 +9,22 @@ namespace CyborgianStates.Tests.CommandHandling
     public class RequestTests
     {
         [Fact]
+        public async Task TestCancel()
+        {
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
+            Assert.True(request.Status == RequestStatus.Pending);
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(100).ConfigureAwait(false);
+                tokenSource.Cancel();
+            });
+            await request.WaitForResponse(tokenSource.Token).ConfigureAwait(false);
+            Assert.True(request.Status == RequestStatus.Canceled);
+            tokenSource.Dispose();
+        }
+
+        [Fact]
         public async Task TestComplete()
         {
             CancellationTokenSource tokenSource = new CancellationTokenSource();
@@ -43,22 +59,6 @@ namespace CyborgianStates.Tests.CommandHandling
             await request.WaitForResponse(tokenSource.Token).ConfigureAwait(false);
             Assert.True(request.Status == RequestStatus.Failed);
             Assert.True(request.FailureReason == "Failed !");
-            tokenSource.Dispose();
-        }
-
-        [Fact]
-        public async Task TestCancel()
-        {
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
-            var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
-            Assert.True(request.Status == RequestStatus.Pending);
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(100).ConfigureAwait(false);
-                tokenSource.Cancel();
-            });
-            await request.WaitForResponse(tokenSource.Token).ConfigureAwait(false);
-            Assert.True(request.Status == RequestStatus.Canceled);
             tokenSource.Dispose();
         }
     }

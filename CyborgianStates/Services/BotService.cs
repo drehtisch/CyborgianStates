@@ -12,10 +12,11 @@ namespace CyborgianStates.Services
 {
     public class BotService : IBotService
     {
-        readonly IMessageHandler _messageHandler;
-        readonly ILogger _logger;
-        readonly IUserRepository _userRepo;
-        readonly IRequestDispatcher _requestDispatcher;
+        private readonly ILogger _logger;
+        private readonly IMessageHandler _messageHandler;
+        private readonly IRequestDispatcher _requestDispatcher;
+        private readonly IUserRepository _userRepo;
+
         public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository)
         {
             if (messageHandler is null) throw new ArgumentNullException(nameof(messageHandler));
@@ -26,6 +27,7 @@ namespace CyborgianStates.Services
             _userRepo = userRepository;
             _logger = ApplicationLogging.CreateLogger(typeof(BotService));
         }
+
         public bool IsRunning { get; private set; }
 
         public async Task InitAsync()
@@ -35,40 +37,23 @@ namespace CyborgianStates.Services
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
-        private async Task Register()
+        public async Task RunAsync()
         {
-            RegisterCommands();
-            var dataService = new NationStatesApiDataService(Program.ServiceProvider.GetService(typeof(IHttpDataService)) as IHttpDataService);
-            var queue = new NationStatesApiRequestQueue(dataService);
-            await _requestDispatcher.Register(DataSourceType.NationStatesAPI, queue).ConfigureAwait(false);
+            IsRunning = true;
+            await _messageHandler.RunAsync().ConfigureAwait(false);
+        }
+
+        public async Task ShutdownAsync()
+        {
+            CommandHandler.Cancel();
+            await _messageHandler.ShutdownAsync().ConfigureAwait(false);
+            IsRunning = false;
         }
 
         private static void RegisterCommands()
         {
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             CommandHandler.Register(new CommandDefinition(typeof(NationStatsCommand), new List<string>() { "nation", "n" }));
-        }
-
-        private async Task ProcessMessage(MessageReceivedEventArgs e)
-        {
-            try
-            {
-                if (IsRunning)
-                {
-                    if (await IsRelevantAsync(e.Message).ConfigureAwait(false))
-                    {
-                        var result = await CommandHandler.Execute(e.Message).ConfigureAwait(false);
-                        if (result == null)
-                        {
-                            _logger.LogError($"Unknown command trigger {e.Message.Content}");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex,$"Unexpected error occured while Processing Message -> {e.Message}: ");
-            }
         }
 
         private async Task<bool> IsRelevantAsync(Message message)
@@ -93,17 +78,34 @@ namespace CyborgianStates.Services
             }
         }
 
-        public async Task RunAsync()
+        private async Task ProcessMessage(MessageReceivedEventArgs e)
         {
-            IsRunning = true;
-            await _messageHandler.RunAsync().ConfigureAwait(false);
+            try
+            {
+                if (IsRunning)
+                {
+                    if (await IsRelevantAsync(e.Message).ConfigureAwait(false))
+                    {
+                        var result = await CommandHandler.Execute(e.Message).ConfigureAwait(false);
+                        if (result == null)
+                        {
+                            _logger.LogError($"Unknown command trigger {e.Message.Content}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, $"Unexpected error occured while Processing Message -> {e.Message}: ");
+            }
         }
 
-        public async Task ShutdownAsync()
+        private async Task Register()
         {
-            CommandHandler.Cancel();
-            await _messageHandler.ShutdownAsync().ConfigureAwait(false);
-            IsRunning = false;
+            RegisterCommands();
+            var dataService = new NationStatesApiDataService(Program.ServiceProvider.GetService(typeof(IHttpDataService)) as IHttpDataService);
+            var queue = new NationStatesApiRequestQueue(dataService);
+            await _requestDispatcher.Register(DataSourceType.NationStatesAPI, queue).ConfigureAwait(false);
         }
     }
 }
