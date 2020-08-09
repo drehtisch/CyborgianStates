@@ -10,7 +10,7 @@ namespace CyborgianStates.Commands
 {
     public class PingCommand : ICommand
     {
-        private ILogger _logger;
+        private readonly ILogger _logger;
         private CancellationToken token;
 
         public PingCommand()

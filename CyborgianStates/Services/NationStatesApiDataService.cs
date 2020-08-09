@@ -23,8 +23,6 @@ namespace CyborgianStates.Services
         private readonly ILogger _logger;
 
         private DateTime lastAPIRequest;
-        //DateTime LastTelegramSending;
-        //DateTime LastNewNationsRequest;
 
         public NationStatesApiDataService(IHttpDataService dataService)
         {
