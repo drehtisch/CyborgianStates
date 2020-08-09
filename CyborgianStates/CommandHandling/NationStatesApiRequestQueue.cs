@@ -1,27 +1,26 @@
-﻿using CyborgianStates.Enums;
-using CyborgianStates.Interfaces;
-using CyborgianStates.Services;
+﻿using CyborgianStates.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace CyborgianStates.CommandHandling
 {
     public class NationStatesApiRequestQueue : IRequestQueue
     {
-        readonly IDataService _dataService;
-        readonly ILogger _logger;
+        private readonly IDataService _dataService;
+        private readonly ILogger _logger;
+
+        private readonly Queue<Request> requestQueue = new Queue<Request>();
+
+        private bool isRunning = false;
+
         public NationStatesApiRequestQueue(IDataService dataService)
         {
             _dataService = dataService;
             _logger = ApplicationLogging.CreateLogger(typeof(NationStatesApiRequestQueue));
         }
-        private readonly Queue<Request> requestQueue = new Queue<Request>();
-        private bool isRunning = false;
 
         public int Size => requestQueue.Count;
 
@@ -33,19 +32,6 @@ namespace CyborgianStates.CommandHandling
             _logger.LogDebug($"Request '{request.Type}' has been queued. Queue Size: {requestQueue.Count}");
             _ = Run();
             return await Task.FromResult(position).ConfigureAwait(false);
-        }
-
-        private async Task Run()
-        {
-            if (isRunning) return;
-            while (requestQueue.Count > 0)
-            {
-                isRunning = true;
-                var type = requestQueue.Peek().Type;
-                await _dataService.WaitForAction(type).ConfigureAwait(false);
-                await ExecuteRequest(requestQueue.Dequeue()).ConfigureAwait(false);
-            }
-            isRunning = false;
         }
 
         private async Task ExecuteRequest(Request request)
@@ -73,6 +59,19 @@ namespace CyborgianStates.CommandHandling
                 _logger.LogCritical(e, $"A error occured while executing request '{request.Type}'");
                 request.Fail("Something went wrong. See logs for details.");
             }
+        }
+
+        private async Task Run()
+        {
+            if (isRunning) return;
+            while (requestQueue.Count > 0)
+            {
+                isRunning = true;
+                var type = requestQueue.Peek().Type;
+                await _dataService.WaitForAction(type).ConfigureAwait(false);
+                await ExecuteRequest(requestQueue.Dequeue()).ConfigureAwait(false);
+            }
+            isRunning = false;
         }
     }
 }

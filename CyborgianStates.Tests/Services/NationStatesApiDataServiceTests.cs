@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -51,6 +50,7 @@ namespace CyborgianStates.Tests.Services
             res.Should().BeOfType<HttpResponseMessage>();
             (res as HttpResponseMessage).StatusCode.Should().Be(HttpStatusCode.OK);
         }
+
         [Fact]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "<Ausstehend>")]
         public async Task TestIsActionReady()
@@ -67,6 +67,7 @@ namespace CyborgianStates.Tests.Services
             res = await dataService.IsActionReady(RequestType.UnitTest).ConfigureAwait(false);
             res.Should().BeFalse();
         }
+
         [Fact]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "<Ausstehend>")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2008:Keine Tasks ohne Übergabe eines TaskSchedulers erstellen", Justification = "<Ausstehend>")]

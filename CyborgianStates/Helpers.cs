@@ -1,24 +1,12 @@
 ﻿using CyborgianStates.Enums;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 
 namespace CyborgianStates
 {
     public static class Helpers
     {
-        /// <summary>
-        /// Converts nation/region name to format that can be used on api calls
-        /// </summary>
-        /// <param name="text">The text to ensure format on</param>
-        /// <returns>Formated string</returns>
-        public static string ToID(string text)
-        {
-            return text?.Trim().ToLower(CultureInfo.InvariantCulture).Replace(' ', '_').Trim('@');
-        }
-
         /// <summary>
         /// Converts a API Id back to nation/region name
         /// </summary>
@@ -27,6 +15,18 @@ namespace CyborgianStates
         public static string FromID(string text)
         {
             return text?.Trim().ToLower(CultureInfo.InvariantCulture).Replace('_', ' ');
+        }
+
+        public static EventId GetEventIdByRequestType(RequestType requestType)
+        {
+            switch (requestType)
+            {
+                case RequestType.GetBasicNationStats:
+                    return GetEventIdByType(LoggingEvent.GetNationStats);
+
+                default:
+                    return new EventId(new Random().Next(), $"Unknown [{requestType.ToString()}]");
+            }
         }
 
         /// <summary>
@@ -39,15 +39,14 @@ namespace CyborgianStates
             return new EventId((int)loggingEvent, loggingEvent.ToString());
         }
 
-        public static EventId GetEventIdByRequestType(RequestType requestType)
+        /// <summary>
+        /// Converts nation/region name to format that can be used on api calls
+        /// </summary>
+        /// <param name="text">The text to ensure format on</param>
+        /// <returns>Formated string</returns>
+        public static string ToID(string text)
         {
-            switch (requestType)
-            {
-                case RequestType.GetBasicNationStats:
-                    return GetEventIdByType(LoggingEvent.GetNationStats);
-                default:
-                    return new EventId(new Random().Next(), $"Unknown [{requestType.ToString()}]");
-            }
+            return text?.Trim().ToLower(CultureInfo.InvariantCulture).Replace(' ', '_').Trim('@');
         }
     }
 }

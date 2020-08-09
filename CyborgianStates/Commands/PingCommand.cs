@@ -3,8 +3,6 @@ using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,12 +10,14 @@ namespace CyborgianStates.Commands
 {
     public class PingCommand : ICommand
     {
-        ILogger _logger;
-        CancellationToken token;
+        private ILogger _logger;
+        private CancellationToken token;
+
         public PingCommand()
         {
             _logger = ApplicationLogging.CreateLogger(typeof(PingCommand));
         }
+
         public async Task<CommandResponse> Execute(Message message)
         {
             if (message is null)

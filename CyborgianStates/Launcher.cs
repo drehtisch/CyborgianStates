@@ -1,14 +1,14 @@
 ﻿using CyborgianStates.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 using System.Threading.Tasks;
 
 namespace CyborgianStates
 {
     public class Launcher : ILauncher
     {
-        IBotService _botService;
+        private IBotService _botService;
         public bool IsRunning { get; private set; }
+
         public async Task RunAsync()
         {
             IsRunning = true;
