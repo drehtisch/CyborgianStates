@@ -19,9 +19,12 @@ namespace CyborgianStates.Services
 
         public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository)
         {
-            if (messageHandler is null) throw new ArgumentNullException(nameof(messageHandler));
-            if (requestDispatcher is null) throw new ArgumentNullException(nameof(requestDispatcher));
-            if (userRepository is null) throw new ArgumentNullException(nameof(requestDispatcher));
+            if (messageHandler is null)
+                throw new ArgumentNullException(nameof(messageHandler));
+            if (requestDispatcher is null)
+                throw new ArgumentNullException(nameof(requestDispatcher));
+            if (userRepository is null)
+                throw new ArgumentNullException(nameof(requestDispatcher));
             _messageHandler = messageHandler;
             _requestDispatcher = requestDispatcher;
             _userRepo = userRepository;
@@ -58,7 +61,8 @@ namespace CyborgianStates.Services
 
         private async Task<bool> IsRelevantAsync(Message message)
         {
-            if (message is null) throw new ArgumentNullException(nameof(message));
+            if (message is null)
+                throw new ArgumentNullException(nameof(message));
             if (message.AuthorId != 0 && !await _userRepo.IsUserInDbAsync(message.AuthorId).ConfigureAwait(false))
             {
                 await _userRepo.AddUserToDbAsync(message.AuthorId).ConfigureAwait(false);

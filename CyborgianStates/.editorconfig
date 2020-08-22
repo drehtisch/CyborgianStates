@@ -94,7 +94,7 @@ csharp_prefer_static_local_function = true:suggestion
 csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:silent
 
 # Einstellungen für Codeblöcke
-csharp_prefer_braces = true:suggestion
+csharp_prefer_braces = true:none
 csharp_prefer_simple_using_statement = false:suggestion
 
 # Einstellungen für Ausdrucksebene
@@ -114,12 +114,12 @@ csharp_using_directive_placement = outside_namespace:silent
 #### C#-Formatierungsregeln ####
 
 # Einstellungen für neue Zeilen
-csharp_new_line_before_catch = false
-csharp_new_line_before_else = false
-csharp_new_line_before_finally = false
+csharp_new_line_before_catch = true
+csharp_new_line_before_else = true
+csharp_new_line_before_finally = true
 csharp_new_line_before_members_in_anonymous_types = true
 csharp_new_line_before_members_in_object_initializers = true
-csharp_new_line_before_open_brace = accessors,anonymous_methods,properties
+csharp_new_line_before_open_brace = all
 csharp_new_line_between_query_expression_clauses = true
 
 # Einstellungen für Einrückung
@@ -192,10 +192,6 @@ dotnet_naming_symbols.readonly.applicable_kinds = namespace, property, field, ev
 dotnet_naming_symbols.readonly.applicable_accessibilities = *
 dotnet_naming_symbols.readonly.required_modifiers = readonly
 
-dotnet_naming_symbols.private.applicable_kinds = namespace, property, field, event, parameter, local, class, struct, interface, enum, delegate, method, local_function
-dotnet_naming_symbols.private.applicable_accessibilities = private
-dotnet_naming_symbols.private.required_modifiers = 
-
 # Benennungsstile
 
 dotnet_naming_style.starts_with_i.required_prefix = I
@@ -207,11 +203,6 @@ dotnet_naming_style.ends_with_async.required_prefix =
 dotnet_naming_style.ends_with_async.required_suffix = Async
 dotnet_naming_style.ends_with_async.word_separator = 
 dotnet_naming_style.ends_with_async.capitalization = pascal_case
-
-dotnet_naming_style.mixed_case.required_prefix = 
-dotnet_naming_style.mixed_case.required_suffix = 
-dotnet_naming_style.mixed_case.word_separator = 
-dotnet_naming_style.mixed_case.capitalization = camel_case
 
 dotnet_naming_style.starts_with___.required_prefix = _
 dotnet_naming_style.starts_with___.required_suffix = 

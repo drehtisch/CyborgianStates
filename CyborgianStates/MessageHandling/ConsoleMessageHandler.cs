@@ -7,8 +7,8 @@ namespace CyborgianStates.MessageHandling
 {
     public class ConsoleMessageHandler : IMessageHandler
     {
-        private IUserInput _input;
-        private ILogger _logger;
+        private readonly IUserInput _input;
+        private readonly ILogger _logger;
 
         public ConsoleMessageHandler(IUserInput input)
         {
