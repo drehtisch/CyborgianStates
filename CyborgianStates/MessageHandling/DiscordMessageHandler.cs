@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
@@ -16,6 +17,7 @@ namespace CyborgianStates.MessageHandling
         private readonly DiscordSocketClient _client;
         private CommandService _commandService;
         private readonly AppSettings _settings;
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         public DiscordMessageHandler(ILogger<DiscordMessageHandler> logger, IOptions<AppSettings> options)
         {
@@ -59,6 +61,7 @@ namespace CyborgianStates.MessageHandling
         private Task Discord_Ready()
         {
             _logger.LogInformation("--- Discord Client Ready ---");
+            IsRunning = true;
             return Task.CompletedTask;
         }
 
@@ -78,16 +81,20 @@ namespace CyborgianStates.MessageHandling
         {
             if (arg is SocketUserMessage message)
             {
-                var context = new SocketCommandContext(_client, message);
-                var isPrivate = context.IsPrivate;
-                MessageReceived?.Invoke(this,
-                    new MessageReceivedEventArgs(
-                        new Message(
-                            message.Author.Id,
-                            message.Content,
-                            new DiscordMessageChannel(message.Channel, isPrivate),
-                            context
-                )));
+                if (message.Content.StartsWith(_settings.SeperatorChar))
+                {
+                    var msgContent = message.Content.Substring(1, message.Content.Length - 1);
+                    var context = new SocketCommandContext(_client, message);
+                    var isPrivate = context.IsPrivate;
+                    MessageReceived?.Invoke(this,
+                        new MessageReceivedEventArgs(
+                            new Message(
+                                message.Author.Id,
+                                msgContent,
+                                new DiscordMessageChannel(message.Channel, isPrivate),
+                                context
+                    )));
+                }
             }
             return Task.CompletedTask;
         }
@@ -137,6 +144,7 @@ namespace CyborgianStates.MessageHandling
         {
             await _client.StartAsync().ConfigureAwait(false);
             IsRunning = true;
+            await Task.Delay(-1, cancellationTokenSource.Token).ConfigureAwait(false);
         }
 
         public async Task ShutdownAsync()
@@ -145,6 +153,7 @@ namespace CyborgianStates.MessageHandling
             await _client.StopAsync().ConfigureAwait(false);
             _client.Dispose();
             IsRunning = false;
+            cancellationTokenSource.Cancel();
         }
     }
 }

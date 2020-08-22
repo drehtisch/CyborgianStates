@@ -114,10 +114,10 @@ namespace CyborgianStates.Commands
                 string influenceValue = census[3].ChildNodes[0].InnerText;
                 string endorsementCount = census[4].ChildNodes[0].InnerText;
                 string residency = census[5].ChildNodes[0].InnerText;
-                double residencyDbl = Convert.ToDouble(residency, _config.Locale);
+                double residencyDbl = Convert.ToDouble(residency, _config.CultureInfo);
                 int residencyYears = (int) (residencyDbl / 365.242199);
                 int residencyDays = (int) (residencyDbl % 365.242199);
-                double populationdbl = Convert.ToDouble(population, _config.Locale);
+                double populationdbl = Convert.ToDouble(population, _config.CultureInfo);
                 string nationUrl = $"https://www.nationstates.net/nation={Helpers.ToID(name)}";
                 string regionUrl = $"https://www.nationstates.net/region={Helpers.ToID(region)}";
                 StringBuilder builder = new StringBuilder();
@@ -125,7 +125,7 @@ namespace CyborgianStates.Commands
                 builder.AppendLine($"thumbnailUrl:{flagUrl}");
                 builder.AppendLine($"description:**[{fullname}]({nationUrl})**");
                 builder.AppendLine($"description:" +
-                    $"{(populationdbl / 1000.0 < 1 ? populationdbl : populationdbl / 1000.0).ToString(_config.Locale)} {(populationdbl / 1000.0 < 1 ? "million" : "billion")} {demonymplural} | " +
+                    $"{(populationdbl / 1000.0 < 1 ? populationdbl : populationdbl / 1000.0).ToString(_config.CultureInfo)} {(populationdbl / 1000.0 < 1 ? "million" : "billion")} {demonymplural} | " +
                     $"Founded {founded} | " +
                     $"Last active {lastActivity}");
                 builder.AppendLine($"field:Region:[{region}]({regionUrl})");

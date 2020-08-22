@@ -49,6 +49,8 @@ namespace CyborgianStates.MessageHandling
 
         public Task WriteToAsync(string content)
         {
+            if (string.IsNullOrWhiteSpace(content))
+                throw new ArgumentNullException(nameof(content));
             _logger.LogInformation(content);
             return Task.CompletedTask;
         }

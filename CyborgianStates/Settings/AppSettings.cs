@@ -51,15 +51,15 @@ namespace CyborgianStates
         public string DiscordBotLoginToken { get; set; }
         public InputChannel InputChannel { get; set; }
 
-        public CultureInfo Locale
+        public CultureInfo CultureInfo
         {
             get
             {
-                return !string.IsNullOrWhiteSpace(LocaleString) ? new CultureInfo(LocaleString) : CultureInfo.InvariantCulture;
+                return !string.IsNullOrWhiteSpace(Locale) ? new CultureInfo(Locale) : CultureInfo.InvariantCulture;
             }
         }
 
-        public string LocaleString { get; set; }
+        public string Locale { get; set; }
         public char SeperatorChar { get; set; }
     }
 }

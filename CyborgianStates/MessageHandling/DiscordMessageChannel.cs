@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
+using Discord.Commands;
 using Discord.WebSocket;
 
 namespace CyborgianStates.MessageHandling
@@ -11,51 +12,70 @@ namespace CyborgianStates.MessageHandling
     public class DiscordMessageChannel : IMessageChannel
     {
         private readonly ISocketMessageChannel _channel;
+        private Discord.IMessageChannel currentChannel;
 
         public DiscordMessageChannel(ISocketMessageChannel channel, bool isPrivate)
         {
             _channel = channel;
-            IsPrivate = isPrivate;
+            currentChannel = _channel;
+            IsPrivateChannel = isPrivate;
         }
 
-        public bool IsPrivate { get; }
+        private bool IsPrivateChannel;
 
-        public Task ReplyToAsync(Message message, string content)
+        public async Task ReplyToAsync(Message message, string content)
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message));
-            throw new NotImplementedException();
+            await ReplyToAsync(message, content, true).ConfigureAwait(false);
         }
 
-        public Task ReplyToAsync(Message message, CommandResponse response)
+        public async Task ReplyToAsync(Message message, CommandResponse response)
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message));
             if (response is null)
                 throw new ArgumentNullException(nameof(response));
-            throw new NotImplementedException();
+            await ReplyToAsync(message, response.Content, true).ConfigureAwait(false);
         }
 
-        public Task ReplyToAsync(Message message, string content, bool isPublic)
+        public async Task ReplyToAsync(Message message, string content, bool isPublic)
         {
-            throw new NotImplementedException();
+            if (message is null)
+                throw new ArgumentNullException(nameof(message));
+            if (!isPublic && !IsPrivateChannel)
+            {
+                var Context = message.MessageObject as SocketCommandContext;
+                currentChannel = await Context.User.GetOrCreateDMChannelAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                currentChannel = _channel;
+            }
+            await WriteToAsync(content).ConfigureAwait(false);
         }
 
-        public Task ReplyToAsync(Message message, CommandResponse response, bool isPublic)
+        public async Task ReplyToAsync(Message message, CommandResponse response, bool isPublic)
         {
-            throw new NotImplementedException();
+            if (message is null)
+                throw new ArgumentNullException(nameof(message));
+            if (response is null)
+                throw new ArgumentNullException(nameof(response));
+            await ReplyToAsync(message, response.Content, isPublic).ConfigureAwait(false);
         }
 
-        public Task WriteToAsync(CommandResponse response)
+        public async Task WriteToAsync(CommandResponse response)
         {
             if (response is null)
                 throw new ArgumentNullException(nameof(response));
-            throw new NotImplementedException();
+            await WriteToAsync(response.Content).ConfigureAwait(false);
         }
 
-        public Task WriteToAsync(string content)
+        public async Task WriteToAsync(string content)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(content))
+                throw new ArgumentNullException(nameof(content));
+            await currentChannel.SendMessageAsync(content).ConfigureAwait(false);
         }
     }
 }

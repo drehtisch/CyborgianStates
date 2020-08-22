@@ -105,13 +105,11 @@ namespace CyborgianStates.Tests.Services
             msgHandlerMock.Verify(m => m.InitAsync(), Times.Once);
             msgHandlerMock.Verify(m => m.RunAsync(), Times.Once);
 
-            bool isPublic = false;
-            CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, "");
+            CommandResponse commandResponse = new CommandResponse(CommandStatus.Success, "");
 
             msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<CommandResponse>()))
-                .Callback<bool, CommandResponse>((b, cr) =>
+                .Callback<CommandResponse>((cr) =>
                 {
-                    isPublic = b;
                     commandResponse = cr;
                 })
                 .Returns(Task.CompletedTask);
@@ -130,7 +128,6 @@ namespace CyborgianStates.Tests.Services
 
             await Task.Delay(1000).ConfigureAwait(false);
 
-            Assert.True(isPublic);
             Assert.Equal(CommandStatus.Success, commandResponse.Status);
             Assert.Equal("Pong !", commandResponse.Content);
 

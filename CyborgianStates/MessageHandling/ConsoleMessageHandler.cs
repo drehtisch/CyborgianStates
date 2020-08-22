@@ -26,7 +26,7 @@ namespace CyborgianStates.MessageHandling
             return Task.CompletedTask;
         }
 
-        public Task RunAsync()
+        public async Task RunAsync()
         {
             IsRunning = true;
             while (IsRunning)
@@ -36,9 +36,8 @@ namespace CyborgianStates.MessageHandling
                 {
                     MessageReceived?.Invoke(this, new MessageReceivedEventArgs(new Message(0, input, new ConsoleMessageChannel())));
                 }
-                Task.Delay(50).Wait();
+                await Task.Delay(50).ConfigureAwait(false);
             }
-            return Task.CompletedTask;
         }
 
         public Task ShutdownAsync()

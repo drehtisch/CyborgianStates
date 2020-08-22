@@ -77,11 +77,23 @@ namespace CyborgianStates
             serviceCollection.AddOptions();
             serviceCollection.Configure<AppSettings>(configuration.GetSection("Configuration"));
             var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
+            serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
             ConfigureLogging(serviceCollection, configuration, loggeroptions);
             // add services
-            serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
-            serviceCollection.AddSingleton(typeof(IUserInput), userInput);
-            serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+            var InputChannel = configuration.GetSection("Configuration").GetSection("InputChannel").Value;
+            if (InputChannel == "Console")
+            {
+                serviceCollection.AddSingleton(typeof(IUserInput), userInput);
+                serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+            }
+            else if (InputChannel == "Discord")
+            {
+                serviceCollection.AddSingleton<IMessageHandler, DiscordMessageHandler>();
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unknown InputChannel '{InputChannel}'");
+            }
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
             serviceCollection.AddSingleton<IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();
