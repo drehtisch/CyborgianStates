@@ -88,6 +88,7 @@ namespace CyborgianStates.Tests.Services
         [Fact]
         public async Task TestStartupProgressMessageAndShutDown()
         {
+            Program.ServiceProvider = Program.ConfigureServices();
             userRepositoryMock.Setup(u => u.IsUserInDbAsync(It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
             userRepositoryMock.Setup(u => u.AddUserToDbAsync(It.IsAny<ulong>())).Returns(() => Task.CompletedTask);
             userRepositoryMock.Setup(u => u.IsAllowedAsync(It.IsAny<string>(), It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
@@ -105,13 +106,13 @@ namespace CyborgianStates.Tests.Services
             msgHandlerMock.Verify(m => m.InitAsync(), Times.Once);
             msgHandlerMock.Verify(m => m.RunAsync(), Times.Once);
 
-            CommandResponse commandResponse = new CommandResponse(CommandStatus.Success, "");
+            CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, "");
 
-            msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<CommandResponse>()))
-                .Callback<CommandResponse>((cr) =>
-                {
-                    commandResponse = cr;
-                })
+            msgChannelMock.Setup(m => m.ReplyToAsync(It.IsAny<Message>(), It.IsAny<CommandResponse>()))
+                .Callback<Message, CommandResponse>((m, cr) =>
+                 {
+                     commandResponse = cr;
+                 })
                 .Returns(Task.CompletedTask);
 
             Message message = new Message(0, "ping", msgChannelMock.Object);

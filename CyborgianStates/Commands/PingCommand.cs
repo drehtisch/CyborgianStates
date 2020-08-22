@@ -25,7 +25,7 @@ namespace CyborgianStates.Commands
                 throw new ArgumentNullException(nameof(message));
             }
             _logger.LogDebug($"- Ping -");
-            var response = new CommandResponse(CommandStatus.Success, "Pong ! - Cyborgian States v4");
+            var response = new CommandResponse(CommandStatus.Success, "Pong !");
             await message.Channel.ReplyToAsync(message, response).ConfigureAwait(false);
             return response;
         }
