@@ -16,7 +16,7 @@ namespace CyborgianStates.Tests.CommandHandling
         {
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            var result = await CommandHandler.Execute(new Message(0, "ping ", new ConsoleMessageChannel(false))).ConfigureAwait(false);
+            var result = await CommandHandler.Execute(new Message(0, "ping ", new ConsoleMessageChannel())).ConfigureAwait(false);
             Assert.True(result is CommandResponse);
             Assert.Equal(CommandStatus.Success, result.Status);
         }
@@ -31,7 +31,7 @@ namespace CyborgianStates.Tests.CommandHandling
         public async Task TestExecuteWithUnresolveableMessage()
         {
             CommandHandler.Clear();
-            var result = await CommandHandler.Execute(new Message(0, "unknown ", new ConsoleMessageChannel(false))).ConfigureAwait(false);
+            var result = await CommandHandler.Execute(new Message(0, "unknown ", new ConsoleMessageChannel())).ConfigureAwait(false);
             Assert.Null(result);
         }
 

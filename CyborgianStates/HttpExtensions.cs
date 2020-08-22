@@ -10,14 +10,16 @@ namespace CyborgianStates
     {
         public static void AddCyborgianStatesUserAgent(this HttpClient client, string version, string contact)
         {
-            if (client is null) throw new ArgumentNullException(nameof(client));
+            if (client is null)
+                throw new ArgumentNullException(nameof(client));
             client.DefaultRequestHeaders.Add("User-Agent", $"CyborgianStates/{version}");
             client.DefaultRequestHeaders.Add("User-Agent", $"(contact {contact};)");
         }
 
-        public static async Task<XmlDocument> ReadXml(this HttpResponseMessage httpResponse)
+        public static async Task<XmlDocument> ReadXmlAsync(this HttpResponseMessage httpResponse)
         {
-            if (httpResponse is null) throw new ArgumentNullException(nameof(httpResponse));
+            if (httpResponse is null)
+                throw new ArgumentNullException(nameof(httpResponse));
             using (Stream stream = await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false))
             {
                 try

@@ -24,9 +24,9 @@ namespace CyborgianStates.Commands
             {
                 throw new ArgumentNullException(nameof(message));
             }
-            _logger.LogDebug($"- Ping on {(message.Channel.IsPrivate ? "Private" : "Public")} Channel -");
+            _logger.LogDebug($"- Ping -");
             var response = new CommandResponse(CommandStatus.Success, "Pong !");
-            await message.Channel.WriteToAsync(true, response).ConfigureAwait(false);
+            await message.Channel.ReplyToAsync(message, response).ConfigureAwait(false);
             return response;
         }
 

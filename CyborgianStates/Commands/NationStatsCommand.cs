@@ -17,14 +17,14 @@ namespace CyborgianStates.Commands
     {
         private readonly AppSettings _config;
         private readonly IRequestDispatcher _dispatcher;
-        private readonly ILogger logger;
+        private readonly ILogger _logger;
         private CancellationToken token;
 
         public NationStatsCommand()
         {
-            logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));
-            _dispatcher = (IRequestDispatcher)Program.ServiceProvider.GetService(typeof(IRequestDispatcher));
-            _config = ((IOptions<AppSettings>)Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
+            _logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));
+            _dispatcher = (IRequestDispatcher) Program.ServiceProvider.GetService(typeof(IRequestDispatcher));
+            _config = ((IOptions<AppSettings>) Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
         }
 
         public async Task<CommandResponse> Execute(Message message)
@@ -35,7 +35,7 @@ namespace CyborgianStates.Commands
             }
             try
             {
-                logger.LogDebug($"{message.Content}");
+                _logger.LogDebug($"{message.Content}");
                 var parameters = message.Content.Split(" ").Skip(1);
                 if (parameters.Any())
                 {
@@ -46,33 +46,33 @@ namespace CyborgianStates.Commands
                     await request.WaitForResponse(token).ConfigureAwait(false);
                     if (request.Status == RequestStatus.Canceled)
                     {
-                        return await FailCommand(message.Channel, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
+                        return await FailCommandAsync(message, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
                     }
                     else if (request.Status == RequestStatus.Failed)
                     {
-                        return await FailCommand(message.Channel, request.FailureReason).ConfigureAwait(false);
+                        return await FailCommandAsync(message, request.FailureReason).ConfigureAwait(false);
                     }
                     else
                     {
                         CommandResponse commandResponse = ParseResponse(request);
-                        await message.Channel.WriteToAsync(message.Channel.IsPrivate, commandResponse).ConfigureAwait(false);
+                        await message.Channel.ReplyToAsync(message, commandResponse).ConfigureAwait(false);
                         return commandResponse;
                     }
                 }
                 else
                 {
-                    return await FailCommand(message.Channel, "No parameter passed.").ConfigureAwait(false);
+                    return await FailCommandAsync(message, "No parameter passed.").ConfigureAwait(false);
                 }
             }
             catch (InvalidOperationException e)
             {
-                logger.LogError(e.ToString());
-                return await FailCommand(message.Channel, "Could not execute command. Something went wrong :(").ConfigureAwait(false);
+                _logger.LogError(e.ToString());
+                return await FailCommandAsync(message, "Could not execute command. Something went wrong :(").ConfigureAwait(false);
             }
             catch (TaskCanceledException e)
             {
-                logger.LogError(e.ToString());
-                return await FailCommand(message.Channel, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
+                _logger.LogError(e.ToString());
+                return await FailCommandAsync(message, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
             }
         }
 
@@ -81,10 +81,10 @@ namespace CyborgianStates.Commands
             token = cancellationToken;
         }
 
-        private static async Task<CommandResponse> FailCommand(IMessageChannel channel, string reason)
+        private static async Task<CommandResponse> FailCommandAsync(Message message, string reason)
         {
             CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, reason);
-            await channel.WriteToAsync(channel.IsPrivate, commandResponse).ConfigureAwait(false);
+            await message.Channel.ReplyToAsync(message, commandResponse).ConfigureAwait(false);
             return commandResponse;
         }
 
@@ -115,8 +115,8 @@ namespace CyborgianStates.Commands
                 string endorsementCount = census[4].ChildNodes[0].InnerText;
                 string residency = census[5].ChildNodes[0].InnerText;
                 double residencyDbl = Convert.ToDouble(residency, _config.Locale);
-                int residencyYears = (int)(residencyDbl / 365.242199);
-                int residencyDays = (int)(residencyDbl % 365.242199);
+                int residencyYears = (int) (residencyDbl / 365.242199);
+                int residencyDays = (int) (residencyDbl % 365.242199);
                 double populationdbl = Convert.ToDouble(population, _config.Locale);
                 string nationUrl = $"https://www.nationstates.net/nation={Helpers.ToID(name)}";
                 string regionUrl = $"https://www.nationstates.net/region={Helpers.ToID(region)}";

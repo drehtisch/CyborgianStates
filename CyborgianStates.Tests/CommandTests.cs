@@ -13,7 +13,7 @@ namespace CyborgianStates.Tests
         public async Task TestPingCommand()
         {
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await new PingCommand().Execute(null).ConfigureAwait(false)).ConfigureAwait(false);
-            var result = await new PingCommand().Execute(new Message(0, "ping", new ConsoleMessageChannel(false))).ConfigureAwait(false);
+            var result = await new PingCommand().Execute(new Message(0, "ping", new ConsoleMessageChannel())).ConfigureAwait(false);
             Assert.Equal(CommandStatus.Success, result.Status);
             Assert.Equal("Pong !", result.Content);
         }

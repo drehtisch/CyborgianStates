@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
@@ -26,6 +23,7 @@ namespace CyborgianStates.MessageHandling
                 throw new ArgumentNullException(nameof(options));
             _logger = logger;
             _client = new DiscordSocketClient();
+            _settings = options.Value;
         }
 
         public bool IsRunning { get; private set; }
@@ -40,10 +38,10 @@ namespace CyborgianStates.MessageHandling
                 SeparatorChar = _settings.SeperatorChar,
                 DefaultRunMode = RunMode.Async,
                 CaseSensitiveCommands = false,
-                LogLevel = Discord.LogSeverity.Debug
+                LogLevel = LogSeverity.Debug
             });
-            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), Program.ServiceProvider).ConfigureAwait(false);
-            await _client.LoginAsync(Discord.TokenType.Bot, _settings.DiscordBotLoginToken).ConfigureAwait(false);
+            //await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), Program.ServiceProvider).ConfigureAwait(false);
+            await _client.LoginAsync(TokenType.Bot, _settings.DiscordBotLoginToken).ConfigureAwait(false);
             SetupDiscordEvents();
         }
 
@@ -78,7 +76,20 @@ namespace CyborgianStates.MessageHandling
 
         private Task Discord_MessageReceived(SocketMessage arg)
         {
-            throw new NotImplementedException();
+            if (arg is SocketUserMessage message)
+            {
+                var context = new SocketCommandContext(_client, message);
+                var isPrivate = context.IsPrivate;
+                MessageReceived?.Invoke(this,
+                    new MessageReceivedEventArgs(
+                        new Message(
+                            message.Author.Id,
+                            message.Content,
+                            new DiscordMessageChannel(message.Channel, isPrivate),
+                            context
+                )));
+            }
+            return Task.CompletedTask;
         }
 
         private Task Discord_Log(LogMessage arg)

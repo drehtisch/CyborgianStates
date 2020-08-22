@@ -48,15 +48,15 @@ namespace CyborgianStates.Tests
             using (var res = new HttpResponseMessage(HttpStatusCode.OK))
             {
                 res.Content = new StringContent("<test>test</test>");
-                var ret = await res.ReadXml().ConfigureAwait(false);
+                var ret = await res.ReadXmlAsync().ConfigureAwait(false);
                 ret.Should().BeOfType<XmlDocument>();
             }
             using (var res = new HttpResponseMessage(HttpStatusCode.OK))
             {
                 res.Content = new StringContent("<test>test</test");
-                await Assert.ThrowsAsync<ApplicationException>(async () => { await res.ReadXml().ConfigureAwait(false); }).ConfigureAwait(false);
+                await Assert.ThrowsAsync<ApplicationException>(async () => { await res.ReadXmlAsync().ConfigureAwait(false); }).ConfigureAwait(false);
             }
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => { await HttpExtensions.ReadXml(null).ConfigureAwait(false); }).ConfigureAwait(false);
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => { await HttpExtensions.ReadXmlAsync(null).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         [Fact]
