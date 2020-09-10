@@ -19,6 +19,8 @@ namespace CyborgianStates.MessageHandling
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message));
+            if (string.IsNullOrWhiteSpace(content))
+                throw new ArgumentNullException(nameof(content));
             await ReplyToAsync(message, content, true).ConfigureAwait(false);
         }
 
@@ -35,6 +37,8 @@ namespace CyborgianStates.MessageHandling
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message));
+            if (string.IsNullOrWhiteSpace(content))
+                throw new ArgumentNullException(nameof(content));
             await WriteToAsync(content).ConfigureAwait(false);
         }
 
