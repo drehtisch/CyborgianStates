@@ -14,17 +14,18 @@ namespace CyborgianStates.MessageHandling
     public class DiscordMessageHandler : IMessageHandler
     {
         private readonly ILogger _logger;
-        private readonly DiscordSocketClient _client;
-        private CommandService _commandService;
+        private readonly DiscordClientWrapper _client;
         private readonly AppSettings _settings;
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        public DiscordMessageHandler(ILogger<DiscordMessageHandler> logger, IOptions<AppSettings> options)
+        public DiscordMessageHandler(IOptions<AppSettings> options, DiscordClientWrapper socketClient)
         {
             if (options is null)
+            {
                 throw new ArgumentNullException(nameof(options));
-            _logger = logger;
-            _client = new DiscordSocketClient();
+            }
+            _logger = ApplicationLogging.CreateLogger(typeof(DiscordMessageHandler));;
+            _client = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _settings = options.Value;
         }
 
@@ -35,14 +36,6 @@ namespace CyborgianStates.MessageHandling
         public async Task InitAsync()
         {
             _logger.LogInformation("-- DiscordMessageHandler Init --");
-            _commandService = new CommandService(new CommandServiceConfig
-            {
-                SeparatorChar = _settings.SeperatorChar,
-                DefaultRunMode = RunMode.Async,
-                CaseSensitiveCommands = false,
-                LogLevel = LogSeverity.Debug
-            });
-            //await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), Program.ServiceProvider).ConfigureAwait(false);
             await _client.LoginAsync(TokenType.Bot, _settings.DiscordBotLoginToken).ConfigureAwait(false);
             SetupDiscordEvents();
         }
@@ -83,7 +76,7 @@ namespace CyborgianStates.MessageHandling
             {
                 if (message.Content.StartsWith(_settings.SeperatorChar))
                 {
-                    var msgContent = message.Content.Substring(1, message.Content.Length - 1);
+                    var msgContent = message.Content[1..];
                     var context = new SocketCommandContext(_client, message);
                     var isPrivate = context.IsPrivate;
                     MessageReceived?.Invoke(this,
@@ -130,7 +123,7 @@ namespace CyborgianStates.MessageHandling
 
         private Task Discord_Disconnected(Exception arg)
         {
-            _logger.LogInformation(arg, "--- Disconnected from Discord ---");
+            _logger.LogWarning(arg, "--- Disconnected from Discord ---");
             return Task.CompletedTask;
         }
 
@@ -144,7 +137,7 @@ namespace CyborgianStates.MessageHandling
         {
             await _client.StartAsync().ConfigureAwait(false);
             IsRunning = true;
-            await Task.Delay(-1, cancellationTokenSource.Token).ConfigureAwait(false);
+            await Task.Delay(Timeout.Infinite, cancellationTokenSource.Token).ConfigureAwait(false);
         }
 
         public async Task ShutdownAsync()
@@ -156,4 +149,5 @@ namespace CyborgianStates.MessageHandling
             cancellationTokenSource.Cancel();
         }
     }
+
 }

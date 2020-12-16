@@ -16,7 +16,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.101
+        dotnet-version: 5.0.*
     - name: Build with dotnet
       working-directory: ./CyborgianStates.Tests
       run: |
@@ -27,7 +27,8 @@ jobs:
       working-directory: ./CyborgianStates.Tests
       run: |
         dotnet tool install --global coverlet.console
-        ~/.dotnet/tools/coverlet bin/Debug/netcoreapp3.1/CyborgianStates.Tests.dll --target "dotnet" --targetargs "test --no-build" --exclude "[*]CyborgianStates.MessageHandling.ConsoleInput" --exclude "[*]CyborgianStates.AppSettings" --exclude "[*]CyborgianStates.Models.*" --exclude "[*]CyborgianStates.Data.SqliteSqlProvider" --format opencover --output "./TestResults//"
+        ~/.dotnet/tools/coverlet bin/Debug/netcoreapp3.1/CyborgianStates.Tests.dll --target "dotnet" --targetargs "test --no-build" --exclude "[*]CyborgianStates.MessageHandling.ConsoleInput" --exclude "[*]CyborgianStates.AppSettings" --exclude "[*]CyborgianStates.Models.*" --exclude "[*]CyborgianStates.Data.SqliteSqlProvider" --exclude "[*]CyborgianStates.MessageHandling.DiscordClientWrapper"
+        --format opencover --output "./TestResults//"
     - name: Upload coverage to codecov.io
       uses: codecov/codecov-action@v1
       with:

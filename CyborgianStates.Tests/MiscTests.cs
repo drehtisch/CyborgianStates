@@ -125,6 +125,15 @@ namespace CyborgianStates.Tests
             mock.Verify(l => l.RunAsync(), Times.Once);
             Assert.True(launcher.IsRunning);
         }
+        [Fact]
+        public void TestConfigureServicesDiscordPath()
+        {
+            Program.InputChannel = "Discord";
+            Program.ConfigureServices();
+            Program.InputChannel = "test";
+            Assert.Throws<InvalidOperationException>(() => Program.ConfigureServices());
+            Program.InputChannel = string.Empty;
+        }
 
         [Fact]
         public async Task TestMainWithLauncherFailure()

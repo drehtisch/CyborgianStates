@@ -22,10 +22,9 @@ namespace CyborgianStates
         private static ILauncher Launcher = new Launcher();
         private static IUserInput userInput = new ConsoleInput();
         private static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
-
+        internal static string InputChannel { get; set; }
         public static IServiceProvider ServiceProvider { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Required to be able to log fatal exceptions causing the bot to crash.")]
         public static async Task Main()
         {
             try
@@ -80,7 +79,11 @@ namespace CyborgianStates
             serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
             ConfigureLogging(serviceCollection, configuration, loggeroptions);
             // add services
-            var InputChannel = configuration.GetSection("Configuration").GetSection("InputChannel").Value;
+            var channel = configuration.GetSection("Configuration").GetSection("InputChannel").Value;
+            if (string.IsNullOrWhiteSpace(InputChannel))
+            {
+                InputChannel = channel;
+            }
             if (InputChannel == "Console")
             {
                 serviceCollection.AddSingleton(typeof(IUserInput), userInput);
@@ -88,6 +91,7 @@ namespace CyborgianStates
             }
             else if (InputChannel == "Discord")
             {
+                serviceCollection.AddSingleton(typeof(DiscordClientWrapper), new DiscordClientWrapper());
                 serviceCollection.AddSingleton<IMessageHandler, DiscordMessageHandler>();
             }
             else

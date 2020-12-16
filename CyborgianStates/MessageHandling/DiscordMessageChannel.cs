@@ -11,17 +11,17 @@ namespace CyborgianStates.MessageHandling
 {
     public class DiscordMessageChannel : IMessageChannel
     {
-        private readonly ISocketMessageChannel _channel;
+        private readonly Discord.IMessageChannel _channel;
         private Discord.IMessageChannel currentChannel;
 
-        public DiscordMessageChannel(ISocketMessageChannel channel, bool isPrivate)
+        public DiscordMessageChannel(Discord.IMessageChannel channel, bool isPrivate)
         {
             _channel = channel;
             currentChannel = _channel;
-            IsPrivateChannel = isPrivate;
+            _isPrivateChannel = isPrivate;
         }
 
-        private bool IsPrivateChannel;
+        private readonly bool _isPrivateChannel;
 
         public async Task ReplyToAsync(Message message, string content)
         {
@@ -43,7 +43,7 @@ namespace CyborgianStates.MessageHandling
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message));
-            if (!isPublic && !IsPrivateChannel)
+            if (!isPublic && !_isPrivateChannel)
             {
                 var Context = message.MessageObject as SocketCommandContext;
                 currentChannel = await Context.User.GetOrCreateDMChannelAsync().ConfigureAwait(false);

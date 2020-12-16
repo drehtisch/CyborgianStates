@@ -21,8 +21,8 @@ namespace CyborgianStates.Tests.Services
             ILogger<HttpDataService> logger = ApplicationLogging.CreateLogger<HttpDataService>();
             var options = new Mock<IOptions<AppSettings>>(MockBehavior.Strict);
             options.Setup(m => m.Value).Returns(new AppSettings() { Contact = "contact@example.com" });
-            Assert.Throws<ArgumentNullException>(() => { var x = new HttpDataService(null, logger); });
-            Assert.Throws<ArgumentNullException>(() => { var x = new HttpDataService(options.Object, null); });
+            Assert.Throws<ArgumentNullException>(() => { new HttpDataService(null, logger); });
+            Assert.Throws<ArgumentNullException>(() => { new HttpDataService(options.Object, null); });
         }
 
         [Fact]
