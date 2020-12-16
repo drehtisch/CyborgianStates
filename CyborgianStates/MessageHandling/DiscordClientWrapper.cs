@@ -126,6 +126,40 @@ namespace CyborgianStates.MessageHandling
             }
         }
 
-    }
+        public new virtual event Func<LogMessage, Task> Log
+        {
+            add
+            {
+                if (!IsTest)
+                {
+                    base.Log += value;
+                }
+            }
+            remove
+            {
+                if (!IsTest)
+                {
+                    base.Log -= value;
+                }
+            }
+        }
 
+        public new virtual event Func<SocketMessage, Task> MessageReceived
+        {
+            add
+            {
+                if (!IsTest)
+                {
+                    base.MessageReceived += value;
+                }
+            }
+            remove
+            {
+                if (!IsTest)
+                {
+                    base.MessageReceived -= value;
+                }
+            }
+        }
+    }
 }

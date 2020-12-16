@@ -1,4 +1,5 @@
 ﻿using CyborgianStates.MessageHandling;
+using Discord;
 using Discord.WebSocket;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
@@ -38,14 +39,47 @@ namespace CyborgianStates.Tests.MessageHandling
         {
             var handler = new DiscordMessageHandler(appSettingsMock.Object, clientMock.Object);
             await handler.InitAsync();
+#pragma warning disable CS4014 // Da auf diesen Aufruf nicht gewartet wird, wird die Ausführung der aktuellen Methode vor Abschluss des Aufrufs fortgesetzt.
+            handler.RunAsync();
+#pragma warning restore CS4014 // Da auf diesen Aufruf nicht gewartet wird, wird die Ausführung der aktuellen Methode vor Abschluss des Aufrufs fortgesetzt.
+            handler.IsRunning.Should().BeTrue();
             Assert.Throws<ArgumentNullException>(() => { new DiscordMessageHandler(null, clientMock.Object); });
             Assert.Throws<ArgumentNullException>(() => { new DiscordMessageHandler(appSettingsMock.Object, null); });
             clientMock.Raise(m => m.Ready += null);
-            handler.IsRunning.Should().BeTrue();
             clientMock.Raise(m => m.Connected += null);
             clientMock.Raise(m => m.LoggedIn += null);
             clientMock.Raise(m => m.Disconnected += null, new Exception());
             clientMock.Raise(m => m.LoggedOut += null);
+            await handler.ShutdownAsync();
+        }
+
+        [Fact]
+        public async Task TestDiscordLogMethod()
+        {
+            var handler = new DiscordMessageHandler(appSettingsMock.Object, clientMock.Object);
+            await handler.InitAsync();
+            clientMock.Raise(m => m.Log += null, new LogMessage(LogSeverity.Info, "", "Test"));
+            clientMock.Raise(m => m.Log += null, new LogMessage(LogSeverity.Warning, "", "Test"));
+            clientMock.Raise(m => m.Log += null, new LogMessage(LogSeverity.Error, "", "Test"));
+            clientMock.Raise(m => m.Log += null, new LogMessage(LogSeverity.Critical, "", "Test"));
+            clientMock.Raise(m => m.Log += null, new LogMessage(LogSeverity.Debug, "", "Test"));
+        }
+
+        [Fact]
+        public async Task TestDiscordMessageReceived()
+        {
+            var handler = new DiscordMessageHandler(appSettingsMock.Object, clientMock.Object);
+            await handler.InitAsync();
+            var mockMessage = new Mock<IMessage>();
+            var mockUser = new Mock<IUser>();
+            mockUser.SetupGet<ulong>(m => m.Id).Returns(0);
+            mockMessage.SetupGet<IUser>(m => m.Author).Returns(mockUser.Object);
+            mockMessage.SetupGet<string>(m => m.Content).Returns("test");
+#pragma warning disable CS4014 // Da auf diesen Aufruf nicht gewartet wird, wird die Ausführung der aktuellen Methode vor Abschluss des Aufrufs fortgesetzt.
+            handler.HandleMessage(mockMessage.Object);
+            mockMessage.SetupGet<string>(m => m.Content).Returns("$test");
+            handler.HandleMessage(mockMessage.Object);
+#pragma warning restore CS4014 // Da auf diesen Aufruf nicht gewartet wird, wird die Ausführung der aktuellen Methode vor Abschluss des Aufrufs fortgesetzt.
         }
     }
 }

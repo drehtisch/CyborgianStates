@@ -19,10 +19,12 @@ namespace CyborgianStates
 
         public static EventId GetEventIdByRequestType(RequestType requestType)
         {
-            return requestType switch
+            switch (requestType)
             {
-                RequestType.GetBasicNationStats => GetEventIdByType(LoggingEvent.GetNationStats),
-                _ => new EventId(new Random().Next(), $"Unknown [{requestType}]"),
+                case RequestType.GetBasicNationStats:
+                    return GetEventIdByType(LoggingEvent.GetNationStats);
+                default:
+                    return new EventId(new Random().Next(), $"Unknown [{requestType}]");
             };
         }
 

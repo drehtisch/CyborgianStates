@@ -41,6 +41,7 @@ namespace CyborgianStates.Tests.MessageHandling
             await channel.ReplyToAsync(message, commandResponse, true).ConfigureAwait(false);
             await channel.ReplyToAsync(message, "Test").ConfigureAwait(false);
             await channel.ReplyToAsync(message, "Test", true).ConfigureAwait(false);
+            await channel.ReplyToAsync(message, "Test", false).ConfigureAwait(false);
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await channel.ReplyToAsync(null, new CommandResponse(CommandStatus.Success, "Test")).ConfigureAwait(false)).ConfigureAwait(false);
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await channel.ReplyToAsync(message, (CommandResponse)null).ConfigureAwait(false)).ConfigureAwait(false);
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await channel.ReplyToAsync(message, string.Empty).ConfigureAwait(false)).ConfigureAwait(false);

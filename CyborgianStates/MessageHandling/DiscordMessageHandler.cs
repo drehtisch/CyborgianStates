@@ -24,7 +24,8 @@ namespace CyborgianStates.MessageHandling
             {
                 throw new ArgumentNullException(nameof(options));
             }
-            _logger = ApplicationLogging.CreateLogger(typeof(DiscordMessageHandler));;
+            _logger = ApplicationLogging.CreateLogger(typeof(DiscordMessageHandler));
+            ;
             _client = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _settings = options.Value;
         }
@@ -54,7 +55,6 @@ namespace CyborgianStates.MessageHandling
         private Task Discord_Ready()
         {
             _logger.LogInformation("--- Discord Client Ready ---");
-            IsRunning = true;
             return Task.CompletedTask;
         }
 
@@ -70,28 +70,28 @@ namespace CyborgianStates.MessageHandling
             return Task.CompletedTask;
         }
 
-        private Task Discord_MessageReceived(SocketMessage arg)
+        private Task Discord_MessageReceived(SocketMessage arg) => HandleMessage(arg);
+
+
+        internal Task HandleMessage(IMessage message)
         {
-            if (arg is SocketUserMessage message)
+            if (message.Content.StartsWith(_settings.SeperatorChar))
             {
-                if (message.Content.StartsWith(_settings.SeperatorChar))
-                {
-                    var msgContent = message.Content[1..];
-                    var context = new SocketCommandContext(_client, message);
-                    var isPrivate = context.IsPrivate;
-                    MessageReceived?.Invoke(this,
-                        new MessageReceivedEventArgs(
-                            new Message(
-                                message.Author.Id,
-                                msgContent,
-                                new DiscordMessageChannel(message.Channel, isPrivate),
-                                context
-                    )));
-                }
+                var usermsg = message as SocketUserMessage;
+                var msgContent = message.Content[1..];
+                var context = usermsg != null ? new SocketCommandContext(_client, usermsg) : null;
+                var isPrivate = usermsg != null && context.IsPrivate;
+                MessageReceived?.Invoke(this,
+                    new MessageReceivedEventArgs(
+                        new Message(
+                            message.Author.Id,
+                            msgContent,
+                            new DiscordMessageChannel(message.Channel, isPrivate),
+                            context
+                )));
             }
             return Task.CompletedTask;
         }
-
         private Task Discord_Log(LogMessage arg)
         {
             var id = Helpers.GetEventIdByType(LoggingEvent.DiscordLogEvent);
