@@ -1,5 +1,6 @@
 ﻿using CyborgianStates.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Threading.Tasks;
 
 namespace CyborgianStates
@@ -15,6 +16,11 @@ namespace CyborgianStates
             _botService = Program.ServiceProvider.GetService<IBotService>();
             await _botService.InitAsync().ConfigureAwait(false);
             await _botService.RunAsync().ConfigureAwait(false);
+        }
+        public async Task ShutdownAsync()
+        {
+            await _botService.ShutdownAsync().ConfigureAwait(false);
+            Environment.Exit(0);
         }
     }
 }

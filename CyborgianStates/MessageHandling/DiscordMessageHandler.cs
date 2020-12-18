@@ -17,7 +17,7 @@ namespace CyborgianStates.MessageHandling
         private readonly DiscordClientWrapper _client;
         private readonly AppSettings _settings;
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
+        private SemaphoreSlim _semaphore = new SemaphoreSlim(0, 1);
         public DiscordMessageHandler(IOptions<AppSettings> options, DiscordClientWrapper socketClient)
         {
             if (options is null)
@@ -137,16 +137,16 @@ namespace CyborgianStates.MessageHandling
         {
             await _client.StartAsync().ConfigureAwait(false);
             IsRunning = true;
-            await Task.Delay(Timeout.Infinite, cancellationTokenSource.Token).ConfigureAwait(false);
+            await _semaphore.WaitAsync().ConfigureAwait(false);
         }
 
         public async Task ShutdownAsync()
         {
             await _client.LogoutAsync().ConfigureAwait(false);
             await _client.StopAsync().ConfigureAwait(false);
-            _client.Dispose();
             IsRunning = false;
-            cancellationTokenSource.Cancel();
+            _semaphore.Release();
+            _client.Dispose();
         }
     }
 

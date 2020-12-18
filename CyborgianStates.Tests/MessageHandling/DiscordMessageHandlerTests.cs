@@ -51,6 +51,7 @@ namespace CyborgianStates.Tests.MessageHandling
             clientMock.Raise(m => m.Disconnected += null, new Exception());
             clientMock.Raise(m => m.LoggedOut += null);
             await handler.ShutdownAsync();
+            handler.IsRunning.Should().BeFalse();
         }
 
         [Fact]
