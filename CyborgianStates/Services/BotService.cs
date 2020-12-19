@@ -83,7 +83,7 @@ namespace CyborgianStates.Services
                 {
                     if (await IsRelevantAsync(e.Message).ConfigureAwait(false))
                     {
-                        var result = await CommandHandler.Execute(e.Message).ConfigureAwait(false);
+                        var result = await CommandHandler.ExecuteAsync(e.Message).ConfigureAwait(false);
                         if (result == null)
                         {
                             _logger.LogError($"Unknown command trigger {e.Message.Content}");

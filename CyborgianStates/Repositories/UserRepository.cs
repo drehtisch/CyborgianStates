@@ -1,5 +1,5 @@
-﻿using CyborgianStates.Interfaces;
-using CyborgianStates.Models;
+﻿using CyborgianStates.Data.Models;
+using CyborgianStates.Interfaces;
 using DataAbstractions.Dapper;
 using Microsoft.Extensions.Options;
 using System;

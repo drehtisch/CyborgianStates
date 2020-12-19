@@ -1,6 +1,6 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace CyborgianStates.Models
+namespace CyborgianStates.Data.Models
 {
     [Table("Permission")]
     public class Permission
