@@ -94,6 +94,7 @@ namespace CyborgianStates
             {
                 serviceCollection.AddSingleton(typeof(IUserInput), userInput);
                 serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+                serviceCollection.AddTransient<IResponseBuilder, ConsoleResponseBuilder>();
             }
             else if (InputChannel == "Discord")
             {

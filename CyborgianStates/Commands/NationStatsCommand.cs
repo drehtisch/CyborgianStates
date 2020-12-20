@@ -17,6 +17,7 @@ namespace CyborgianStates.Commands
     {
         private readonly AppSettings _config;
         private readonly IRequestDispatcher _dispatcher;
+        private readonly IResponseBuilder _responseBuilder;
         private readonly ILogger _logger;
         private CancellationToken token;
 
@@ -25,6 +26,7 @@ namespace CyborgianStates.Commands
             _logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));
             _dispatcher = (IRequestDispatcher) Program.ServiceProvider.GetService(typeof(IRequestDispatcher));
             _config = ((IOptions<AppSettings>) Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
+            _responseBuilder = (IResponseBuilder) Program.ServiceProvider.GetService(typeof(IResponseBuilder));
         }
 
         public async Task<CommandResponse> Execute(Message message)
@@ -120,19 +122,6 @@ namespace CyborgianStates.Commands
                 double populationdbl = Convert.ToDouble(population, _config.CultureInfo);
                 string nationUrl = $"https://www.nationstates.net/nation={Helpers.ToID(name)}";
                 string regionUrl = $"https://www.nationstates.net/region={Helpers.ToID(region)}";
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine("title:BasicStats for Nation");
-                builder.AppendLine($"thumbnailUrl:{flagUrl}");
-                builder.AppendLine($"description:**[{fullname}]({nationUrl})**");
-                builder.AppendLine($"description:" +
-                    $"{(populationdbl / 1000.0 < 1 ? populationdbl : populationdbl / 1000.0).ToString(_config.CultureInfo)} {(populationdbl / 1000.0 < 1 ? "million" : "billion")} {demonymplural} | " +
-                    $"Founded {founded} | " +
-                    $"Last active {lastActivity}");
-                builder.AppendLine($"field:Region:[{region}]({regionUrl})");
-                builder.AppendLine($"field:Residency:" +
-                    $"{(residencyYears < 1 ? "" : $"{residencyYears} year" + $"{(residencyYears > 1 ? "s" : "")}")} " +
-                    $"{residencyDays} { (residencyDays > 1 ? $"days" : "day")}");
-                builder.AppendLine($"field:{category}:C: { civilStr} ({ civilRights}) | E: { economyStr} ({ economy}) | P: { politicalStr} ({ politicalFreedom})");
                 string waVoteString = "";
                 if (wa == "WA Member")
                 {
@@ -147,8 +136,19 @@ namespace CyborgianStates.Commands
                         waVoteString += $"SC Vote: {scVote} | ";
                     }
                 }
-                builder.AppendLine($"field:{wa}:{waVoteString} {endorsementCount} endorsements | {influenceValue} Influence ({Influence})");
-                return new CommandResponse(CommandStatus.Success, builder.ToString());
+                _responseBuilder.Success()
+                    .WithTitle("BasicStats for Nation")
+                    .WithThumbnailUrl(flagUrl)
+                    .WithDescription($"**[{fullname}]({nationUrl})**{Environment.NewLine}" +
+                    $"{(populationdbl / 1000.0 < 1 ? populationdbl : populationdbl / 1000.0).ToString(_config.CultureInfo)} {(populationdbl / 1000.0 < 1 ? "million" : "billion")} {demonymplural} | " +
+                    $"Founded {founded} | " +
+                    $"Last active {lastActivity}")
+                    .WithField("Region", $"[{region}]({regionUrl})")
+                    .WithField("Residency", $"{(residencyYears < 1 ? "" : $"{residencyYears} year" + $"{(residencyYears > 1 ? "s" : "")}")} " +
+                    $"{residencyDays} { (residencyDays > 1 ? $"days" : "day")}")
+                    .WithField(category, $"C: { civilStr} ({ civilRights}) | E: { economyStr} ({ economy}) | P: { politicalStr} ({ politicalFreedom})")
+                    .WithField(wa, $"{waVoteString} {endorsementCount} endorsements | {influenceValue} Influence ({Influence})");
+                return _responseBuilder.Build();
             }
             else
             {
