@@ -1,54 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using CyborgianStates.CommandHandling;
+using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 
 namespace CyborgianStates.MessageHandling
 {
-    public class ConsoleResponseBuilder : IResponseBuilder
+    public class ConsoleResponseBuilder : BaseResponseBuilder
     {
-        private readonly CommandResponse _response;
-        private readonly Dictionary<FieldKey, string> _properties = new();
-        private readonly Dictionary<string, (string, bool)> _fields = new();
-        public ConsoleResponseBuilder()
-        {
-            _response = new CommandResponse();
-        }
-
-        public CommandResponse Build()
+        public override CommandResponse Build()
         {
             var builder = new StringBuilder();
             var contentEmpty = string.IsNullOrWhiteSpace(_response.Content);
+            AddContent(builder, contentEmpty);
+            if (_properties.Any() || _fields.Any())
+            {
+                AddSeperator(builder, contentEmpty);
+                AddTitle(builder);
+                AddDescription(builder);
+                AddFields(builder);
+                AddFooter(builder);
+                builder.AppendLine(_properties[FieldKey.Color]);
+            }
+            return new CommandResponse(_response.Status, builder.ToString());
+        }
+
+        private void AddContent(StringBuilder builder, bool contentEmpty)
+        {
             if (!contentEmpty)
             {
                 builder.AppendLine(_response.Content);
             }
-            if (_properties.Any() || _fields.Any())
+        }
+
+        private static void AddSeperator(StringBuilder builder, bool contentEmpty)
+        {
+            if (!contentEmpty)
             {
-                if (!contentEmpty)
-                {
-                    builder.AppendLine("= = = = =");
-                }
-                if (_properties.ContainsKey(FieldKey.Title))
-                {
-                    builder.AppendLine(_properties[FieldKey.Title]);
-                    builder.AppendLine();
-                }
-                if (_properties.ContainsKey(FieldKey.Description))
-                {
-                    builder.AppendLine(_properties[FieldKey.Description]);
-                    builder.AppendLine();
-                }
-                AddFields(builder);
-                if (_properties.ContainsKey(FieldKey.Footer))
-                {
-                    builder.AppendLine(_properties[FieldKey.Footer]);
-                }
+                builder.AppendLine("= = = = =");
             }
-            return new CommandResponse(_response.Status, builder.ToString());
+        }
+
+        private void AddFooter(StringBuilder builder)
+        {
+            if (_properties.ContainsKey(FieldKey.Footer))
+            {
+                builder.AppendLine(_properties[FieldKey.Footer]);
+            }
+        }
+
+        private void AddDescription(StringBuilder builder)
+        {
+            if (_properties.ContainsKey(FieldKey.Description))
+            {
+                builder.AppendLine(_properties[FieldKey.Description]);
+                builder.AppendLine();
+            }
+        }
+
+        private void AddTitle(StringBuilder builder)
+        {
+            if (_properties.ContainsKey(FieldKey.Title))
+            {
+                builder.AppendLine(_properties[FieldKey.Title]);
+                builder.AppendLine();
+            }
         }
 
         private void AddFields(StringBuilder builder)
@@ -82,37 +99,6 @@ namespace CyborgianStates.MessageHandling
                     builder.AppendLine();
                 }
             }
-        }
-
-        public IResponseBuilder Failed(string reason)
-        {
-            _response.Status = CommandStatus.Error;
-            _response.Content = reason;
-            return this;
-        }
-
-        public IResponseBuilder Success()
-        {
-            _response.Status = CommandStatus.Success;
-            return this;
-        }
-
-        public IResponseBuilder WithContent(string content)
-        {
-            _response.Content = content;
-            return this;
-        }
-
-        public IResponseBuilder WithCustomProperty(FieldKey key, string value)
-        {
-            _properties[key] = value;
-            return this;
-        }
-
-        public IResponseBuilder WithField(string key, string value, bool isInline = false)
-        {
-            _fields[key] = (value, isInline);
-            return this;
         }
     }
 }

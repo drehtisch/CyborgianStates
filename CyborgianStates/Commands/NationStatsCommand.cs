@@ -45,7 +45,7 @@ namespace CyborgianStates.Commands
                     Request request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
                     request.Params.Add("nationName", Helpers.ToID(nationName));
                     await _dispatcher.Dispatch(request).ConfigureAwait(false);
-                    await request.WaitForResponse(token).ConfigureAwait(false);
+                    await request.WaitForResponseAsync(token).ConfigureAwait(false);
                     if (request.Status == RequestStatus.Canceled)
                     {
                         return await FailCommandAsync(message, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
@@ -83,11 +83,14 @@ namespace CyborgianStates.Commands
             token = cancellationToken;
         }
 
-        private static async Task<CommandResponse> FailCommandAsync(Message message, string reason)
+        private async Task<CommandResponse> FailCommandAsync(Message message, string reason)
         {
-            CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, reason);
-            await message.Channel.ReplyToAsync(message, commandResponse).ConfigureAwait(false);
-            return commandResponse;
+            _responseBuilder.WithColor(Discord.Color.Red)
+                .FailWithDescription(reason)
+                .WithFooter(_config.Footer);
+            var response = _responseBuilder.Build();
+            await message.Channel.ReplyToAsync(message, response).ConfigureAwait(false);
+            return response;
         }
 
         private CommandResponse ParseResponse(Request request)
@@ -143,11 +146,12 @@ namespace CyborgianStates.Commands
                     $"{(populationdbl / 1000.0 < 1 ? populationdbl : populationdbl / 1000.0).ToString(_config.CultureInfo)} {(populationdbl / 1000.0 < 1 ? "million" : "billion")} {demonymplural} | " +
                     $"Founded {founded} | " +
                     $"Last active {lastActivity}")
-                    .WithField("Region", $"[{region}]({regionUrl})")
+                    .WithField("Region", $"[{region}]({regionUrl})", true)
                     .WithField("Residency", $"{(residencyYears < 1 ? "" : $"{residencyYears} year" + $"{(residencyYears > 1 ? "s" : "")}")} " +
-                    $"{residencyDays} { (residencyDays > 1 ? $"days" : "day")}")
+                    $"{residencyDays} { (residencyDays > 1 ? $"days" : "day")}", true)
                     .WithField(category, $"C: { civilStr} ({ civilRights}) | E: { economyStr} ({ economy}) | P: { politicalStr} ({ politicalFreedom})")
-                    .WithField(wa, $"{waVoteString} {endorsementCount} endorsements | {influenceValue} Influence ({Influence})");
+                    .WithField(wa, $"{waVoteString} {endorsementCount} endorsements | {influenceValue} Influence ({Influence})")
+                    .WithDefaults(_config.Footer);
                 return _responseBuilder.Build();
             }
             else

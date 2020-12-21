@@ -17,6 +17,6 @@
 
         public string Content { get; internal set; }
         public CommandStatus Status { get; internal set; }
-        public object MessagObject { get; internal set; }
+        public object ResponseObject { get; internal set; }
     }
 }

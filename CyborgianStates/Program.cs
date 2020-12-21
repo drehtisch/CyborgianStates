@@ -100,6 +100,7 @@ namespace CyborgianStates
             {
                 serviceCollection.AddSingleton(typeof(DiscordClientWrapper), new DiscordClientWrapper());
                 serviceCollection.AddSingleton<IMessageHandler, DiscordMessageHandler>();
+                serviceCollection.AddTransient<IResponseBuilder, DiscordResponseBuilder>();
             }
             else
             {

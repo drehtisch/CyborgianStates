@@ -19,7 +19,7 @@ namespace CyborgianStates.Tests.CommandHandling
                 await Task.Delay(100).ConfigureAwait(false);
                 tokenSource.Cancel();
             });
-            await request.WaitForResponse(tokenSource.Token).ConfigureAwait(false);
+            await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false);
             Assert.True(request.Status == RequestStatus.Canceled);
             tokenSource.Dispose();
         }
@@ -39,7 +39,7 @@ namespace CyborgianStates.Tests.CommandHandling
                   await Task.Delay(100).ConfigureAwait(false);
                   request.Complete("Success !");
               });
-            await request.WaitForResponse(tokenSource.Token).ConfigureAwait(false);
+            await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false);
             Assert.True(request.Status == RequestStatus.Success);
             Assert.True(request.Response.ToString() == "Success !");
             tokenSource.Dispose();
@@ -56,7 +56,7 @@ namespace CyborgianStates.Tests.CommandHandling
                 await Task.Delay(100).ConfigureAwait(false);
                 request.Fail("Failed !");
             });
-            await request.WaitForResponse(tokenSource.Token).ConfigureAwait(false);
+            await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false);
             Assert.True(request.Status == RequestStatus.Failed);
             Assert.True(request.FailureReason == "Failed !");
             tokenSource.Dispose();

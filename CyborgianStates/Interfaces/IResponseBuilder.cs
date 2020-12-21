@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CyborgianStates.CommandHandling;
+using CyborgianStates.Enums;
 using Discord;
 
 namespace CyborgianStates.Interfaces
@@ -16,15 +17,6 @@ namespace CyborgianStates.Interfaces
         IResponseBuilder WithCustomProperty(FieldKey key, string value);
         IResponseBuilder WithField(string key, string value, bool isInline = false);
         CommandResponse Build();
-    }
-
-    public enum FieldKey
-    {
-        Title,
-        Description,
-        Footer,
-        ThumbnailUrl,
-        Color
     }
 
     public static class ResponseBuilderExtensions
@@ -52,6 +44,27 @@ namespace CyborgianStates.Interfaces
         public static IResponseBuilder WithColor(this IResponseBuilder builder, Color color)
         {
             return builder.WithCustomProperty(FieldKey.Color, color.ToString());
+        }
+
+        public static IResponseBuilder FailWithDescription(this IResponseBuilder builder, string reason)
+        {
+            var _builder = builder.Failed(null);
+            _builder = _builder.WithTitle("Something went wrong");
+            _builder = _builder.WithDescription(reason);
+            return _builder;
+        }
+        public static IResponseBuilder WithRandomColor(this IResponseBuilder builder)
+        {
+            var _rnd = new Random();
+            var rndBytes = new byte[3];
+            _rnd.NextBytes(rndBytes);
+            return builder.WithColor(new Color(rndBytes[0], rndBytes[1], rndBytes[2]));
+        }
+
+        public static IResponseBuilder WithDefaults(this IResponseBuilder builder, string footer)
+        {
+            var _builder = builder.WithFooter(footer);
+            return _builder.WithRandomColor();
         }
     }
 }

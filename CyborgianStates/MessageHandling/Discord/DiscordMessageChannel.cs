@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
 using Discord.Commands;
-using Discord.WebSocket;
 
 namespace CyborgianStates.MessageHandling
 {
@@ -36,7 +33,7 @@ namespace CyborgianStates.MessageHandling
                 throw new ArgumentNullException(nameof(message));
             if (response is null)
                 throw new ArgumentNullException(nameof(response));
-            await ReplyToAsync(message, response.Content, true).ConfigureAwait(false);
+            await ReplyToAsync(message, response, true).ConfigureAwait(false);
         }
 
         public async Task ReplyToAsync(Message message, string content, bool isPublic)
@@ -55,21 +52,24 @@ namespace CyborgianStates.MessageHandling
                 throw new ArgumentNullException(nameof(message));
             if (response is null)
                 throw new ArgumentNullException(nameof(response));
-            await ReplyToAsync(message, response.Content, isPublic).ConfigureAwait(false);
+            currentChannel = !isPublic && !_isPrivateChannel
+                ? message.MessageObject is SocketCommandContext Context ? await Context.User.GetOrCreateDMChannelAsync().ConfigureAwait(false) : _channel
+                : _channel;
+            await WriteToAsync(response).ConfigureAwait(false);
         }
 
         public async Task WriteToAsync(CommandResponse response)
         {
             if (response is null)
                 throw new ArgumentNullException(nameof(response));
-            await WriteToAsync(response.Content).ConfigureAwait(false);
+            await currentChannel.SendMessageAsync(text: response.Content, embed: response.ResponseObject as Discord.Embed).ConfigureAwait(false);
         }
 
         public async Task WriteToAsync(string content)
         {
             if (string.IsNullOrWhiteSpace(content))
                 throw new ArgumentNullException(nameof(content));
-            await currentChannel.SendMessageAsync(content).ConfigureAwait(false);
+            await currentChannel.SendMessageAsync(text: content).ConfigureAwait(false);
         }
     }
 }

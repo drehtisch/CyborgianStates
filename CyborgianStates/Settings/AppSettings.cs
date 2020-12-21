@@ -1,15 +1,11 @@
 ﻿using System.Globalization;
 using System.Runtime.CompilerServices;
+using CyborgianStates.Enums;
 
 [assembly: InternalsVisibleTo("CyborgianStates.Tests")]
 
 namespace CyborgianStates
 {
-    public enum InputChannel
-    {
-        Console,
-        Discord
-    }
 
     public class AppSettings
     {
@@ -21,6 +17,8 @@ namespace CyborgianStates
 
         static internal bool IsTesting = false;
         private static string config = "development";
+
+        public string Footer => $"CyborgianStates {VERSION} by drehtisch · See {SeperatorChar}about";
 
         public static string Configuration
         {
