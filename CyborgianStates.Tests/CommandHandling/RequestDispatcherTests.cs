@@ -23,7 +23,7 @@ namespace CyborgianStates.Tests.CommandHandling
         public async Task TestReqisterAndDispatch()
         {
             RequestDispatcher dispatcher = new RequestDispatcher();
-            var requestQueue = new Mock<IRequestQueue>(MockBehavior.Strict);
+            var requestQueue = new Mock<IRequestWorker>(MockBehavior.Strict);
             requestQueue.Setup(r => r.Enqueue(It.IsAny<Request>())).Returns(Task.FromResult(1));
             await dispatcher.Register(DataSourceType.NationStatesAPI, requestQueue.Object).ConfigureAwait(false);
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);

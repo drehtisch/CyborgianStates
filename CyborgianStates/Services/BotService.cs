@@ -6,6 +6,7 @@ using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.Services
@@ -35,22 +36,29 @@ namespace CyborgianStates.Services
 
         public async Task InitAsync()
         {
-            await RegisterAsync().ConfigureAwait(false);
+            _logger.LogInformation("BotService Initializing");
+            Register();
             _messageHandler.MessageReceived += async (s, e) => await ProcessMessageAsync(e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
         public async Task RunAsync()
         {
+            _logger.LogInformation("BotService Starting");
             IsRunning = true;
+            _requestDispatcher.Start();
+            _logger.LogInformation("BotService Running");
             await _messageHandler.RunAsync().ConfigureAwait(false);
         }
 
         public async Task ShutdownAsync()
         {
+            _logger.LogInformation("BotService Shutdown");
             CommandHandler.Cancel();
+            _requestDispatcher.Shutdown();
             await _messageHandler.ShutdownAsync().ConfigureAwait(false);
             IsRunning = false;
+            _logger.LogInformation("BotService Stopped");
         }
 
         private static void RegisterCommands()
@@ -97,12 +105,12 @@ namespace CyborgianStates.Services
             }
         }
 
-        private async Task RegisterAsync()
+        private void Register()
         {
             RegisterCommands();
             var dataService = new NationStatesApiDataService(Program.ServiceProvider.GetService(typeof(IHttpDataService)) as IHttpDataService);
-            var queue = new NationStatesApiRequestQueue(dataService);
-            await _requestDispatcher.Register(DataSourceType.NationStatesAPI, queue).ConfigureAwait(false);
+            var queue = new NationStatesApiRequestWorker(dataService);
+            _requestDispatcher.Register(DataSourceType.NationStatesAPI, queue);
         }
     }
 }

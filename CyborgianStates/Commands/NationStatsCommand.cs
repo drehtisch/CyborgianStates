@@ -44,7 +44,7 @@ namespace CyborgianStates.Commands
                     string nationName = string.Join(" ", parameters);
                     Request request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
                     request.Params.Add("nationName", Helpers.ToID(nationName));
-                    await _dispatcher.Dispatch(request).ConfigureAwait(false);
+                    _dispatcher.Dispatch(request, 0);
                     await request.WaitForResponseAsync(token).ConfigureAwait(false);
                     if (request.Status == RequestStatus.Canceled)
                     {

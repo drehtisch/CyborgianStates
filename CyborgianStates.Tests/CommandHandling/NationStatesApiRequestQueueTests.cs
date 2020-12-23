@@ -31,7 +31,7 @@ namespace CyborgianStates.Tests.CommandHandling
                 dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => Task.FromResult((object)GetDummyResponse()));
                 dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(() => Task.Delay(10));
 
-                GetQueueAndRequest(dataService, out NationStatesApiRequestQueue queue, out Request request);
+                GetQueueAndRequest(dataService, out NationStatesApiRequestWorker queue, out Request request);
                 GetQueueAndRequest(dataService, out _, out Request request2);
                 await queue.Enqueue(request).ConfigureAwait(false);
                 var position = await queue.Enqueue(request2).ConfigureAwait(false);
@@ -52,7 +52,7 @@ namespace CyborgianStates.Tests.CommandHandling
                 dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(Task.FromResult((object)dummyResponseMessage));
                 dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(Task.CompletedTask);
 
-                GetQueueAndRequest(dataService, out NationStatesApiRequestQueue queue, out Request request);
+                GetQueueAndRequest(dataService, out NationStatesApiRequestWorker queue, out Request request);
 
                 await Assert.ThrowsAsync<ArgumentNullException>(async () => await queue.Enqueue(null).ConfigureAwait(false)).ConfigureAwait(false);
                 await ExecuteWithExpectedResult(dataService, RequestStatus.Success).ConfigureAwait(false);
@@ -107,9 +107,9 @@ namespace CyborgianStates.Tests.CommandHandling
             };
         }
 
-        private static void GetQueueAndRequest(Mock<IDataService> dataService, out NationStatesApiRequestQueue queue, out Request request)
+        private static void GetQueueAndRequest(Mock<IDataService> dataService, out NationStatesApiRequestWorker queue, out Request request)
         {
-            queue = new NationStatesApiRequestQueue(dataService.Object);
+            queue = new NationStatesApiRequestWorker(dataService.Object);
             request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
         }
 
@@ -121,7 +121,7 @@ namespace CyborgianStates.Tests.CommandHandling
 
         private async Task ExecuteWithExpectedResult(Mock<IDataService> dataService, RequestStatus expectedStatus)
         {
-            GetQueueAndRequest(dataService, out NationStatesApiRequestQueue queue, out Request request);
+            GetQueueAndRequest(dataService, out NationStatesApiRequestWorker queue, out Request request);
 
             await queue.Enqueue(request).ConfigureAwait(false);
             await request.WaitForResponseAsync(source.Token).ConfigureAwait(false);
