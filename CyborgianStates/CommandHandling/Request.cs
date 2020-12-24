@@ -42,13 +42,14 @@ namespace CyborgianStates.Interfaces
         {
             while (Status == RequestStatus.Pending)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    Status = RequestStatus.Canceled;
-                }
-                else
+                try
                 {
                     await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+                }
+                catch (TaskCanceledException)
+                {
+                    Status = RequestStatus.Canceled;
+                    break;
                 }
             }
         }

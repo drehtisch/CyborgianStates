@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using CyborgianStates.Enums;
 
 [assembly: InternalsVisibleTo("CyborgianStates.Tests")]
-
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace CyborgianStates
 {
 

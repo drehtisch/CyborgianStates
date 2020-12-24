@@ -9,7 +9,11 @@ namespace CyborgianStates
     {
         private IBotService _botService;
         public bool IsRunning { get; private set; }
-
+        private BotEnvironment _env;
+        public Launcher()
+        {
+            _env = new BotEnvironment();
+        }
         public async Task RunAsync()
         {
             IsRunning = true;
@@ -20,7 +24,16 @@ namespace CyborgianStates
         public async Task ShutdownAsync()
         {
             await _botService.ShutdownAsync().ConfigureAwait(false);
-            Environment.Exit(0);
+            Exit(0);
+        }
+
+        internal void SetEnv(BotEnvironment botEnvironment)
+        {
+            _env = botEnvironment;
+        }
+        internal virtual void Exit(int exitCode)
+        {
+            _env.Exit(exitCode);
         }
     }
 }

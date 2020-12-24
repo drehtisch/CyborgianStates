@@ -21,7 +21,6 @@ namespace CyborgianStates.MessageHandling
                 AddDescription(builder);
                 AddFields(builder);
                 AddFooter(builder);
-                builder.AppendLine(_properties[FieldKey.Color]);
             }
             return new CommandResponse(_response.Status, builder.ToString());
         }

@@ -31,18 +31,13 @@ namespace CyborgianStates
             {
                 var serviceCollection = new ServiceCollection();
                 ServiceProvider = ConfigureServices();
-                Console.CancelKeyPress += async (s, e) => await Console_CancelKeyPressAsync(s, e).ConfigureAwait(false);
+                Console.CancelKeyPress += async (s, e) => await Launcher.ShutdownAsync().ConfigureAwait(false);
                 await Launcher.RunAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"A fatal error caused the bot to crash: {ex}");
             }
-        }
-
-        private static async Task Console_CancelKeyPressAsync(object sender, ConsoleCancelEventArgs e)
-        {
-            await Launcher.ShutdownAsync().ConfigureAwait(false);
         }
 
         public static void SetLauncher(ILauncher launcher)

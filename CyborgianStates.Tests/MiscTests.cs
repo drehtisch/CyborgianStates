@@ -86,6 +86,7 @@ namespace CyborgianStates.Tests
             var botService = new Mock<IBotService>(MockBehavior.Strict);
             botService.Setup(m => m.InitAsync()).Returns(Task.CompletedTask);
             botService.Setup(m => m.RunAsync()).Returns(Task.CompletedTask);
+            botService.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler.Object);
             serviceCollection.AddSingleton(typeof(IBotService), botService.Object);
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
@@ -94,6 +95,10 @@ namespace CyborgianStates.Tests
             await launcher.RunAsync().ConfigureAwait(false);
             Assert.True(launcher.IsRunning);
             botService.Verify(m => m.RunAsync(), Times.Once);
+            var envMock = new Mock<BotEnvironment>(MockBehavior.Strict);
+            envMock.Setup(m => m.Exit(It.IsAny<int>()));
+            launcher.SetEnv(envMock.Object);
+            await launcher.ShutdownAsync();
         }
 
         [Fact]

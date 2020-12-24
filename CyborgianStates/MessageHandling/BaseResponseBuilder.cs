@@ -23,7 +23,7 @@ namespace CyborgianStates.MessageHandling
         public IResponseBuilder Failed(string reason)
         {
             _response.Status = CommandStatus.Error;
-            _response.Content = reason;
+            WithContent(reason);
             return this;
         }
 
