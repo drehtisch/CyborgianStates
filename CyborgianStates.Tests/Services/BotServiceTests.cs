@@ -27,7 +27,7 @@ namespace CyborgianStates.Tests.Services
             msgHandlerMock.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
 
             requestDispatcherMock = new Mock<IRequestDispatcher>(MockBehavior.Strict);
-            requestDispatcherMock.Setup(r => r.Register(It.IsAny<DataSourceType>(), It.IsAny<IRequestQueue>())).Returns(() => Task.CompletedTask);
+            requestDispatcherMock.Setup(r => r.Register(It.IsAny<DataSourceType>(), It.IsAny<IRequestWorker>()));
 
             userRepositoryMock = new Mock<IUserRepository>(MockBehavior.Strict);
 

@@ -4,6 +4,7 @@ using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -17,7 +18,8 @@ namespace CyborgianStates.Services
         private readonly IMessageHandler _messageHandler;
         private readonly IRequestDispatcher _requestDispatcher;
         private readonly IUserRepository _userRepo;
-
+        private readonly IResponseBuilder _responseBuilder;
+        private readonly AppSettings _appSettings;
         public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository)
         {
             if (messageHandler is null)
@@ -30,6 +32,8 @@ namespace CyborgianStates.Services
             _requestDispatcher = requestDispatcher;
             _userRepo = userRepository;
             _logger = ApplicationLogging.CreateLogger(typeof(BotService));
+            _responseBuilder = (IResponseBuilder) Program.ServiceProvider.GetService(typeof(IResponseBuilder));
+            _appSettings = ((IOptions<AppSettings>) Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
         }
 
         public bool IsRunning { get; private set; }
@@ -95,6 +99,11 @@ namespace CyborgianStates.Services
                         if (result == null)
                         {
                             _logger.LogError($"Unknown command trigger {e.Message.Content}");
+                            var response = _responseBuilder
+                                .FailWithDescription($"Unrecognized command trigger: '{e.Message.Content}'")
+                                .WithFooter(_appSettings.Footer)
+                                .Build();
+                            await e.Message.Channel.ReplyToAsync(e.Message, response).ConfigureAwait(false);
                         }
                     }
                 }

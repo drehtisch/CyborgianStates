@@ -54,7 +54,7 @@ namespace CyborgianStates.Tests.CommandHandling
             _ = Task.Run(async () =>
             {
                 await Task.Delay(100).ConfigureAwait(false);
-                request.Fail("Failed !");
+                request.Fail("Failed !", null);
             });
             await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false);
             Assert.True(request.Status == RequestStatus.Failed);

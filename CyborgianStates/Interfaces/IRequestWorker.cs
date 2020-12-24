@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.Interfaces
@@ -7,5 +8,6 @@ namespace CyborgianStates.Interfaces
     {
         void Enqueue(Request request, int priority);
         Task RunAsync(CancellationToken cancellationToken);
+        event EventHandler RestartRequired;
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,7 +54,7 @@ namespace CyborgianStates.Services
                 switch (request.Type)
                 {
                     case RequestType.GetBasicNationStats:
-                        var task = GetNationStatsAsync(request.Params["nationName"].ToString(), request.EventId, request.TraceId);
+                        var task = GetNationStatsAsync(request.Params["nationName"].ToString(), request.EventId);
                         _ = task.ContinueWith(_continue);
                         result = await task.ConfigureAwait(false);
                         break;
@@ -65,11 +66,13 @@ namespace CyborgianStates.Services
                 }
                 else if (result is null)
                 {
-                    request.Fail("Request failed: result null", null);
+                    var reason = "Request failed: No result";
+                    request.Fail(reason, new InvalidOperationException(reason));
                 }
                 else
                 {
-                    request.Fail($"Request failed: {result.StatusCode} - {result.StatusCode}", null);
+                    var reason = $"Request failed: {(int) result.StatusCode} - {result.StatusCode}";
+                    request.Fail(reason, new HttpRequestFailedException(reason));
                 }
             }
             finally
@@ -101,18 +104,29 @@ namespace CyborgianStates.Services
             }
         }
 
-        private async Task<HttpResponseMessage> GetNationStatsAsync(string nationName, EventId eventId, string traceId)
+        private async Task<HttpResponseMessage> GetNationStatsAsync(string nationName, EventId eventId)
         {
             Uri url = BuildApiRequestUrl($"nation={Helpers.ToID(nationName)}&q=flag+wa+gavote+scvote+fullname+freedom+demonym2plural+category+population+region+founded+influence+lastactivity+census;mode=score;scale=0+1+2+65+66+80");
             var message = new HttpRequestMessage(HttpMethod.Get, url);
             try
             {
-                return await _dataService.ExecuteRequest(message, eventId, traceId).ConfigureAwait(false);
+                return await _dataService.ExecuteRequest(message, eventId).ConfigureAwait(false);
             }
             finally
             {
                 message.Dispose();
             }
         }
+    }
+
+    public class HttpRequestFailedException : Exception
+    {
+        public HttpRequestFailedException() { }
+
+        public HttpRequestFailedException(string message) : base(message) { }
+
+        public HttpRequestFailedException(string message, Exception innerException) : base(message, innerException) { }
+
+        protected HttpRequestFailedException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

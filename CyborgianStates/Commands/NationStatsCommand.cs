@@ -2,6 +2,7 @@
 using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
+using CyborgianStates.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -35,6 +36,7 @@ namespace CyborgianStates.Commands
             {
                 throw new ArgumentNullException(nameof(message));
             }
+            Request request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
             try
             {
                 _logger.LogDebug($"{message.Content}");
@@ -42,13 +44,12 @@ namespace CyborgianStates.Commands
                 if (parameters.Any())
                 {
                     string nationName = string.Join(" ", parameters);
-                    Request request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
                     request.Params.Add("nationName", Helpers.ToID(nationName));
                     _dispatcher.Dispatch(request, 0);
                     await request.WaitForResponseAsync(token).ConfigureAwait(false);
                     if (request.Status == RequestStatus.Canceled)
                     {
-                        return await FailCommandAsync(message, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
+                        return await FailCommandAsync(message, "Request has been canceled. Sorry :(").ConfigureAwait(false);
                     }
                     else if (request.Status == RequestStatus.Failed)
                     {
@@ -75,6 +76,11 @@ namespace CyborgianStates.Commands
             {
                 _logger.LogError(e.ToString());
                 return await FailCommandAsync(message, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
+            }
+            catch (HttpRequestFailedException e)
+            {
+                _logger.LogError(e.ToString());
+                return await FailCommandAsync(message, request.FailureReason).ConfigureAwait(false);
             }
         }
 

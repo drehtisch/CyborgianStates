@@ -18,9 +18,16 @@ namespace CyborgianStates.CommandHandling
         {
             _dataService = dataService;
             _logger = ApplicationLogging.CreateLogger(typeof(NationStatesApiRequestWorker));
+            _requestQueue.Jammed += RequestQueue_Jammed;
         }
 
+        private void RequestQueue_Jammed(object sender, EventArgs e)
+        {
+            _logger.LogWarning("RequestQueue jammed. No waiting consumers found. Consumers possibly died. Trying to restart worker.");
+            RestartRequired?.Invoke(this, e);
+        }
 
+        public event EventHandler RestartRequired;
         public void Enqueue(Request request, int priority = 1000)
         {
             if (request is null)
@@ -31,6 +38,7 @@ namespace CyborgianStates.CommandHandling
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("RequestWorker running");
             while (await _requestQueue.WaitForNextItemAsync(cancellationToken).ConfigureAwait(false))
             {
                 var request = _requestQueue.Dequeue();
