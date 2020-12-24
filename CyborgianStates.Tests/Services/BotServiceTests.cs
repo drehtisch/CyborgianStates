@@ -32,7 +32,6 @@ namespace CyborgianStates.Tests.Services
             userRepositoryMock = new Mock<IUserRepository>(MockBehavior.Strict);
 
             msgChannelMock = new Mock<IMessageChannel>(MockBehavior.Strict);
-            msgChannelMock.SetupGet(m => m.IsPrivate).Returns(true);
         }
 
         [Fact]
@@ -62,7 +61,7 @@ namespace CyborgianStates.Tests.Services
             userRepositoryMock.Setup(u => u.IsUserInDbAsync(It.IsAny<ulong>())).Returns(() => Task.FromResult(false));
             userRepositoryMock.Setup(u => u.AddUserToDbAsync(It.IsAny<ulong>())).Returns(() => Task.CompletedTask);
             userRepositoryMock.Setup(u => u.IsAllowedAsync(It.IsAny<string>(), It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
-            msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<bool>(), It.IsAny<CommandResponse>())).Returns(Task.CompletedTask);
+            msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<CommandResponse>())).Returns(Task.CompletedTask);
 
             Message message = new Message(0, "test", msgChannelMock.Object);
             var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object);
@@ -89,6 +88,7 @@ namespace CyborgianStates.Tests.Services
         [Fact]
         public async Task TestStartupProgressMessageAndShutDown()
         {
+            Program.ServiceProvider = Program.ConfigureServices();
             userRepositoryMock.Setup(u => u.IsUserInDbAsync(It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
             userRepositoryMock.Setup(u => u.AddUserToDbAsync(It.IsAny<ulong>())).Returns(() => Task.CompletedTask);
             userRepositoryMock.Setup(u => u.IsAllowedAsync(It.IsAny<string>(), It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
@@ -106,15 +106,13 @@ namespace CyborgianStates.Tests.Services
             msgHandlerMock.Verify(m => m.InitAsync(), Times.Once);
             msgHandlerMock.Verify(m => m.RunAsync(), Times.Once);
 
-            bool isPublic = false;
             CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, "");
 
-            msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<bool>(), It.IsAny<CommandResponse>()))
-                .Callback<bool, CommandResponse>((b, cr) =>
-                {
-                    isPublic = b;
-                    commandResponse = cr;
-                })
+            msgChannelMock.Setup(m => m.ReplyToAsync(It.IsAny<Message>(), It.IsAny<CommandResponse>()))
+                .Callback<Message, CommandResponse>((m, cr) =>
+                 {
+                     commandResponse = cr;
+                 })
                 .Returns(Task.CompletedTask);
 
             Message message = new Message(0, "ping", msgChannelMock.Object);
@@ -131,7 +129,6 @@ namespace CyborgianStates.Tests.Services
 
             await Task.Delay(1000).ConfigureAwait(false);
 
-            Assert.True(isPublic);
             Assert.Equal(CommandStatus.Success, commandResponse.Status);
             Assert.Equal("Pong !", commandResponse.Content);
 

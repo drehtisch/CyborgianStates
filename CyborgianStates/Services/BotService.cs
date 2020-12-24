@@ -19,9 +19,12 @@ namespace CyborgianStates.Services
 
         public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository)
         {
-            if (messageHandler is null) throw new ArgumentNullException(nameof(messageHandler));
-            if (requestDispatcher is null) throw new ArgumentNullException(nameof(requestDispatcher));
-            if (userRepository is null) throw new ArgumentNullException(nameof(requestDispatcher));
+            if (messageHandler is null)
+                throw new ArgumentNullException(nameof(messageHandler));
+            if (requestDispatcher is null)
+                throw new ArgumentNullException(nameof(requestDispatcher));
+            if (userRepository is null)
+                throw new ArgumentNullException(nameof(requestDispatcher));
             _messageHandler = messageHandler;
             _requestDispatcher = requestDispatcher;
             _userRepo = userRepository;
@@ -32,8 +35,8 @@ namespace CyborgianStates.Services
 
         public async Task InitAsync()
         {
-            await Register().ConfigureAwait(false);
-            _messageHandler.MessageReceived += async (s, e) => await ProcessMessage(e).ConfigureAwait(false);
+            await RegisterAsync().ConfigureAwait(false);
+            _messageHandler.MessageReceived += async (s, e) => await ProcessMessageAsync(e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
@@ -58,27 +61,21 @@ namespace CyborgianStates.Services
 
         private async Task<bool> IsRelevantAsync(Message message)
         {
-            if (message is null) throw new ArgumentNullException(nameof(message));
+            if (message is null)
+                throw new ArgumentNullException(nameof(message));
             if (message.AuthorId != 0 && !await _userRepo.IsUserInDbAsync(message.AuthorId).ConfigureAwait(false))
             {
                 await _userRepo.AddUserToDbAsync(message.AuthorId).ConfigureAwait(false);
             }
             var value = !string.IsNullOrWhiteSpace(message.Content);
-            if (AppSettings.Configuration == "development")
-            {
-                return value &&
-                    (message.AuthorId == 0 ||
-                    await _userRepo.IsAllowedAsync("Commands.Preview.Execute", message.AuthorId).ConfigureAwait(false));
-            }
-            else
-            {
-                return value &&
-                    (message.AuthorId == 0 ||
-                    await _userRepo.IsAllowedAsync("Commands.Execute", message.AuthorId).ConfigureAwait(false));
-            }
+            return value &&
+                (message.AuthorId == 0 ||
+                await _userRepo.IsAllowedAsync(
+                    AppSettings.Configuration == "development" ? "Commands.Preview.Execute" : "Commands.Execute",
+                    message.AuthorId).ConfigureAwait(false));
         }
 
-        private async Task ProcessMessage(MessageReceivedEventArgs e)
+        private async Task ProcessMessageAsync(MessageReceivedEventArgs e)
         {
             try
             {
@@ -86,7 +83,7 @@ namespace CyborgianStates.Services
                 {
                     if (await IsRelevantAsync(e.Message).ConfigureAwait(false))
                     {
-                        var result = await CommandHandler.Execute(e.Message).ConfigureAwait(false);
+                        var result = await CommandHandler.ExecuteAsync(e.Message).ConfigureAwait(false);
                         if (result == null)
                         {
                             _logger.LogError($"Unknown command trigger {e.Message.Content}");
@@ -100,7 +97,7 @@ namespace CyborgianStates.Services
             }
         }
 
-        private async Task Register()
+        private async Task RegisterAsync()
         {
             RegisterCommands();
             var dataService = new NationStatesApiDataService(Program.ServiceProvider.GetService(typeof(IHttpDataService)) as IHttpDataService);

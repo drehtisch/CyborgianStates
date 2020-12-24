@@ -23,10 +23,9 @@ namespace CyborgianStates
             {
                 case RequestType.GetBasicNationStats:
                     return GetEventIdByType(LoggingEvent.GetNationStats);
-
                 default:
-                    return new EventId(new Random().Next(), $"Unknown [{requestType.ToString()}]");
-            }
+                    return new EventId(new Random().Next(), $"Unknown [{requestType}]");
+            };
         }
 
         /// <summary>
@@ -36,7 +35,7 @@ namespace CyborgianStates
         /// <returns>The created EventId</returns>
         public static EventId GetEventIdByType(LoggingEvent loggingEvent)
         {
-            return new EventId((int)loggingEvent, loggingEvent.ToString());
+            return new EventId((int) loggingEvent, loggingEvent.ToString());
         }
 
         /// <summary>

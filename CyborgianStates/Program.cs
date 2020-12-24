@@ -22,16 +22,16 @@ namespace CyborgianStates
         private static ILauncher Launcher = new Launcher();
         private static IUserInput userInput = new ConsoleInput();
         private static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
-
+        internal static string InputChannel { get; set; }
         public static IServiceProvider ServiceProvider { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Required to be able to log fatal exceptions causing the bot to crash.")]
         public static async Task Main()
         {
             try
             {
                 var serviceCollection = new ServiceCollection();
                 ServiceProvider = ConfigureServices();
+                Console.CancelKeyPress += async (s, e) => await Launcher.ShutdownAsync().ConfigureAwait(false);
                 await Launcher.RunAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -77,11 +77,30 @@ namespace CyborgianStates
             serviceCollection.AddOptions();
             serviceCollection.Configure<AppSettings>(configuration.GetSection("Configuration"));
             var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
+            serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
             ConfigureLogging(serviceCollection, configuration, loggeroptions);
             // add services
-            serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
-            serviceCollection.AddSingleton(typeof(IUserInput), userInput);
-            serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+            var channel = configuration.GetSection("Configuration").GetSection("InputChannel").Value;
+            if (string.IsNullOrWhiteSpace(InputChannel))
+            {
+                InputChannel = channel;
+            }
+            if (InputChannel == "Console")
+            {
+                serviceCollection.AddSingleton(typeof(IUserInput), userInput);
+                serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
+                serviceCollection.AddTransient<IResponseBuilder, ConsoleResponseBuilder>();
+            }
+            else if (InputChannel == "Discord")
+            {
+                serviceCollection.AddSingleton(typeof(DiscordClientWrapper), new DiscordClientWrapper());
+                serviceCollection.AddSingleton<IMessageHandler, DiscordMessageHandler>();
+                serviceCollection.AddTransient<IResponseBuilder, DiscordResponseBuilder>();
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unknown InputChannel '{InputChannel}'");
+            }
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
             serviceCollection.AddSingleton<IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();

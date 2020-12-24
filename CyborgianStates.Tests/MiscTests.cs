@@ -48,15 +48,15 @@ namespace CyborgianStates.Tests
             using (var res = new HttpResponseMessage(HttpStatusCode.OK))
             {
                 res.Content = new StringContent("<test>test</test>");
-                var ret = await res.ReadXml().ConfigureAwait(false);
+                var ret = await res.ReadXmlAsync().ConfigureAwait(false);
                 ret.Should().BeOfType<XmlDocument>();
             }
             using (var res = new HttpResponseMessage(HttpStatusCode.OK))
             {
                 res.Content = new StringContent("<test>test</test");
-                await Assert.ThrowsAsync<ApplicationException>(async () => { await res.ReadXml().ConfigureAwait(false); }).ConfigureAwait(false);
+                await Assert.ThrowsAsync<ApplicationException>(async () => { await res.ReadXmlAsync().ConfigureAwait(false); }).ConfigureAwait(false);
             }
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => { await HttpExtensions.ReadXml(null).ConfigureAwait(false); }).ConfigureAwait(false);
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => { await HttpExtensions.ReadXmlAsync(null).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
         [Fact]
@@ -86,6 +86,7 @@ namespace CyborgianStates.Tests
             var botService = new Mock<IBotService>(MockBehavior.Strict);
             botService.Setup(m => m.InitAsync()).Returns(Task.CompletedTask);
             botService.Setup(m => m.RunAsync()).Returns(Task.CompletedTask);
+            botService.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler.Object);
             serviceCollection.AddSingleton(typeof(IBotService), botService.Object);
             serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
@@ -94,6 +95,10 @@ namespace CyborgianStates.Tests
             await launcher.RunAsync().ConfigureAwait(false);
             Assert.True(launcher.IsRunning);
             botService.Verify(m => m.RunAsync(), Times.Once);
+            var envMock = new Mock<BotEnvironment>(MockBehavior.Strict);
+            envMock.Setup(m => m.Exit(It.IsAny<int>()));
+            launcher.SetEnv(envMock.Object);
+            await launcher.ShutdownAsync();
         }
 
         [Fact]
@@ -124,6 +129,15 @@ namespace CyborgianStates.Tests
             await Program.Main().ConfigureAwait(false);
             mock.Verify(l => l.RunAsync(), Times.Once);
             Assert.True(launcher.IsRunning);
+        }
+        [Fact]
+        public void TestConfigureServicesDiscordPath()
+        {
+            Program.InputChannel = "Discord";
+            Program.ConfigureServices();
+            Program.InputChannel = "test";
+            Assert.Throws<InvalidOperationException>(() => Program.ConfigureServices());
+            Program.InputChannel = string.Empty;
         }
 
         [Fact]

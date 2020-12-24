@@ -51,7 +51,7 @@ dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_prefer_auto_properties = true:suggestion
 dotnet_style_prefer_compound_assignment = true:suggestion
 dotnet_style_prefer_conditional_expression_over_assignment = true:warning
-dotnet_style_prefer_conditional_expression_over_return = true:suggestion
+dotnet_style_prefer_conditional_expression_over_return = true:warning
 dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
 dotnet_style_prefer_inferred_tuple_names = true:suggestion
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
@@ -84,7 +84,7 @@ csharp_style_expression_bodied_properties = true:silent
 # Einstellungen für den Musterabgleich
 csharp_style_pattern_matching_over_as_with_null_check = true:warning
 csharp_style_pattern_matching_over_is_with_cast_check = true:warning
-csharp_style_prefer_switch_expression = false:warning
+csharp_style_prefer_switch_expression = true:warning
 
 # Einstellungen für NULL-Überprüfung
 csharp_style_conditional_delegate_call = true:suggestion
@@ -94,7 +94,7 @@ csharp_prefer_static_local_function = true:suggestion
 csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:silent
 
 # Einstellungen für Codeblöcke
-csharp_prefer_braces = true:none
+csharp_prefer_braces = true:suggestion
 csharp_prefer_simple_using_statement = false:suggestion
 
 # Einstellungen für Ausdrucksebene
@@ -174,10 +174,6 @@ dotnet_naming_rule.readonly_should_be_starts_with___.severity = warning
 dotnet_naming_rule.readonly_should_be_starts_with___.symbols = readonly
 dotnet_naming_rule.readonly_should_be_starts_with___.style = starts_with___
 
-dotnet_naming_rule.private_should_be_mixed_case.severity = suggestion
-dotnet_naming_rule.private_should_be_mixed_case.symbols = private
-dotnet_naming_rule.private_should_be_mixed_case.style = mixed_case
-
 # Symbolspezifikationen
 
 dotnet_naming_symbols.interface.applicable_kinds = interface
@@ -208,15 +204,3 @@ dotnet_naming_style.starts_with___.required_prefix = _
 dotnet_naming_style.starts_with___.required_suffix = 
 dotnet_naming_style.starts_with___.word_separator = 
 dotnet_naming_style.starts_with___.capitalization = camel_case
-
-# CA1303: Do not pass literals as localized parameters
-dotnet_diagnostic.CA1303.severity = silent
-
-# CA2007: Aufruf von "ConfigureAwait" für erwarteten Task erwägen
-dotnet_diagnostic.CA2007.severity = error
-
-# IDE0063: Einfache using-Anweisung verwenden
-csharp_prefer_simple_using_statement = false:suggestion
-
-# IDE0046: In bedingten Ausdruck konvertieren
-dotnet_diagnostic.IDE0046.severity = suggestion

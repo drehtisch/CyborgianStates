@@ -17,14 +17,16 @@ namespace CyborgianStates.Commands
     {
         private readonly AppSettings _config;
         private readonly IRequestDispatcher _dispatcher;
-        private readonly ILogger logger;
+        private readonly IResponseBuilder _responseBuilder;
+        private readonly ILogger _logger;
         private CancellationToken token;
 
         public NationStatsCommand()
         {
-            logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));
-            _dispatcher = (IRequestDispatcher)Program.ServiceProvider.GetService(typeof(IRequestDispatcher));
-            _config = ((IOptions<AppSettings>)Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
+            _logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));
+            _dispatcher = (IRequestDispatcher) Program.ServiceProvider.GetService(typeof(IRequestDispatcher));
+            _config = ((IOptions<AppSettings>) Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
+            _responseBuilder = (IResponseBuilder) Program.ServiceProvider.GetService(typeof(IResponseBuilder));
         }
 
         public async Task<CommandResponse> Execute(Message message)
@@ -35,7 +37,7 @@ namespace CyborgianStates.Commands
             }
             try
             {
-                logger.LogDebug($"{message.Content}");
+                _logger.LogDebug($"{message.Content}");
                 var parameters = message.Content.Split(" ").Skip(1);
                 if (parameters.Any())
                 {
@@ -43,36 +45,36 @@ namespace CyborgianStates.Commands
                     Request request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
                     request.Params.Add("nationName", Helpers.ToID(nationName));
                     await _dispatcher.Dispatch(request).ConfigureAwait(false);
-                    await request.WaitForResponse(token).ConfigureAwait(false);
+                    await request.WaitForResponseAsync(token).ConfigureAwait(false);
                     if (request.Status == RequestStatus.Canceled)
                     {
-                        return await FailCommand(message.Channel, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
+                        return await FailCommandAsync(message, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
                     }
                     else if (request.Status == RequestStatus.Failed)
                     {
-                        return await FailCommand(message.Channel, request.FailureReason).ConfigureAwait(false);
+                        return await FailCommandAsync(message, request.FailureReason).ConfigureAwait(false);
                     }
                     else
                     {
                         CommandResponse commandResponse = ParseResponse(request);
-                        await message.Channel.WriteToAsync(message.Channel.IsPrivate, commandResponse).ConfigureAwait(false);
+                        await message.Channel.ReplyToAsync(message, commandResponse).ConfigureAwait(false);
                         return commandResponse;
                     }
                 }
                 else
                 {
-                    return await FailCommand(message.Channel, "No parameter passed.").ConfigureAwait(false);
+                    return await FailCommandAsync(message, "No parameter passed.").ConfigureAwait(false);
                 }
             }
             catch (InvalidOperationException e)
             {
-                logger.LogError(e.ToString());
-                return await FailCommand(message.Channel, "Could not execute command. Something went wrong :(").ConfigureAwait(false);
+                _logger.LogError(e.ToString());
+                return await FailCommandAsync(message, "Could not execute command. Something went wrong :(").ConfigureAwait(false);
             }
             catch (TaskCanceledException e)
             {
-                logger.LogError(e.ToString());
-                return await FailCommand(message.Channel, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
+                _logger.LogError(e.ToString());
+                return await FailCommandAsync(message, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
             }
         }
 
@@ -81,11 +83,14 @@ namespace CyborgianStates.Commands
             token = cancellationToken;
         }
 
-        private static async Task<CommandResponse> FailCommand(IMessageChannel channel, string reason)
+        private async Task<CommandResponse> FailCommandAsync(Message message, string reason)
         {
-            CommandResponse commandResponse = new CommandResponse(CommandStatus.Error, reason);
-            await channel.WriteToAsync(channel.IsPrivate, commandResponse).ConfigureAwait(false);
-            return commandResponse;
+            _responseBuilder.WithColor(Discord.Color.Red)
+                .FailWithDescription(reason)
+                .WithFooter(_config.Footer);
+            var response = _responseBuilder.Build();
+            await message.Channel.ReplyToAsync(message, response).ConfigureAwait(false);
+            return response;
         }
 
         private CommandResponse ParseResponse(Request request)
@@ -114,25 +119,12 @@ namespace CyborgianStates.Commands
                 string influenceValue = census[3].ChildNodes[0].InnerText;
                 string endorsementCount = census[4].ChildNodes[0].InnerText;
                 string residency = census[5].ChildNodes[0].InnerText;
-                double residencyDbl = Convert.ToDouble(residency, _config.Locale);
-                int residencyYears = (int)(residencyDbl / 365.242199);
-                int residencyDays = (int)(residencyDbl % 365.242199);
-                double populationdbl = Convert.ToDouble(population, _config.Locale);
+                double residencyDbl = Convert.ToDouble(residency, _config.CultureInfo);
+                int residencyYears = (int) (residencyDbl / 365.242199);
+                int residencyDays = (int) (residencyDbl % 365.242199);
+                double populationdbl = Convert.ToDouble(population, _config.CultureInfo);
                 string nationUrl = $"https://www.nationstates.net/nation={Helpers.ToID(name)}";
                 string regionUrl = $"https://www.nationstates.net/region={Helpers.ToID(region)}";
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine("title:BasicStats for Nation");
-                builder.AppendLine($"thumbnailUrl:{flagUrl}");
-                builder.AppendLine($"description:**[{fullname}]({nationUrl})**");
-                builder.AppendLine($"description:" +
-                    $"{(populationdbl / 1000.0 < 1 ? populationdbl : populationdbl / 1000.0).ToString(_config.Locale)} {(populationdbl / 1000.0 < 1 ? "million" : "billion")} {demonymplural} | " +
-                    $"Founded {founded} | " +
-                    $"Last active {lastActivity}");
-                builder.AppendLine($"field:Region:[{region}]({regionUrl})");
-                builder.AppendLine($"field:Residency:" +
-                    $"{(residencyYears < 1 ? "" : $"{residencyYears} year" + $"{(residencyYears > 1 ? "s" : "")}")} " +
-                    $"{residencyDays} { (residencyDays > 1 ? $"days" : "day")}");
-                builder.AppendLine($"field:{category}:C: { civilStr} ({ civilRights}) | E: { economyStr} ({ economy}) | P: { politicalStr} ({ politicalFreedom})");
                 string waVoteString = "";
                 if (wa == "WA Member")
                 {
@@ -147,8 +139,20 @@ namespace CyborgianStates.Commands
                         waVoteString += $"SC Vote: {scVote} | ";
                     }
                 }
-                builder.AppendLine($"field:{wa}:{waVoteString} {endorsementCount} endorsements | {influenceValue} Influence ({Influence})");
-                return new CommandResponse(CommandStatus.Success, builder.ToString());
+                _responseBuilder.Success()
+                    .WithTitle("BasicStats for Nation")
+                    .WithThumbnailUrl(flagUrl)
+                    .WithDescription($"**[{fullname}]({nationUrl})**{Environment.NewLine}" +
+                    $"{(populationdbl / 1000.0 < 1 ? populationdbl : populationdbl / 1000.0).ToString(_config.CultureInfo)} {(populationdbl / 1000.0 < 1 ? "million" : "billion")} {demonymplural} | " +
+                    $"Founded {founded} | " +
+                    $"Last active {lastActivity}")
+                    .WithField("Region", $"[{region}]({regionUrl})", true)
+                    .WithField("Residency", $"{(residencyYears < 1 ? "" : $"{residencyYears} year" + $"{(residencyYears > 1 ? "s" : "")}")} " +
+                    $"{residencyDays} { (residencyDays > 1 ? $"days" : "day")}", true)
+                    .WithField(category, $"C: { civilStr} ({ civilRights}) | E: { economyStr} ({ economy}) | P: { politicalStr} ({ politicalFreedom})")
+                    .WithField(wa, $"{waVoteString} {endorsementCount} endorsements | {influenceValue} Influence ({Influence})")
+                    .WithDefaults(_config.Footer);
+                return _responseBuilder.Build();
             }
             else
             {

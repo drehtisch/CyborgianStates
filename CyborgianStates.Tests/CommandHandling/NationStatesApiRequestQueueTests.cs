@@ -36,9 +36,9 @@ namespace CyborgianStates.Tests.CommandHandling
                 await queue.Enqueue(request).ConfigureAwait(false);
                 var position = await queue.Enqueue(request2).ConfigureAwait(false);
                 Assert.Equal(2, position);
-                await request.WaitForResponse(source.Token).ConfigureAwait(false);
+                await request.WaitForResponseAsync(source.Token).ConfigureAwait(false);
                 Assert.Equal(RequestStatus.Success, request.Status);
-                await request2.WaitForResponse(source.Token).ConfigureAwait(false);
+                await request2.WaitForResponseAsync(source.Token).ConfigureAwait(false);
                 Assert.Equal(RequestStatus.Success, request2.Status);
             }
         }
@@ -124,7 +124,7 @@ namespace CyborgianStates.Tests.CommandHandling
             GetQueueAndRequest(dataService, out NationStatesApiRequestQueue queue, out Request request);
 
             await queue.Enqueue(request).ConfigureAwait(false);
-            await request.WaitForResponse(source.Token).ConfigureAwait(false);
+            await request.WaitForResponseAsync(source.Token).ConfigureAwait(false);
             Assert.Equal(expectedStatus, request.Status);
             VerifyDataServiceCalls(dataService);
         }

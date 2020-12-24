@@ -38,17 +38,18 @@ namespace CyborgianStates.Interfaces
             Status = RequestStatus.Failed;
         }
 
-        public async Task WaitForResponse(CancellationToken cancellationToken)
+        public async Task WaitForResponseAsync(CancellationToken cancellationToken)
         {
             while (Status == RequestStatus.Pending)
             {
-                if (cancellationToken.IsCancellationRequested)
+                try
+                {
+                    await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+                }
+                catch (TaskCanceledException)
                 {
                     Status = RequestStatus.Canceled;
-                }
-                else
-                {
-                    await Task.Delay(50).ConfigureAwait(false);
+                    break;
                 }
             }
         }

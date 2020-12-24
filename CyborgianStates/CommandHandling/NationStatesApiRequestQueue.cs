@@ -12,7 +12,7 @@ namespace CyborgianStates.CommandHandling
         private readonly IDataService _dataService;
         private readonly ILogger _logger;
 
-        private readonly Queue<Request> requestQueue = new Queue<Request>();
+        private readonly Queue<Request> _requestQueue = new Queue<Request>();
 
         private bool isRunning = false;
 
@@ -22,25 +22,26 @@ namespace CyborgianStates.CommandHandling
             _logger = ApplicationLogging.CreateLogger(typeof(NationStatesApiRequestQueue));
         }
 
-        public int Size => requestQueue.Count;
+        public int Size => _requestQueue.Count;
 
         public async Task<int> Enqueue(Request request)
         {
-            if (request is null) throw new ArgumentNullException(nameof(request));
-            requestQueue.Enqueue(request);
+            if (request is null)
+                throw new ArgumentNullException(nameof(request));
+            _requestQueue.Enqueue(request);
             var position = Size;
-            _logger.LogDebug($"Request '{request.Type}' has been queued. Queue Size: {requestQueue.Count}");
-            _ = Run();
+            _logger.LogDebug($"Request '{request.Type}' has been queued. Queue Size: {_requestQueue.Count}");
+            _ = RunAsync();
             return await Task.FromResult(position).ConfigureAwait(false);
         }
 
-        private async Task ExecuteRequest(Request request)
+        private async Task ExecuteRequestAsync(Request request)
         {
             try
             {
                 if (await _dataService.ExecuteRequest(request).ConfigureAwait(false) is HttpResponseMessage response)
                 {
-                    var xml = await response.ReadXml().ConfigureAwait(false);
+                    var xml = await response.ReadXmlAsync().ConfigureAwait(false);
                     request.Complete(xml);
                     response.Dispose();
                 }
@@ -61,15 +62,16 @@ namespace CyborgianStates.CommandHandling
             }
         }
 
-        private async Task Run()
+        private async Task RunAsync()
         {
-            if (isRunning) return;
-            while (requestQueue.Count > 0)
+            if (isRunning)
+                return;
+            while (_requestQueue.Count > 0)
             {
                 isRunning = true;
-                var type = requestQueue.Peek().Type;
+                var type = _requestQueue.Peek().Type;
                 await _dataService.WaitForAction(type).ConfigureAwait(false);
-                await ExecuteRequest(requestQueue.Dequeue()).ConfigureAwait(false);
+                await ExecuteRequestAsync(_requestQueue.Dequeue()).ConfigureAwait(false);
             }
             isRunning = false;
         }

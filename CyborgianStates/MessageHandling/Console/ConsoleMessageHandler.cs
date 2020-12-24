@@ -7,8 +7,8 @@ namespace CyborgianStates.MessageHandling
 {
     public class ConsoleMessageHandler : IMessageHandler
     {
-        private IUserInput _input;
-        private ILogger _logger;
+        private readonly IUserInput _input;
+        private readonly ILogger _logger;
 
         public ConsoleMessageHandler(IUserInput input)
         {
@@ -26,7 +26,7 @@ namespace CyborgianStates.MessageHandling
             return Task.CompletedTask;
         }
 
-        public Task RunAsync()
+        public async Task RunAsync()
         {
             IsRunning = true;
             while (IsRunning)
@@ -34,11 +34,10 @@ namespace CyborgianStates.MessageHandling
                 var input = _input.GetInput();
                 if (!string.IsNullOrWhiteSpace(input))
                 {
-                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(new Message(0, input, new ConsoleMessageChannel(true))));
+                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(new Message(0, input, new ConsoleMessageChannel())));
                 }
-                Task.Delay(50).Wait();
+                await Task.Delay(50).ConfigureAwait(false);
             }
-            return Task.CompletedTask;
         }
 
         public Task ShutdownAsync()

@@ -1,6 +1,6 @@
 ﻿using CyborgianStates.Data;
 using CyborgianStates.Interfaces;
-using CyborgianStates.Models;
+using CyborgianStates.Data.Models;
 using CyborgianStates.Repositories;
 using DataAbstractions.Dapper;
 using Microsoft.Extensions.Options;
