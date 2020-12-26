@@ -34,7 +34,11 @@ namespace CyborgianStates.Services
 
         public async Task ExecuteRequestAsync(Request request)
         {
-            //_logger.LogDebug(request.EventId, LogMessageBuilder.Build(request.EventId, $"Waiting for NationStats-Request: {nationName}"));
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             var semaphore = GetSemaphoreByRequestType(request.Type);
             var ticks = DateTime.UtcNow.Ticks;
             _logger.LogDebug($"[{request.TraceId}]: Acquiring Semaphore");
@@ -77,7 +81,7 @@ namespace CyborgianStates.Services
             }
             finally
             {
-                result.Dispose();
+                result?.Dispose();
             }
         }
 
@@ -97,8 +101,7 @@ namespace CyborgianStates.Services
             switch (requestType)
             {
                 case RequestType.GetBasicNationStats:
-                    //return API_REQUEST_INTERVAL;
-                    return TimeSpan.FromSeconds(5).Ticks;
+                    return API_REQUEST_INTERVAL;
                 default:
                     throw new InvalidOperationException($"Unrecognized RequestType '{requestType}'");
             }
@@ -110,7 +113,7 @@ namespace CyborgianStates.Services
             var message = new HttpRequestMessage(HttpMethod.Get, url);
             try
             {
-                return await _dataService.ExecuteRequest(message, eventId).ConfigureAwait(false);
+                return await _dataService.ExecuteRequestAsync(message, eventId).ConfigureAwait(false);
             }
             finally
             {

@@ -1,5 +1,6 @@
 ﻿using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -17,9 +18,9 @@ namespace CyborgianStates.Tests.CommandHandling
             _ = Task.Run(async () =>
             {
                 await Task.Delay(100).ConfigureAwait(false);
-                tokenSource.Cancel();
+                tokenSource.Cancel(false);
             });
-            await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false);
+            await Assert.ThrowsAsync<TaskCanceledException>(async () => await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false));
             Assert.True(request.Status == RequestStatus.Canceled);
             tokenSource.Dispose();
         }
@@ -54,9 +55,9 @@ namespace CyborgianStates.Tests.CommandHandling
             _ = Task.Run(async () =>
             {
                 await Task.Delay(100).ConfigureAwait(false);
-                request.Fail("Failed !", null);
+                request.Fail("Failed !", new Exception("Failed !"));
             });
-            await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false);
+            await Assert.ThrowsAsync<Exception>(async() => await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false));
             Assert.True(request.Status == RequestStatus.Failed);
             Assert.True(request.FailureReason == "Failed !");
             tokenSource.Dispose();

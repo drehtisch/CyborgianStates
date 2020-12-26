@@ -52,7 +52,7 @@ namespace CyborgianStates.Tests.Services
                 })
                 .Verifiable();
             httpService.SetHttpMessageHandler(handlerMock.Object);
-            var response = await httpService.ExecuteRequest(message, id).ConfigureAwait(false);
+            var response = await httpService.ExecuteRequestAsync(message, id).ConfigureAwait(false);
             response.StatusCode.Should().Be(HttpStatusCode.BadGateway);
 
             handlerMock.Protected().Verify(
@@ -81,7 +81,7 @@ namespace CyborgianStates.Tests.Services
             var id = Helpers.GetEventIdByType(Enums.LoggingEvent.TestRequest);
             var message = new HttpRequestMessage(HttpMethod.Get, "0.0.0.0");
 
-            Func<Task> act = async () => { await httpService.ExecuteRequest(message, id).ConfigureAwait(false); };
+            Func<Task> act = async () => { await httpService.ExecuteRequestAsync(message, id).ConfigureAwait(false); };
             await act.Should().ThrowAsync<InvalidOperationException>().ConfigureAwait(false);
 
             message.Dispose();
@@ -100,7 +100,7 @@ namespace CyborgianStates.Tests.Services
 
             var id = Helpers.GetEventIdByType(Enums.LoggingEvent.TestRequest);
 
-            Func<Task> act = async () => { await httpService.ExecuteRequest(null, id).ConfigureAwait(false); };
+            Func<Task> act = async () => { await httpService.ExecuteRequestAsync(null, id).ConfigureAwait(false); };
             await act.Should().ThrowAsync<ArgumentNullException>().ConfigureAwait(false);
         }
 
@@ -131,7 +131,7 @@ namespace CyborgianStates.Tests.Services
                 })
                 .Verifiable();
             httpService.SetHttpMessageHandler(handlerMock.Object);
-            var response = await httpService.ExecuteRequest(message, id).ConfigureAwait(false);
+            var response = await httpService.ExecuteRequestAsync(message, id).ConfigureAwait(false);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             handlerMock.Protected().Verify(

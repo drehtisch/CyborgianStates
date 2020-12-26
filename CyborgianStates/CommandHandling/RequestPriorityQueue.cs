@@ -23,8 +23,12 @@ namespace CyborgianStates.CommandHandling
                     Jammed?.Invoke(this, new EventArgs());
                 }
                 base.Enqueue(item, priority);
-                _waitCompletionSource.TrySetResult(true);
+                _waitCompletionSource?.TrySetResult(true);
                 isWaiting = false;
+            }
+            if (this.Any(item => item.Status != Enums.RequestStatus.Pending))
+            {
+                this.Where(item => item.Status != Enums.RequestStatus.Pending).ToList().ForEach(item => TryRemove(item));
             }
         }
 

@@ -4,6 +4,7 @@ using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using CyborgianStates.Services;
+using Microsoft.Extensions.Options;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace CyborgianStates.Tests.Services
         private Mock<IMessageHandler> msgHandlerMock;
         private Mock<IRequestDispatcher> requestDispatcherMock;
         private Mock<IUserRepository> userRepositoryMock;
-
+        private Mock<IOptions<AppSettings>> appSettingsMock;
         public BotServiceTests()
         {
             msgHandlerMock = new Mock<IMessageHandler>(MockBehavior.Strict);
@@ -28,25 +29,34 @@ namespace CyborgianStates.Tests.Services
 
             requestDispatcherMock = new Mock<IRequestDispatcher>(MockBehavior.Strict);
             requestDispatcherMock.Setup(r => r.Register(It.IsAny<DataSourceType>(), It.IsAny<IRequestWorker>()));
+            requestDispatcherMock.Setup(r => r.Start());
+            requestDispatcherMock.Setup(r => r.Shutdown());
 
             userRepositoryMock = new Mock<IUserRepository>(MockBehavior.Strict);
 
             msgChannelMock = new Mock<IMessageChannel>(MockBehavior.Strict);
+            appSettingsMock = new Mock<IOptions<AppSettings>>(MockBehavior.Strict);
+            appSettingsMock
+                .Setup(m => m.Value)
+                .Returns(new AppSettings() { });
+
         }
 
         [Fact]
         public void TestBotServiceWithNullMessageHandler()
         {
-            Assert.Throws<ArgumentNullException>(() => new BotService(null, requestDispatcherMock.Object, userRepositoryMock.Object));
-            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, null, userRepositoryMock.Object));
-            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, null));
+            Assert.Throws<ArgumentNullException>(() => new BotService(null, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object));
+            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, null, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object));
+            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, null, new DiscordResponseBuilder(), appSettingsMock.Object));
+            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, null, appSettingsMock.Object));
+            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), null));
         }
 
         [Fact]
         public async Task TestInitRunAndShutDownBotService()
         {
             Program.ServiceProvider = Program.ConfigureServices();
-            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object);
+            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
             Assert.True(botService.IsRunning);
@@ -64,7 +74,7 @@ namespace CyborgianStates.Tests.Services
             msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<CommandResponse>())).Returns(Task.CompletedTask);
 
             Message message = new Message(0, "test", msgChannelMock.Object);
-            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object);
+            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
 
@@ -98,7 +108,7 @@ namespace CyborgianStates.Tests.Services
 
             Assert.True(CommandHandler.Count == 1);
 
-            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object);
+            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
 
@@ -118,6 +128,8 @@ namespace CyborgianStates.Tests.Services
             Message message = new Message(0, "ping", msgChannelMock.Object);
             MessageReceivedEventArgs eventArgs = new MessageReceivedEventArgs(message);
             msgHandlerMock.Raise(m => m.MessageReceived += null, this, eventArgs);
+            Assert.Equal(CommandStatus.Success, commandResponse.Status);
+            Assert.Equal("Pong !", commandResponse.Content);
 
             message = new Message(0, "test", msgChannelMock.Object);
             eventArgs = new MessageReceivedEventArgs(message);
@@ -129,8 +141,7 @@ namespace CyborgianStates.Tests.Services
 
             await Task.Delay(1000).ConfigureAwait(false);
 
-            Assert.Equal(CommandStatus.Success, commandResponse.Status);
-            Assert.Equal("Pong !", commandResponse.Content);
+            Assert.Equal(CommandStatus.Error, commandResponse.Status);
 
             await botService.ShutdownAsync().ConfigureAwait(false);
 

@@ -20,7 +20,7 @@ namespace CyborgianStates.Services
         private readonly IUserRepository _userRepo;
         private readonly IResponseBuilder _responseBuilder;
         private readonly AppSettings _appSettings;
-        public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository)
+        public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository, IResponseBuilder responseBuilder, IOptions<AppSettings> options)
         {
             if (messageHandler is null)
                 throw new ArgumentNullException(nameof(messageHandler));
@@ -28,12 +28,16 @@ namespace CyborgianStates.Services
                 throw new ArgumentNullException(nameof(requestDispatcher));
             if (userRepository is null)
                 throw new ArgumentNullException(nameof(requestDispatcher));
+            if(responseBuilder is null)
+                throw new ArgumentNullException(nameof(responseBuilder));
+            if(options is null)
+                throw new ArgumentNullException(nameof(options));
             _messageHandler = messageHandler;
             _requestDispatcher = requestDispatcher;
             _userRepo = userRepository;
             _logger = ApplicationLogging.CreateLogger(typeof(BotService));
-            _responseBuilder = (IResponseBuilder) Program.ServiceProvider.GetService(typeof(IResponseBuilder));
-            _appSettings = ((IOptions<AppSettings>) Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
+            _responseBuilder = responseBuilder;
+            _appSettings = options.Value;
         }
 
         public bool IsRunning { get; private set; }
