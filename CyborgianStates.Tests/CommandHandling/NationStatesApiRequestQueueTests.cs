@@ -1,6 +1,7 @@
 ﻿using CyborgianStates.CommandHandling;
 using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
+using FluentAssertions;
 using Moq;
 using System;
 using System.Net;
@@ -49,9 +50,9 @@ namespace CyborgianStates.Tests.CommandHandling
                 }
                 );
                 await request.WaitForResponseAsync(source.Token).ConfigureAwait(false);
-                Assert.Equal(RequestStatus.Success, request.Status);
+                request.Status.Should().Be(RequestStatus.Success);
                 await request2.WaitForResponseAsync(source.Token).ConfigureAwait(false);
-                Assert.Equal(RequestStatus.Success, request2.Status);
+                request2.Status.Should().Be(RequestStatus.Success);
             }
         }
 
@@ -150,7 +151,7 @@ namespace CyborgianStates.Tests.CommandHandling
             {
                 await Assert.ThrowsAsync<Exception>(async () => await request.WaitForResponseAsync(source.Token).ConfigureAwait(false));
             }
-            Assert.Equal(expectedStatus, request.Status);
+            expectedStatus.Should().Be(request.Status);
         }
 
         #endregion Helpers

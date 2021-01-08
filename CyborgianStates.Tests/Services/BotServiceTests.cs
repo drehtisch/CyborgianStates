@@ -4,6 +4,7 @@ using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using CyborgianStates.Services;
+using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
 using System;
@@ -20,6 +21,7 @@ namespace CyborgianStates.Tests.Services
         private Mock<IRequestDispatcher> requestDispatcherMock;
         private Mock<IUserRepository> userRepositoryMock;
         private Mock<IOptions<AppSettings>> appSettingsMock;
+
         public BotServiceTests()
         {
             msgHandlerMock = new Mock<IMessageHandler>(MockBehavior.Strict);
@@ -39,7 +41,6 @@ namespace CyborgianStates.Tests.Services
             appSettingsMock
                 .Setup(m => m.Value)
                 .Returns(new AppSettings() { });
-
         }
 
         [Fact]
@@ -59,9 +60,9 @@ namespace CyborgianStates.Tests.Services
             var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
-            Assert.True(botService.IsRunning);
+            botService.IsRunning.Should().BeTrue();
             await botService.ShutdownAsync().ConfigureAwait(false);
-            Assert.False(botService.IsRunning);
+            botService.IsRunning.Should().BeFalse();
         }
 
         [Fact]
@@ -106,13 +107,13 @@ namespace CyborgianStates.Tests.Services
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
 
-            Assert.True(CommandHandler.Count == 1);
+            CommandHandler.Count.Should().Be(1);
 
             var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object);
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
 
-            Assert.True(botService.IsRunning);
+            botService.IsRunning.Should().BeTrue();
             msgHandlerMock.Verify(m => m.InitAsync(), Times.Once);
             msgHandlerMock.Verify(m => m.RunAsync(), Times.Once);
 
@@ -128,8 +129,8 @@ namespace CyborgianStates.Tests.Services
             Message message = new Message(0, "ping", msgChannelMock.Object);
             MessageReceivedEventArgs eventArgs = new MessageReceivedEventArgs(message);
             msgHandlerMock.Raise(m => m.MessageReceived += null, this, eventArgs);
-            Assert.Equal(CommandStatus.Success, commandResponse.Status);
-            Assert.Equal("Pong !", commandResponse.Content);
+            commandResponse.Status.Should().Be(CommandStatus.Success);
+            commandResponse.Content.Should().Be("Pong !");
 
             message = new Message(0, "test", msgChannelMock.Object);
             eventArgs = new MessageReceivedEventArgs(message);
@@ -141,11 +142,11 @@ namespace CyborgianStates.Tests.Services
 
             await Task.Delay(1000).ConfigureAwait(false);
 
-            Assert.Equal(CommandStatus.Error, commandResponse.Status);
+            commandResponse.Status.Should().Be(CommandStatus.Error);
 
             await botService.ShutdownAsync().ConfigureAwait(false);
 
-            Assert.False(botService.IsRunning);
+            botService.IsRunning.Should().BeFalse();
             msgHandlerMock.Verify(m => m.ShutdownAsync(), Times.Once);
         }
     }
