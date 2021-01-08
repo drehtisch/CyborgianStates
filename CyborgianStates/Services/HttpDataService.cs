@@ -21,7 +21,7 @@ namespace CyborgianStates.Services
             _logger = logger;
         }
 
-        public async Task<HttpResponseMessage> ExecuteRequest(HttpRequestMessage httpRequest, EventId eventId)
+        public async Task<HttpResponseMessage> ExecuteRequestAsync(HttpRequestMessage httpRequest, EventId eventId)
         {
             if (httpRequest is null) throw new ArgumentNullException(nameof(httpRequest));
             if (string.IsNullOrWhiteSpace(_config.Contact)) throw new InvalidOperationException("No Request can be send when contact info hasn't been provided.");

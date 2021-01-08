@@ -4,8 +4,10 @@ using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.Services
@@ -16,8 +18,9 @@ namespace CyborgianStates.Services
         private readonly IMessageHandler _messageHandler;
         private readonly IRequestDispatcher _requestDispatcher;
         private readonly IUserRepository _userRepo;
-
-        public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository)
+        private readonly IResponseBuilder _responseBuilder;
+        private readonly AppSettings _appSettings;
+        public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository, IResponseBuilder responseBuilder, IOptions<AppSettings> options)
         {
             if (messageHandler is null)
                 throw new ArgumentNullException(nameof(messageHandler));
@@ -25,32 +28,45 @@ namespace CyborgianStates.Services
                 throw new ArgumentNullException(nameof(requestDispatcher));
             if (userRepository is null)
                 throw new ArgumentNullException(nameof(requestDispatcher));
+            if(responseBuilder is null)
+                throw new ArgumentNullException(nameof(responseBuilder));
+            if(options is null)
+                throw new ArgumentNullException(nameof(options));
             _messageHandler = messageHandler;
             _requestDispatcher = requestDispatcher;
             _userRepo = userRepository;
             _logger = ApplicationLogging.CreateLogger(typeof(BotService));
+            _responseBuilder = responseBuilder;
+            _appSettings = options.Value;
         }
 
         public bool IsRunning { get; private set; }
 
         public async Task InitAsync()
         {
-            await RegisterAsync().ConfigureAwait(false);
+            _logger.LogInformation("BotService Initializing");
+            Register();
             _messageHandler.MessageReceived += async (s, e) => await ProcessMessageAsync(e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
         }
 
         public async Task RunAsync()
         {
+            _logger.LogInformation("BotService Starting");
             IsRunning = true;
+            _requestDispatcher.Start();
+            _logger.LogInformation("BotService Running");
             await _messageHandler.RunAsync().ConfigureAwait(false);
         }
 
         public async Task ShutdownAsync()
         {
+            _logger.LogInformation("BotService Shutdown");
             CommandHandler.Cancel();
+            _requestDispatcher.Shutdown();
             await _messageHandler.ShutdownAsync().ConfigureAwait(false);
             IsRunning = false;
+            _logger.LogInformation("BotService Stopped");
         }
 
         private static void RegisterCommands()
@@ -87,6 +103,11 @@ namespace CyborgianStates.Services
                         if (result == null)
                         {
                             _logger.LogError($"Unknown command trigger {e.Message.Content}");
+                            var response = _responseBuilder
+                                .FailWithDescription($"Unrecognized command trigger: '{e.Message.Content}'")
+                                .WithFooter(_appSettings.Footer)
+                                .Build();
+                            await e.Message.Channel.ReplyToAsync(e.Message, response).ConfigureAwait(false);
                         }
                     }
                 }
@@ -97,12 +118,12 @@ namespace CyborgianStates.Services
             }
         }
 
-        private async Task RegisterAsync()
+        private void Register()
         {
             RegisterCommands();
             var dataService = new NationStatesApiDataService(Program.ServiceProvider.GetService(typeof(IHttpDataService)) as IHttpDataService);
-            var queue = new NationStatesApiRequestQueue(dataService);
-            await _requestDispatcher.Register(DataSourceType.NationStatesAPI, queue).ConfigureAwait(false);
+            var queue = new NationStatesApiRequestWorker(dataService);
+            _requestDispatcher.Register(DataSourceType.NationStatesAPI, queue);
         }
     }
 }

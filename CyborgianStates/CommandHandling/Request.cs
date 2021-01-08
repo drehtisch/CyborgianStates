@@ -1,10 +1,13 @@
 ﻿using CyborgianStates.Enums;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CyborgianStates.Interfaces
+namespace CyborgianStates
 {
     public class Request
     {
@@ -14,10 +17,18 @@ namespace CyborgianStates.Interfaces
             ExpectedReponseFormat = format;
             DataSourceType = dataSource;
             EventId = Helpers.GetEventIdByRequestType(type);
+            _completionSource = new TaskCompletionSource<object>();
+            TraceId = GenerateTraceId();
         }
 
+        public Request()
+        {
+        }
+
+        private readonly TaskCompletionSource<object> _completionSource;
         public DataSourceType DataSourceType { get; }
         public EventId EventId { get; private set; }
+        public string TraceId { get; private set; }
         public ResponseFormat ExpectedReponseFormat { get; }
         public string FailureReason { get; private set; }
         public Dictionary<string, object> Params { get; } = new Dictionary<string, object>();
@@ -30,28 +41,43 @@ namespace CyborgianStates.Interfaces
         {
             Response = response;
             Status = RequestStatus.Success;
+            _completionSource.TrySetResult(response);
         }
 
-        public void Fail(string failReason)
+        public void Fail(string failReason, Exception ex)
         {
             FailureReason = failReason;
             Status = RequestStatus.Failed;
+            if (ex is null)
+            {
+                ex = new Exception("Error not specified.");
+            }
+
+            _completionSource.TrySetException(ex);
         }
 
-        public async Task WaitForResponseAsync(CancellationToken cancellationToken)
+        public Task<object> WaitForResponseAsync(CancellationToken cancellationToken)
         {
-            while (Status == RequestStatus.Pending)
+            cancellationToken.Register(() =>
             {
-                try
-                {
-                    await Task.Delay(50, cancellationToken).ConfigureAwait(false);
-                }
-                catch (TaskCanceledException)
-                {
-                    Status = RequestStatus.Canceled;
-                    break;
-                }
-            }
+                Status = RequestStatus.Canceled;
+                _completionSource.TrySetCanceled(cancellationToken);
+            });
+            return _completionSource.Task;
+        }
+
+        private string GenerateTraceId()
+        {
+            StringBuilder builder = new StringBuilder();
+            Enumerable
+               .Range(65, 26)
+                .Select(e => ((char) e).ToString())
+                .Concat(Enumerable.Range(97, 26).Select(e => ((char) e).ToString()))
+                .Concat(Enumerable.Range(0, 10).Select(e => e.ToString()))
+                .OrderBy(e => Guid.NewGuid())
+                .Take(11)
+                .ToList().ForEach(e => builder.Append(e));
+            return builder.ToString();
         }
     }
 }

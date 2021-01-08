@@ -1,10 +1,10 @@
-﻿using CyborgianStates.CommandHandling;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CyborgianStates.Commands
 {

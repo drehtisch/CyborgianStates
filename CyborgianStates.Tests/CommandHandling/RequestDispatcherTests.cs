@@ -11,24 +11,29 @@ namespace CyborgianStates.Tests.CommandHandling
     public class RequestDispatcherTests
     {
         [Fact]
-        public async Task TestRegisterAndThrowOnDispatch()
+        public void TestRegisterAndThrowOnDispatch()
         {
             RequestDispatcher dispatcher = new RequestDispatcher();
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
-            await Assert.ThrowsAsync<ArgumentNullException>(() => dispatcher.Dispatch(null)).ConfigureAwait(false);
-            await Assert.ThrowsAsync<InvalidOperationException>(() => dispatcher.Dispatch(request)).ConfigureAwait(false);
+            Assert.Throws<ArgumentNullException>(() => dispatcher.Dispatch(null, 0));
+            Assert.Throws<InvalidOperationException>(() => dispatcher.Dispatch(request, 0));
         }
 
         [Fact]
-        public async Task TestReqisterAndDispatch()
+        public void TestReqisterAndDispatch()
         {
             RequestDispatcher dispatcher = new RequestDispatcher();
-            var requestQueue = new Mock<IRequestQueue>(MockBehavior.Strict);
-            requestQueue.Setup(r => r.Enqueue(It.IsAny<Request>())).Returns(Task.FromResult(1));
-            await dispatcher.Register(DataSourceType.NationStatesAPI, requestQueue.Object).ConfigureAwait(false);
+            var requestQueue = new Mock<IRequestWorker>(MockBehavior.Strict);
+            requestQueue.Setup(r => r.Enqueue(It.IsAny<Request>(), It.IsAny<int>()));
+            dispatcher.Register(DataSourceType.NationStatesAPI, requestQueue.Object);
+            dispatcher.Start();
+            Assert.Throws<InvalidOperationException>(() => dispatcher.Register(DataSourceType.NationStatesAPI, requestQueue.Object));
+            Assert.Throws<InvalidOperationException>(() => dispatcher.Start());
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
-            await dispatcher.Dispatch(request).ConfigureAwait(false);
-            requestQueue.Verify(r => r.Enqueue(It.IsAny<Request>()), Times.Once);
+            dispatcher.Dispatch(request, 0);
+            requestQueue.Raise(m => m.RestartRequired += null, requestQueue.Object, null);
+            requestQueue.Verify(r => r.Enqueue(It.IsAny<Request>(), It.IsAny<int>()), Times.Once);
+            dispatcher.Shutdown();
         }
     }
 }

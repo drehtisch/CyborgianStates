@@ -1,7 +1,9 @@
 ﻿using CyborgianStates.Enums;
+using CyborgianStates.Exceptions;
 using CyborgianStates.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,24 +12,20 @@ namespace CyborgianStates.Services
 {
     public class NationStatesApiDataService : IDataService
     {
-        public const long API_REQUEST_INTERVAL = 6500000;
+        public const long API_REQUEST_INTERVAL = 6125000; //0,6 s + additional 0,0125 s as buffer -> 0,6125 s
         public const int API_VERSION = 10;
-
-        //0,6 s + additional 0,05 s as buffer -> 0,65 s
-        public const long REQUEST_NEW_NATIONS_INTERVAL = 18000000000; //30 m 18000000000
-
-        public const long REQUEST_REGION_NATIONS_INTERVAL = 432000000000; //12 h 432000000000
-        public const long SEND_RECRUITMENTTELEGRAM_INTERVAL = 1800000000; //3 m 1800000000
 
         private readonly IHttpDataService _dataService;
         private readonly ILogger _logger;
 
-        private DateTime lastAPIRequest;
+        //private DateTime lastAPIRequest;
+        private Dictionary<string, SemaphoreSlim> _semaphores = new();
 
         public NationStatesApiDataService(IHttpDataService dataService)
         {
             _dataService = dataService;
             _logger = ApplicationLogging.CreateLogger(typeof(NationStatesApiDataService));
+            _semaphores["API_REQUEST"] = new SemaphoreSlim(1, 1);
         }
 
         public static Uri BuildApiRequestUrl(string parameters)
@@ -35,68 +33,90 @@ namespace CyborgianStates.Services
             return new Uri($"http://www.nationstates.net/cgi-bin/api.cgi?{parameters}&v={API_VERSION}");
         }
 
-        public async Task<object> ExecuteRequest(Request request)
+        public async Task ExecuteRequestAsync(Request request)
         {
-            if (request is null) throw new ArgumentNullException(nameof(request));
-            switch (request.Type)
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var semaphore = GetSemaphoreByRequestType(request.Type);
+            var ticks = DateTime.UtcNow.Ticks;
+            _logger.LogDebug($"[{request.TraceId}]: Acquiring Semaphore");
+            await semaphore.WaitAsync().ConfigureAwait(false);
+            _logger.LogDebug($"[{request.TraceId}]: Aquiring Semaphore took {TimeSpan.FromTicks(DateTime.UtcNow.Ticks).Subtract(TimeSpan.FromTicks(ticks))}");
+            HttpResponseMessage result = null;
+            Action<Task<HttpResponseMessage>> _continue = async (prev) =>
+            {
+                await Task.Delay(TimeSpan.FromTicks(GetTimeoutByRequestType(request.Type))).ConfigureAwait(false);
+                if (semaphore.CurrentCount == 0)
+                {
+                    semaphore.Release();
+                }
+            };
+            try
+            {
+                switch (request.Type)
+                {
+                    case RequestType.GetBasicNationStats:
+                        var task = GetNationStatsAsync(request.Params["nationName"].ToString(), request.EventId);
+                        _ = task.ContinueWith(_continue);
+                        result = await task.ConfigureAwait(false);
+                        break;
+                }
+                if (result is not null && result.IsSuccessStatusCode)
+                {
+                    var xml = await result.ReadXmlAsync().ConfigureAwait(false);
+                    request.Complete(xml);
+                }
+                else if (result is null)
+                {
+                    var reason = "Request failed: No result";
+                    request.Fail(reason, new InvalidOperationException(reason));
+                }
+                else
+                {
+                    var reason = $"Request failed: {(int) result.StatusCode} - {result.StatusCode}";
+                    request.Fail(reason, new HttpRequestFailedException(reason));
+                }
+            }
+            finally
+            {
+                result?.Dispose();
+            }
+        }
+
+        private SemaphoreSlim GetSemaphoreByRequestType(RequestType requestType)
+        {
+            switch (requestType)
             {
                 case RequestType.GetBasicNationStats:
-                    return await GetNationStatsAsync(request.Params["nationName"].ToString(), request.EventId).ConfigureAwait(false);
+                    return _semaphores["API_REQUEST"];
 
-                case RequestType.UnitTest:
                 default:
-                    throw new InvalidOperationException($"Unknown request type: {request.Type}");
+                    throw new InvalidOperationException($"Unrecognized RequestType '{requestType}'");
             }
         }
 
-        public Task<bool> IsActionReady(RequestType requestType)
+        private long GetTimeoutByRequestType(RequestType requestType)
         {
-            if (requestType == RequestType.GetBasicNationStats)
+            switch (requestType)
             {
-                return Task.FromResult(DateTime.UtcNow.Ticks - lastAPIRequest.Ticks > API_REQUEST_INTERVAL);
-            }
-            else
-            {
-                _logger.LogCritical($"Unrecognized RequestType '{requestType}'");
-                return Task.FromResult(false);
-            }
-        }
+                case RequestType.GetBasicNationStats:
+                    return API_REQUEST_INTERVAL;
 
-        public async Task WaitForAction(RequestType requestType, TimeSpan interval, CancellationToken cancellationToken)
-        {
-            while (!await IsActionReady(requestType).ConfigureAwait(false))
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-                await Task.Delay(interval.Milliseconds, cancellationToken).ConfigureAwait(false);
+                default:
+                    throw new InvalidOperationException($"Unrecognized RequestType '{requestType}'");
             }
-        }
-
-        public async Task WaitForAction(RequestType requestType, TimeSpan interval)
-        {
-            while (!await IsActionReady(requestType).ConfigureAwait(false))
-            {
-                await Task.Delay(interval.Milliseconds).ConfigureAwait(false);
-            }
-        }
-
-        public async Task WaitForAction(RequestType requestType)
-        {
-            await WaitForAction(requestType, TimeSpan.FromTicks(API_REQUEST_INTERVAL)).ConfigureAwait(false);
         }
 
         private async Task<HttpResponseMessage> GetNationStatsAsync(string nationName, EventId eventId)
         {
-            _logger.LogDebug(eventId, LogMessageBuilder.Build(eventId, $"Waiting for NationStats-Request: {nationName}"));
-            await WaitForAction(RequestType.GetBasicNationStats).ConfigureAwait(false);
             Uri url = BuildApiRequestUrl($"nation={Helpers.ToID(nationName)}&q=flag+wa+gavote+scvote+fullname+freedom+demonym2plural+category+population+region+founded+influence+lastactivity+census;mode=score;scale=0+1+2+65+66+80");
             var message = new HttpRequestMessage(HttpMethod.Get, url);
-            lastAPIRequest = DateTime.UtcNow;
             try
             {
-                return await _dataService.ExecuteRequest(message, eventId).ConfigureAwait(false);
+                return await _dataService.ExecuteRequestAsync(message, eventId).ConfigureAwait(false);
             }
             finally
             {

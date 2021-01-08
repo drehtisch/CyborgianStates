@@ -51,6 +51,7 @@ namespace CyborgianStates.Interfaces
             var _builder = builder.Failed(null);
             _builder = _builder.WithTitle("Something went wrong");
             _builder = _builder.WithDescription(reason);
+            _builder = _builder.WithColor(Color.Red);
             return _builder;
         }
         public static IResponseBuilder WithRandomColor(this IResponseBuilder builder)

@@ -14,7 +14,13 @@ namespace CyborgianStates.Tests.CommandHandling
     public class NationStatesApiRequestQueueTests : IDisposable
     {
         private bool disposedValue;
-        private CancellationTokenSource source = new CancellationTokenSource();
+        private CancellationTokenSource source;
+
+        public NationStatesApiRequestQueueTests()
+        {
+            disposedValue = false;
+            source = new CancellationTokenSource();
+        }
 
         public void Dispose()
         {
@@ -28,14 +34,20 @@ namespace CyborgianStates.Tests.CommandHandling
             using (var dummyResponseMessage = GetDummyResponse())
             {
                 Mock<IDataService> dataService = new Mock<IDataService>(MockBehavior.Strict);
-                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => Task.FromResult((object)GetDummyResponse()));
-                dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(() => Task.Delay(10));
+                dataService.Setup(d => d.ExecuteRequestAsync(It.IsAny<Request>())).Returns(() => Task.CompletedTask);
 
-                GetQueueAndRequest(dataService, out NationStatesApiRequestQueue queue, out Request request);
+                GetQueueAndRequest(dataService, out NationStatesApiRequestWorker queue, out Request request);
                 GetQueueAndRequest(dataService, out _, out Request request2);
-                await queue.Enqueue(request).ConfigureAwait(false);
-                var position = await queue.Enqueue(request2).ConfigureAwait(false);
-                Assert.Equal(2, position);
+                queue.Enqueue(request);
+                queue.Enqueue(request2);
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(100);
+                    request.Complete(null);
+                    await Task.Delay(100);
+                    request2.Complete(null);
+                }
+                );
                 await request.WaitForResponseAsync(source.Token).ConfigureAwait(false);
                 Assert.Equal(RequestStatus.Success, request.Status);
                 await request2.WaitForResponseAsync(source.Token).ConfigureAwait(false);
@@ -49,12 +61,11 @@ namespace CyborgianStates.Tests.CommandHandling
             using (var dummyResponseMessage = GetDummyResponse())
             {
                 Mock<IDataService> dataService = new Mock<IDataService>(MockBehavior.Strict);
-                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(Task.FromResult((object)dummyResponseMessage));
-                dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(Task.CompletedTask);
+                dataService.Setup(d => d.ExecuteRequestAsync(It.IsAny<Request>())).Returns(Task.FromResult((object)dummyResponseMessage));
 
-                GetQueueAndRequest(dataService, out NationStatesApiRequestQueue queue, out Request request);
+                GetQueueAndRequest(dataService, out NationStatesApiRequestWorker queue, out Request request);
 
-                await Assert.ThrowsAsync<ArgumentNullException>(async () => await queue.Enqueue(null).ConfigureAwait(false)).ConfigureAwait(false);
+                Assert.Throws<ArgumentNullException>(() => queue.Enqueue(null));
                 await ExecuteWithExpectedResult(dataService, RequestStatus.Success).ConfigureAwait(false);
             }
         }
@@ -65,8 +76,7 @@ namespace CyborgianStates.Tests.CommandHandling
             using (var dummyResponseMessage = GetDummyResponse())
             {
                 Mock<IDataService> dataService = new Mock<IDataService>(MockBehavior.Strict);
-                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => throw new ApplicationException("Unit Test: Forced Execution Failure"));
-                dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(Task.CompletedTask);
+                dataService.Setup(d => d.ExecuteRequestAsync(It.IsAny<Request>())).Returns(() => throw new ApplicationException("Unit Test: Forced Execution Failure"));
 
                 await ExecuteWithExpectedResult(dataService, RequestStatus.Failed).ConfigureAwait(false);
             }
@@ -78,8 +88,7 @@ namespace CyborgianStates.Tests.CommandHandling
             using (var dummyResponseMessage = GetDummyResponse())
             {
                 Mock<IDataService> dataService = new Mock<IDataService>(MockBehavior.Strict);
-                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => throw new Exception("Unit Test: Forced Execution Failure"));
-                dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(Task.CompletedTask);
+                dataService.Setup(d => d.ExecuteRequestAsync(It.IsAny<Request>())).Returns(() => throw new Exception("Unit Test: Forced Execution Failure"));
                 await ExecuteWithExpectedResult(dataService, RequestStatus.Failed).ConfigureAwait(false);
             }
         }
@@ -90,8 +99,7 @@ namespace CyborgianStates.Tests.CommandHandling
             using (var dummyResponseMessage = GetDummyResponse())
             {
                 Mock<IDataService> dataService = new Mock<IDataService>(MockBehavior.Strict);
-                dataService.Setup(d => d.ExecuteRequest(It.IsAny<Request>())).Returns(() => Task.FromResult((object)null));
-                dataService.Setup(d => d.WaitForAction(It.IsAny<RequestType>())).Returns(Task.CompletedTask);
+                dataService.Setup(d => d.ExecuteRequestAsync(It.IsAny<Request>())).Returns(() => Task.FromResult((object)null));
                 await ExecuteWithExpectedResult(dataService, RequestStatus.Failed).ConfigureAwait(false);
             }
         }
@@ -107,26 +115,42 @@ namespace CyborgianStates.Tests.CommandHandling
             };
         }
 
-        private static void GetQueueAndRequest(Mock<IDataService> dataService, out NationStatesApiRequestQueue queue, out Request request)
+        private void GetQueueAndRequest(Mock<IDataService> dataService, out NationStatesApiRequestWorker queue, out Request request)
         {
-            queue = new NationStatesApiRequestQueue(dataService.Object);
+            var _queue = new NationStatesApiRequestWorker(dataService.Object);
+            queue = _queue;
             request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
-        }
-
-        private static void VerifyDataServiceCalls(Mock<IDataService> dataService)
-        {
-            dataService.Verify(d => d.WaitForAction(It.IsAny<RequestType>()), Times.AtLeastOnce);
-            dataService.Verify(d => d.ExecuteRequest(It.IsAny<Request>()), Times.AtLeastOnce);
+            var tmpSource = new CancellationTokenSource();
+            Task.Run(async () => await _queue.RunAsync(tmpSource.Token));
+            tmpSource.Cancel();
         }
 
         private async Task ExecuteWithExpectedResult(Mock<IDataService> dataService, RequestStatus expectedStatus)
         {
-            GetQueueAndRequest(dataService, out NationStatesApiRequestQueue queue, out Request request);
+            GetQueueAndRequest(dataService, out NationStatesApiRequestWorker queue, out Request request);
 
-            await queue.Enqueue(request).ConfigureAwait(false);
-            await request.WaitForResponseAsync(source.Token).ConfigureAwait(false);
+            queue.Enqueue(request);
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(100);
+                if (expectedStatus == RequestStatus.Success)
+                {
+                    request.Complete(null);
+                }
+                else if (expectedStatus == RequestStatus.Failed)
+                {
+                    request.Fail("Unit Test", new Exception());
+                }
+            });
+            if (expectedStatus == RequestStatus.Success)
+            {
+                await request.WaitForResponseAsync(source.Token).ConfigureAwait(false);
+            }
+            else
+            {
+                await Assert.ThrowsAsync<Exception>(async () => await request.WaitForResponseAsync(source.Token).ConfigureAwait(false));
+            }
             Assert.Equal(expectedStatus, request.Status);
-            VerifyDataServiceCalls(dataService);
         }
 
         #endregion Helpers
