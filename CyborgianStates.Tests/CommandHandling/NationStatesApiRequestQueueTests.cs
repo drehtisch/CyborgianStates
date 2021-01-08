@@ -14,7 +14,13 @@ namespace CyborgianStates.Tests.CommandHandling
     public class NationStatesApiRequestQueueTests : IDisposable
     {
         private bool disposedValue;
-        private CancellationTokenSource source = new CancellationTokenSource();
+        private CancellationTokenSource source;
+
+        public NationStatesApiRequestQueueTests()
+        {
+            disposedValue = false;
+            source = new CancellationTokenSource();
+        }
 
         public void Dispose()
         {
@@ -114,12 +120,9 @@ namespace CyborgianStates.Tests.CommandHandling
             var _queue = new NationStatesApiRequestWorker(dataService.Object);
             queue = _queue;
             request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
-            Task.Run(async () => await _queue.RunAsync(source.Token));
-        }
-
-        private static void VerifyDataServiceCalls(Mock<IDataService> dataService)
-        {
-            dataService.Verify(d => d.ExecuteRequestAsync(It.IsAny<Request>()), Times.AtLeastOnce);
+            var tmpSource = new CancellationTokenSource();
+            Task.Run(async () => await _queue.RunAsync(tmpSource.Token));
+            tmpSource.Cancel();
         }
 
         private async Task ExecuteWithExpectedResult(Mock<IDataService> dataService, RequestStatus expectedStatus)
@@ -148,7 +151,6 @@ namespace CyborgianStates.Tests.CommandHandling
                 await Assert.ThrowsAsync<Exception>(async () => await request.WaitForResponseAsync(source.Token).ConfigureAwait(false));
             }
             Assert.Equal(expectedStatus, request.Status);
-            VerifyDataServiceCalls(dataService);
         }
 
         #endregion Helpers

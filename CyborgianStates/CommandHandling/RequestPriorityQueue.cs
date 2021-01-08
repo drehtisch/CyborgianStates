@@ -14,6 +14,7 @@ namespace CyborgianStates.CommandHandling
         /// Use this event to detected consumer failures and for restarting these.
         /// </summary>
         public event EventHandler Jammed;
+
         public new void Enqueue(Request item, int priority)
         {
             if (item.Status == Enums.RequestStatus.Pending)
@@ -32,26 +33,11 @@ namespace CyborgianStates.CommandHandling
             }
         }
 
-        public new bool EnqueueWithoutDuplicates(Request item, int priority)
-        {
-            if (item.Status == Enums.RequestStatus.Pending)
-            {
-                var res = base.EnqueueWithoutDuplicates(item, priority);
-                if (res)
-                {
-                    _waitCompletionSource.TrySetResult(true);
-                    isWaiting = false;
-                }
-                return res;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        public new void EnqueueWithoutDuplicates(Request item, int priority) => throw new NotImplementedException();
 
         private TaskCompletionSource<bool> _waitCompletionSource;
         private bool isWaiting = false;
+
         public Task<bool> WaitForNextItemAsync(CancellationToken cancellationToken)
         {
             if (this.Any(t => t.Status == Enums.RequestStatus.Pending))

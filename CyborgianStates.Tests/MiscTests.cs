@@ -56,6 +56,11 @@ namespace CyborgianStates.Tests
                 res.Content = new StringContent("<test>test</test");
                 await Assert.ThrowsAsync<ApplicationException>(async () => { await res.ReadXmlAsync().ConfigureAwait(false); }).ConfigureAwait(false);
             }
+            using (var res = new HttpResponseMessage(HttpStatusCode.NotFound))
+            {
+                var ret = await res.ReadXmlAsync().ConfigureAwait(false);
+                ret.Should().BeNull();
+            }
             await Assert.ThrowsAsync<ArgumentNullException>(async () => { await HttpExtensions.ReadXmlAsync(null).ConfigureAwait(false); }).ConfigureAwait(false);
         }
 
@@ -130,6 +135,7 @@ namespace CyborgianStates.Tests
             mock.Verify(l => l.RunAsync(), Times.Once);
             Assert.True(launcher.IsRunning);
         }
+
         [Fact]
         public void TestConfigureServicesDiscordPath()
         {
@@ -137,6 +143,8 @@ namespace CyborgianStates.Tests
             Program.ConfigureServices();
             Program.InputChannel = "test";
             Assert.Throws<InvalidOperationException>(() => Program.ConfigureServices());
+            Program.InputChannel = "Console";
+            Program.ConfigureServices();
             Program.InputChannel = string.Empty;
         }
 

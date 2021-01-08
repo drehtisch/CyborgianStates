@@ -1,16 +1,15 @@
-﻿using CyborgianStates.CommandHandling;
-using CyborgianStates.Enums;
-using CyborgianStates.Interfaces;
-using CyborgianStates.MessageHandling;
-using CyborgianStates.Services;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
+﻿using System;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using CyborgianStates.CommandHandling;
+using CyborgianStates.Enums;
+using CyborgianStates.Exceptions;
+using CyborgianStates.Interfaces;
+using CyborgianStates.MessageHandling;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CyborgianStates.Commands
 {

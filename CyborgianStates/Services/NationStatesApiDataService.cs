@@ -1,10 +1,10 @@
 ﻿using CyborgianStates.Enums;
+using CyborgianStates.Exceptions;
 using CyborgianStates.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,6 +20,7 @@ namespace CyborgianStates.Services
 
         //private DateTime lastAPIRequest;
         private Dictionary<string, SemaphoreSlim> _semaphores = new();
+
         public NationStatesApiDataService(IHttpDataService dataService)
         {
             _dataService = dataService;
@@ -91,6 +92,7 @@ namespace CyborgianStates.Services
             {
                 case RequestType.GetBasicNationStats:
                     return _semaphores["API_REQUEST"];
+
                 default:
                     throw new InvalidOperationException($"Unrecognized RequestType '{requestType}'");
             }
@@ -102,6 +104,7 @@ namespace CyborgianStates.Services
             {
                 case RequestType.GetBasicNationStats:
                     return API_REQUEST_INTERVAL;
+
                 default:
                     throw new InvalidOperationException($"Unrecognized RequestType '{requestType}'");
             }
@@ -120,16 +123,5 @@ namespace CyborgianStates.Services
                 message.Dispose();
             }
         }
-    }
-
-    public class HttpRequestFailedException : Exception
-    {
-        public HttpRequestFailedException() { }
-
-        public HttpRequestFailedException(string message) : base(message) { }
-
-        public HttpRequestFailedException(string message, Exception innerException) : base(message, innerException) { }
-
-        protected HttpRequestFailedException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

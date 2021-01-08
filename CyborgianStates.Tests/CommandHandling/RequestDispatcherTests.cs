@@ -26,9 +26,14 @@ namespace CyborgianStates.Tests.CommandHandling
             var requestQueue = new Mock<IRequestWorker>(MockBehavior.Strict);
             requestQueue.Setup(r => r.Enqueue(It.IsAny<Request>(), It.IsAny<int>()));
             dispatcher.Register(DataSourceType.NationStatesAPI, requestQueue.Object);
+            dispatcher.Start();
+            Assert.Throws<InvalidOperationException>(() => dispatcher.Register(DataSourceType.NationStatesAPI, requestQueue.Object));
+            Assert.Throws<InvalidOperationException>(() => dispatcher.Start());
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
             dispatcher.Dispatch(request, 0);
+            requestQueue.Raise(m => m.RestartRequired += null, requestQueue.Object, null);
             requestQueue.Verify(r => r.Enqueue(It.IsAny<Request>(), It.IsAny<int>()), Times.Once);
+            dispatcher.Shutdown();
         }
     }
 }

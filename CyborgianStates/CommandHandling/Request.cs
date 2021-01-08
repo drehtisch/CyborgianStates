@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CyborgianStates.Interfaces
+namespace CyborgianStates
 {
     public class Request
     {
@@ -20,6 +20,11 @@ namespace CyborgianStates.Interfaces
             _completionSource = new TaskCompletionSource<object>();
             TraceId = GenerateTraceId();
         }
+
+        public Request()
+        {
+        }
+
         private readonly TaskCompletionSource<object> _completionSource;
         public DataSourceType DataSourceType { get; }
         public EventId EventId { get; private set; }
@@ -43,15 +48,20 @@ namespace CyborgianStates.Interfaces
         {
             FailureReason = failReason;
             Status = RequestStatus.Failed;
+            if (ex is null)
+            {
+                ex = new Exception("Error not specified.");
+            }
+
             _completionSource.TrySetException(ex);
         }
 
         public Task<object> WaitForResponseAsync(CancellationToken cancellationToken)
         {
-            cancellationToken.Register(() => 
-            { 
-                Status = RequestStatus.Canceled; 
-                _completionSource.TrySetCanceled(cancellationToken); 
+            cancellationToken.Register(() =>
+            {
+                Status = RequestStatus.Canceled;
+                _completionSource.TrySetCanceled(cancellationToken);
             });
             return _completionSource.Task;
         }

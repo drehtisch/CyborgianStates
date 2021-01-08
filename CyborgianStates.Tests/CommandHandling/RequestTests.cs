@@ -32,8 +32,6 @@ namespace CyborgianStates.Tests.CommandHandling
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
             var requestType = request.Type;
             request.Params.Add("nationName", "Testlandia");
-            var expectedResponseFormat = request.ExpectedReponseFormat;
-            var priority = request.Priority++;
             Assert.True(request.Status == RequestStatus.Pending);
             _ = Task.Run(async () =>
               {
@@ -50,14 +48,15 @@ namespace CyborgianStates.Tests.CommandHandling
         public async Task TestFailure()
         {
             CancellationTokenSource tokenSource = new CancellationTokenSource();
-            var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
+            Request request = new();
+            request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
             Assert.True(request.Status == RequestStatus.Pending);
             _ = Task.Run(async () =>
             {
                 await Task.Delay(100).ConfigureAwait(false);
-                request.Fail("Failed !", new Exception("Failed !"));
+                request.Fail("Failed !", null);
             });
-            await Assert.ThrowsAsync<Exception>(async() => await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false));
+            await Assert.ThrowsAsync<Exception>(async () => await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false));
             Assert.True(request.Status == RequestStatus.Failed);
             Assert.True(request.FailureReason == "Failed !");
             tokenSource.Dispose();
