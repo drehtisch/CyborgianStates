@@ -19,9 +19,9 @@ namespace CyborgianStates.Tests
         public void TestGetEventId()
         {
             var res = Helpers.GetEventIdByType(Enums.LoggingEvent.GetNationStats);
-            Assert.IsType<EventId>(res);
-            Assert.Equal(10300, res.Id);
-            Assert.Equal("GetNationStats", res.Name);
+            res.Should().BeOfType<EventId>();
+            res.Id.Should().Be(10300);
+            res.Name.Should().Be("GetNationStats");
         }
 
         [Fact]
@@ -29,8 +29,8 @@ namespace CyborgianStates.Tests
         {
             ILogger logger = ApplicationLogging.CreateLogger("TestLogger");
             Type type = logger.GetType();
-            Assert.Equal("Logger", type.Name);
-            Assert.Equal("Microsoft.Extensions.Logging.Logger", type.FullName);
+            type.Name.Should().Be("Logger");
+            type.FullName.Should().Be("Microsoft.Extensions.Logging.Logger");
         }
 
         [Fact]
@@ -38,8 +38,8 @@ namespace CyborgianStates.Tests
         {
             ILogger logger = ApplicationLogging.CreateLogger(typeof(Program));
             Type type = logger.GetType();
-            Assert.Equal("Logger", type.Name);
-            Assert.Equal("Microsoft.Extensions.Logging.Logger", type.FullName);
+            type.Name.Should().Be("Logger");
+            type.FullName.Should().Be("Microsoft.Extensions.Logging.Logger");
         }
 
         [Fact]
@@ -74,13 +74,13 @@ namespace CyborgianStates.Tests
         public void TestIdMethods()
         {
             var res = Helpers.ToID("Hello World");
-            Assert.Equal("hello_world", res);
+            res.Should().Be("hello_world");
             res = Helpers.FromID(res);
-            Assert.Equal("hello world", res);
+            res.Should().Be("hello world");
             res = Helpers.FromID(null);
-            Assert.Null(res);
+            res.Should().BeNull();
             res = Helpers.ToID(null);
-            Assert.Null(res);
+            res.Should().BeNull();
         }
 
         [Fact]
@@ -98,7 +98,7 @@ namespace CyborgianStates.Tests
             Launcher launcher = new Launcher();
             Program.ServiceProvider = serviceCollection.BuildServiceProvider();
             await launcher.RunAsync().ConfigureAwait(false);
-            Assert.True(launcher.IsRunning);
+            launcher.IsRunning.Should().BeTrue();
             botService.Verify(m => m.RunAsync(), Times.Once);
             var envMock = new Mock<BotEnvironment>(MockBehavior.Strict);
             envMock.Setup(m => m.Exit(It.IsAny<int>()));
@@ -110,11 +110,11 @@ namespace CyborgianStates.Tests
         public void TestLogMessageBuilder()
         {
             var res = Helpers.GetEventIdByType(Enums.LoggingEvent.GetNationStats);
-            Assert.IsType<EventId>(res);
-            Assert.Equal(10300, res.Id);
-            Assert.Equal("GetNationStats", res.Name);
+            res.Should().BeOfType<EventId>();
+            res.Id.Should().Be(10300);
+            res.Name.Should().Be("GetNationStats");
             var logString = LogMessageBuilder.Build(res, "Test");
-            Assert.Equal("[10300] Test", logString);
+            logString.Should().Be("[10300] Test");
         }
 
         [Fact]
@@ -133,7 +133,7 @@ namespace CyborgianStates.Tests
             Program.SetMessageHandler(messageHandler);
             await Program.Main().ConfigureAwait(false);
             mock.Verify(l => l.RunAsync(), Times.Once);
-            Assert.True(launcher.IsRunning);
+            launcher.IsRunning.Should().BeTrue();
         }
 
         [Fact]
@@ -162,7 +162,7 @@ namespace CyborgianStates.Tests
             Program.SetMessageHandler(messageHandler);
             await Program.Main().ConfigureAwait(false);
             mock.Verify(l => l.RunAsync(), Times.Once);
-            Assert.True(launcher.IsRunning);
+            launcher.IsRunning.Should().BeTrue();
         }
     }
 }

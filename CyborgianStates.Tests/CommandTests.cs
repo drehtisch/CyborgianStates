@@ -1,6 +1,7 @@
 ﻿using CyborgianStates.CommandHandling;
 using CyborgianStates.Commands;
 using CyborgianStates.MessageHandling;
+using FluentAssertions;
 using System;
 using System.Threading.Tasks;
 using Xunit;
@@ -14,8 +15,8 @@ namespace CyborgianStates.Tests
         {
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await new PingCommand().Execute(null).ConfigureAwait(false)).ConfigureAwait(false);
             var result = await new PingCommand().Execute(new Message(0, "ping", new ConsoleMessageChannel())).ConfigureAwait(false);
-            Assert.Equal(CommandStatus.Success, result.Status);
-            Assert.Equal("Pong !", result.Content);
+            result.Status.Should().Be(CommandStatus.Success);
+            result.Content.Should().Be("Pong !");
         }
     }
 }

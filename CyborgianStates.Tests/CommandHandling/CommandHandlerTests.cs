@@ -2,6 +2,7 @@ using CyborgianStates.CommandHandling;
 using CyborgianStates.Commands;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,8 +18,8 @@ namespace CyborgianStates.Tests.CommandHandling
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             var result = await CommandHandler.ExecuteAsync(new Message(0, "ping ", new ConsoleMessageChannel())).ConfigureAwait(false);
-            Assert.True(result is CommandResponse);
-            Assert.Equal(CommandStatus.Success, result.Status);
+            result.Should().BeOfType<CommandResponse>();
+            result.Status.Should().Be(CommandStatus.Success);
         }
 
         [Fact]
@@ -32,7 +33,7 @@ namespace CyborgianStates.Tests.CommandHandling
         {
             CommandHandler.Clear();
             var result = await CommandHandler.ExecuteAsync(new Message(0, "unknown ", new ConsoleMessageChannel())).ConfigureAwait(false);
-            Assert.Null(result);
+            result.Should().BeNull();
         }
 
         [Fact]
@@ -40,7 +41,7 @@ namespace CyborgianStates.Tests.CommandHandling
         {
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
-            Assert.True(CommandHandler.Count == 1, $"Expected CommandCount to be 1 but was: {CommandHandler.Count}");
+            CommandHandler.Count.Should().Be(1);
         }
 
         [Fact]
@@ -58,14 +59,14 @@ namespace CyborgianStates.Tests.CommandHandling
             CommandHandler.Clear();
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             var resolved = await CommandHandler.ResolveAsync("ping").ConfigureAwait(false);
-            Assert.True(resolved is PingCommand);
+            resolved.Should().BeOfType<PingCommand>();
         }
 
         [Fact]
         public async Task TestResolveUnknownCommand()
         {
             var result = await CommandHandler.ResolveAsync("unknownCommand").ConfigureAwait(false);
-            Assert.Null(result);
+            result.Should().BeNull();
         }
 
         [Fact]
