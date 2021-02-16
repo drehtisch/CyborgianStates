@@ -46,30 +46,14 @@ namespace CyborgianStates.Commands
                     request.Params.Add("nationName", Helpers.ToID(nationName));
                     _dispatcher.Dispatch(request, 0);
                     await request.WaitForResponseAsync(token).ConfigureAwait(false);
-                    if (request.Status == RequestStatus.Canceled)
-                    {
-                        return await FailCommandAsync(message, "Request has been canceled. Sorry :(").ConfigureAwait(false);
-                    }
-                    else if (request.Status == RequestStatus.Failed)
-                    {
-                        return await FailCommandAsync(message, request.FailureReason).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        CommandResponse commandResponse = ParseResponse(request);
-                        await message.Channel.ReplyToAsync(message, commandResponse).ConfigureAwait(false);
-                        return commandResponse;
-                    }
+                    CommandResponse commandResponse = ParseResponse(request);
+                    await message.Channel.ReplyToAsync(message, commandResponse).ConfigureAwait(false);
+                    return commandResponse;
                 }
                 else
                 {
                     return await FailCommandAsync(message, "No parameter passed.").ConfigureAwait(false);
                 }
-            }
-            catch (InvalidOperationException e)
-            {
-                _logger.LogError(e.ToString());
-                return await FailCommandAsync(message, "Could not execute command. Something went wrong :(").ConfigureAwait(false);
             }
             catch (TaskCanceledException e)
             {
@@ -80,6 +64,11 @@ namespace CyborgianStates.Commands
             {
                 _logger.LogError(e.ToString());
                 return await FailCommandAsync(message, request.FailureReason).ConfigureAwait(false);
+            }
+            catch(Exception e)
+            {
+                _logger.LogError(e.ToString());
+                return await FailCommandAsync(message, "An unexpected error occured. Please contact the bot administrator.").ConfigureAwait(false);
             }
         }
 

@@ -3,12 +3,13 @@ using CyborgianStates.Commands;
 using CyborgianStates.MessageHandling;
 using FluentAssertions;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace CyborgianStates.Tests
 {
-    public class CommandTests
+    public class PingCommandTests
     {
         [Fact]
         public async Task TestPingCommand()

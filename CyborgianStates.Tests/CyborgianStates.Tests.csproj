@@ -30,4 +30,10 @@
     <ProjectReference Include="..\CyborgianStates\CyborgianStates.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data\testlandia-nation-stats.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

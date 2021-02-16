@@ -23,7 +23,7 @@ namespace CyborgianStates
         private static IUserInput userInput = new ConsoleInput();
         private static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
         internal static string InputChannel { get; set; }
-        public static IServiceProvider ServiceProvider { get; set; }
+        internal static IServiceProvider ServiceProvider { get; set; }
 
         public static async Task Main()
         {
