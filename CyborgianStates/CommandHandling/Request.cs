@@ -50,7 +50,7 @@ namespace CyborgianStates
             Status = RequestStatus.Failed;
             if (ex is null)
             {
-                ex = new Exception("Error not specified.");
+                ex = new Exception($"Error not specified. FailureReason: {FailureReason}");
             }
 
             _completionSource.TrySetException(ex);
