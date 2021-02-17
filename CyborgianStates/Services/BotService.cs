@@ -28,9 +28,9 @@ namespace CyborgianStates.Services
                 throw new ArgumentNullException(nameof(requestDispatcher));
             if (userRepository is null)
                 throw new ArgumentNullException(nameof(requestDispatcher));
-            if(responseBuilder is null)
+            if (responseBuilder is null)
                 throw new ArgumentNullException(nameof(responseBuilder));
-            if(options is null)
+            if (options is null)
                 throw new ArgumentNullException(nameof(options));
             _messageHandler = messageHandler;
             _requestDispatcher = requestDispatcher;
@@ -73,6 +73,7 @@ namespace CyborgianStates.Services
         {
             CommandHandler.Register(new CommandDefinition(typeof(PingCommand), new List<string>() { "ping" }));
             CommandHandler.Register(new CommandDefinition(typeof(NationStatsCommand), new List<string>() { "nation", "n" }));
+            CommandHandler.Register(new CommandDefinition(typeof(AboutCommand), new List<string>() { "about" }));
         }
 
         private async Task<bool> IsRelevantAsync(Message message)
