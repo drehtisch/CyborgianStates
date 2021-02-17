@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -23,6 +24,7 @@ namespace CyborgianStates.Tests.CommandTests
             ConfigureServices();
             var message = new Message(0, "about", new ConsoleMessageChannel());
             var command = new AboutCommand();
+            command.SetCancellationToken(CancellationToken.None);
             var response = await command.Execute(message);
             response.Status.Should().Be(CommandStatus.Success);
             response.Content.Should().StartWith($"About CyborgianStates{Environment.NewLine}{Environment.NewLine}Contact for this instance{Environment.NewLine}contact@example.com{Environment.NewLine}{Environment.NewLine}Github{Environment.NewLine}[CyborgianStates](https://github.com/Free-Nations-Region/CyborgianStates){Environment.NewLine}{Environment.NewLine}Developed by Drehtisch{Environment.NewLine}Discord: Drehtisch#5680{Environment.NewLine}NationStates: [Tigerania](https://www.nationstates.net/nation=tigerania){Environment.NewLine}{Environment.NewLine}Support{Environment.NewLine}via [OpenCollective](https://opencollective.com/fnr){Environment.NewLine}");
