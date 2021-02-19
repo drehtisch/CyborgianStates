@@ -46,22 +46,19 @@ namespace CyborgianStates.Services
             await semaphore.WaitAsync().ConfigureAwait(false);
             _logger.LogDebug($"[{request.TraceId}]: Aquiring Semaphore took {TimeSpan.FromTicks(DateTime.UtcNow.Ticks).Subtract(TimeSpan.FromTicks(ticks))}");
             HttpResponseMessage result = null;
-            Action<Task<HttpResponseMessage>> _continue = async (prev) =>
-            {
-                await Task.Delay(TimeSpan.FromTicks(GetTimeoutByRequestType(request.Type))).ConfigureAwait(false);
-                if (semaphore.CurrentCount == 0)
-                {
-                    semaphore.Release();
-                }
-            };
             try
             {
                 switch (request.Type)
                 {
                     case RequestType.GetBasicNationStats:
-                        var task = GetNationStatsAsync(request.Params["nationName"].ToString(), request.EventId);
-                        _ = task.ContinueWith(_continue);
-                        result = await task.ConfigureAwait(false);
+                        var nstatsTask = GetNationStatsAsync(request.Params["nationName"].ToString(), request.EventId);
+                        _ = nstatsTask.ContinueWith(prev => ContinueAsync(request, semaphore));
+                        result = await nstatsTask.ConfigureAwait(false);
+                        break;
+                    case RequestType.GetRegionalOfficers:
+                        var roTask = GetRegionalOfficersAsync(request.Params["regionName"].ToString(), request.EventId);
+                        _ = roTask.ContinueWith(prev => ContinueAsync(request, semaphore));
+                        result = await roTask.ConfigureAwait(false);
                         break;
                 }
                 if (result is not null && result.IsSuccessStatusCode)
@@ -86,11 +83,35 @@ namespace CyborgianStates.Services
             }
         }
 
+        private async Task<HttpResponseMessage> GetRegionalOfficersAsync(string regionName, EventId eventId)
+        {
+            Uri url = BuildApiRequestUrl($"region={Helpers.ToID(regionName)}&q=officers");
+            var message = new HttpRequestMessage(HttpMethod.Get, url);
+            try
+            {
+                return await _dataService.ExecuteRequestAsync(message, eventId).ConfigureAwait(false);
+            }
+            finally
+            {
+                message.Dispose();
+            }
+        }
+
+        private async void ContinueAsync(Request request, SemaphoreSlim semaphore)
+        {
+            await Task.Delay(TimeSpan.FromTicks(GetTimeoutByRequestType(request.Type))).ConfigureAwait(false);
+            if (semaphore.CurrentCount == 0)
+            {
+                semaphore.Release();
+            }
+        }
+
         private SemaphoreSlim GetSemaphoreByRequestType(RequestType requestType)
         {
             switch (requestType)
             {
                 case RequestType.GetBasicNationStats:
+                case RequestType.GetRegionalOfficers:
                     return _semaphores["API_REQUEST"];
 
                 default:
@@ -103,8 +124,8 @@ namespace CyborgianStates.Services
             switch (requestType)
             {
                 case RequestType.GetBasicNationStats:
+                case RequestType.GetRegionalOfficers:
                     return API_REQUEST_INTERVAL;
-
                 default:
                     throw new InvalidOperationException($"Unrecognized RequestType '{requestType}'");
             }
@@ -112,7 +133,7 @@ namespace CyborgianStates.Services
 
         private async Task<HttpResponseMessage> GetNationStatsAsync(string nationName, EventId eventId)
         {
-            Uri url = BuildApiRequestUrl($"nation={Helpers.ToID(nationName)}&q=flag+wa+gavote+scvote+fullname+freedom+demonym2plural+category+population+region+founded+influence+lastactivity+census;mode=score;scale=0+1+2+65+66+80");
+            Uri url = BuildApiRequestUrl($"nation={Helpers.ToID(nationName)}&q=flag+wa+gavote+scvote+fullname+freedom+demonym2plural+category+population+region+founded+foundedtime+influence+lastactivity+census;mode=score;scale=0+1+2+65+66+80");
             var message = new HttpRequestMessage(HttpMethod.Get, url);
             try
             {

@@ -50,5 +50,11 @@ namespace CyborgianStates.MessageHandling
             _fields[key] = (value, isInline);
             return this;
         }
+
+        public void Clear()
+        {
+            _properties.Clear();
+            _fields.Clear();
+        }
     }
 }

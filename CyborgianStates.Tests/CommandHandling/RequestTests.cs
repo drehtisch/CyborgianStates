@@ -15,12 +15,14 @@ namespace CyborgianStates.Tests.CommandHandling
         {
             CancellationTokenSource tokenSource = new CancellationTokenSource();
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.XmlResult, DataSourceType.NationStatesAPI);
+            request.Priority = 1;
             request.Status.Should().Be(RequestStatus.Pending);
             _ = Task.Run(async () =>
             {
                 await Task.Delay(100).ConfigureAwait(false);
                 tokenSource.Cancel(false);
             });
+            request.Priority.Should().Be(1);
             await Assert.ThrowsAsync<TaskCanceledException>(async () => await request.WaitForResponseAsync(tokenSource.Token).ConfigureAwait(false));
             request.Status.Should().Be(RequestStatus.Canceled);
             tokenSource.Dispose();

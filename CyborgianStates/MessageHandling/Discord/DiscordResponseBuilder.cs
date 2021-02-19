@@ -14,6 +14,10 @@ namespace CyborgianStates.MessageHandling
         }
         public override CommandResponse Build()
         {
+            if (_properties.ContainsKey(FieldKey.Url))
+            {
+                _builder.WithUrl(_properties[FieldKey.Url]);
+            }
             if (_properties.ContainsKey(FieldKey.Title))
             {
                 _builder.WithTitle(_properties[FieldKey.Title]);

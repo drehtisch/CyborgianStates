@@ -54,7 +54,8 @@ namespace CyborgianStates.Tests.MessageHandling
                 .WithThumbnailUrl("https://localhost/image.jpg")
                 .WithDescription("Description")
                 .WithDefaults("Footer")
-                .WithField("Key1", "Value");
+                .WithField("Key1", "Value")
+                .WithUrl("https://localhost");
             var response = builder.Build();
             response.Status.Should().Be(CommandStatus.Success);
             response.ResponseObject.Should().NotBeNull();

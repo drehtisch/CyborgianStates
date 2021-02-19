@@ -13,7 +13,7 @@ namespace CyborgianStates
         public const int API_VERSION = 10;
         public const long REQUEST_NEW_NATIONS_INTERVAL = 18000000000; //30 m
         public const long SEND_RECRUITMENTTELEGRAM_INTERVAL = 1800000000; //3 m
-        public const string VERSION = "v4.0.0-preview-3";
+        public const string VERSION = "v4.0.0-preview-7";
 
         static internal bool IsTesting = false;
         private static string config = "development";
