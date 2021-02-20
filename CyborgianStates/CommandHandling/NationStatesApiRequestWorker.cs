@@ -43,7 +43,14 @@ namespace CyborgianStates.CommandHandling
             {
                 var request = _requestQueue.Dequeue();
                 _logger.LogDebug($"[{request.TraceId}]: Request '{request.Type}' has been dequeued. Queue Size: {_requestQueue.Count}");
-                await _dataService.ExecuteRequestAsync(request).ConfigureAwait(false);
+                try
+                {
+                    await _dataService.ExecuteRequestAsync(request).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    request.Fail("Unexpected Error", e);
+                }
             }
         }
     }

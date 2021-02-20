@@ -43,24 +43,10 @@ namespace CyborgianStates.Tests.Services
             var missingParamRequest = new Request(RequestType.GetBasicNationStats, ResponseFormat.HttpResponseMessage, DataSourceType.NationStatesAPI);
             await Assert.ThrowsAsync<KeyNotFoundException>(async () => { await dataService.ExecuteRequestAsync(missingParamRequest).ConfigureAwait(false); })
                 .ConfigureAwait(false);
-        }
-
-        [Fact]
-        public async Task TestExecuteRequest()
-        {
-            var httpService = new Mock<IHttpDataService>(MockBehavior.Strict);
-            httpService
-                .Setup(m => m.ExecuteRequestAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<EventId>()))
-                .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<xml></xml>") }));
-            var dataService = new NationStatesApiDataService(httpService.Object);
 
             var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.HttpResponseMessage, DataSourceType.NationStatesAPI);
-            request.Params.Add("nationName", Helpers.ToID("Testlandia"));
-            await dataService.ExecuteRequestAsync(request).ConfigureAwait(false);
-            request.Status.Should().Be(RequestStatus.Success);
-
+            request.Params.Add("nationName", "Testlandia");
             /* Failure Test */
-
             httpService
                 .Setup(m => m.ExecuteRequestAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<EventId>()))
                 .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)));
@@ -76,6 +62,36 @@ namespace CyborgianStates.Tests.Services
             dataService = new NationStatesApiDataService(httpService.Object);
             await dataService.ExecuteRequestAsync(request).ConfigureAwait(false);
             request.Status.Should().Be(RequestStatus.Failed);
+        }
+
+        [Fact]
+        public async Task TestExecuteNationStatsRequest()
+        {
+            var httpService = new Mock<IHttpDataService>(MockBehavior.Strict);
+            httpService
+                .Setup(m => m.ExecuteRequestAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<EventId>()))
+                .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<xml></xml>") }));
+            var dataService = new NationStatesApiDataService(httpService.Object);
+
+            var request = new Request(RequestType.GetBasicNationStats, ResponseFormat.HttpResponseMessage, DataSourceType.NationStatesAPI);
+            request.Params.Add("nationName", Helpers.ToID("Testlandia"));
+            await dataService.ExecuteRequestAsync(request).ConfigureAwait(false);
+            request.Status.Should().Be(RequestStatus.Success);
+        }
+
+        [Fact]
+        public async Task TestExecuteRegionalOfficerRequest()
+        {
+            var httpService = new Mock<IHttpDataService>(MockBehavior.Strict);
+            httpService
+                .Setup(m => m.ExecuteRequestAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<EventId>()))
+                .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<xml></xml>") }));
+            var dataService = new NationStatesApiDataService(httpService.Object);
+
+            var request = new Request(RequestType.GetRegionalOfficers, ResponseFormat.HttpResponseMessage, DataSourceType.NationStatesAPI);
+            request.Params.Add("regionName", Helpers.ToID("Testregionia"));
+            await dataService.ExecuteRequestAsync(request).ConfigureAwait(false);
+            request.Status.Should().Be(RequestStatus.Success);
         }
     }
 }

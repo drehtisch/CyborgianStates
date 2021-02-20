@@ -6,6 +6,7 @@
         Description,
         Footer,
         ThumbnailUrl,
-        Color
+        Color,
+        Url
     }
 }

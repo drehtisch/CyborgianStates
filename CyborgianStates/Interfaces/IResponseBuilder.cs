@@ -16,6 +16,7 @@ namespace CyborgianStates.Interfaces
         IResponseBuilder WithContent(string content);
         IResponseBuilder WithCustomProperty(FieldKey key, string value);
         IResponseBuilder WithField(string key, string value, bool isInline = false);
+        void Clear();
         CommandResponse Build();
     }
 
@@ -41,6 +42,10 @@ namespace CyborgianStates.Interfaces
             return builder.WithCustomProperty(FieldKey.ThumbnailUrl, value);
         }
 
+        public static IResponseBuilder WithUrl(this IResponseBuilder builder, string value)
+        {
+            return builder.WithCustomProperty(FieldKey.Url, value);
+        }
         public static IResponseBuilder WithColor(this IResponseBuilder builder, Color color)
         {
             return builder.WithCustomProperty(FieldKey.Color, color.ToString());

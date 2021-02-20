@@ -149,7 +149,7 @@ namespace CyborgianStates.Tests.CommandHandling
             }
             else
             {
-                await Assert.ThrowsAsync<Exception>(async () => await request.WaitForResponseAsync(source.Token).ConfigureAwait(false));
+                await Assert.ThrowsAnyAsync<Exception>(async () => await request.WaitForResponseAsync(source.Token).ConfigureAwait(false));
             }
             expectedStatus.Should().Be(request.Status);
         }
