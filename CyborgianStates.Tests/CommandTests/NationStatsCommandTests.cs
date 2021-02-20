@@ -106,7 +106,7 @@ namespace CyborgianStates.Tests
         {
             var serviceCollection = new ServiceCollection();
             var options = new Mock<IOptions<AppSettings>>(MockBehavior.Strict);
-            options.SetupGet(m => m.Value).Returns(new AppSettings() { SeperatorChar = '$' });
+            options.SetupGet(m => m.Value).Returns(new AppSettings() { SeperatorChar = '$', Locale = "en-US" });
             serviceCollection.AddSingleton<IRequestDispatcher, TestRequestDispatcher>();
             serviceCollection.AddSingleton<IResponseBuilder, ConsoleResponseBuilder>();
             serviceCollection.AddSingleton(typeof(IOptions<AppSettings>), options.Object);

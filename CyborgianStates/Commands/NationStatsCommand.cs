@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -182,13 +183,13 @@ namespace CyborgianStates.Commands
                     .WithThumbnailUrl(flagUrl)
                     .WithDescription($"{(populationdbl / 1000.0 < 1 ? populationdbl : populationdbl / 1000.0).ToString(_config.CultureInfo)} {(populationdbl / 1000.0 < 1 ? "million" : "billion")} {demonymplural} | " +
                     $"Last active {lastActivity}")
-                    .WithField("Founded", $"{dateFounded.ToString(_config.CultureInfo.DateTimeFormat.ShortDatePattern)} ({founded})")
+                    .WithField("Founded", $"{dateFounded:dd.MM.yyyy} ({founded})")
                     .WithField("Region", $"[{region}]({regionUrl})", true);
                 if (!string.IsNullOrWhiteSpace(officerPosition))
                 {
                     _responseBuilder.WithField("Regional Officer", officerPosition, true);
                 }
-                _responseBuilder.WithField("Resident Since", $"{dateJoined.ToString(_config.CultureInfo.DateTimeFormat.ShortDatePattern)} ({(residencyYears < 1 ? "" : $"{residencyYears} y ")}{residencyDays} d)", string.IsNullOrWhiteSpace(officerPosition));
+                _responseBuilder.WithField("Resident Since", $"{dateJoined:dd.MM.yyyy} ({(residencyYears < 1 ? "" : $"{residencyYears} y ")}{residencyDays} d)", string.IsNullOrWhiteSpace(officerPosition));
                 _responseBuilder.WithField(category, $"C: {civilStr} ({civilRights}) | E: {economyStr} ({economy}) | P: {politicalStr} ({politicalFreedom})")
                     .WithField(wa, $"{endoString} {influenceValue} Influence ({Influence})");
                 if (!string.IsNullOrWhiteSpace(waVoteString))
