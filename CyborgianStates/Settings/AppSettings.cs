@@ -30,8 +30,8 @@ namespace CyborgianStates
                     return "production";
 #elif DEBUG
                     return "development";
-                }
 #endif
+                }
             }
             internal set
             {
