@@ -27,7 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NationStatesSharp\NationStatesSharp.csproj" />
     <ProjectReference Include="..\CyborgianStates\CyborgianStates.csproj" />
   </ItemGroup>
 
