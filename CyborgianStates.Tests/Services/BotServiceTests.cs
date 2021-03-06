@@ -7,6 +7,7 @@ using CyborgianStates.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
+using NationStatesSharp.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -30,7 +31,6 @@ namespace CyborgianStates.Tests.Services
             msgHandlerMock.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
 
             requestDispatcherMock = new Mock<IRequestDispatcher>(MockBehavior.Strict);
-            requestDispatcherMock.Setup(r => r.Register(It.IsAny<DataSourceType>(), It.IsAny<IRequestWorker>()));
             requestDispatcherMock.Setup(r => r.Start());
             requestDispatcherMock.Setup(r => r.Shutdown());
 

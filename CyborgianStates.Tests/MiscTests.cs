@@ -4,6 +4,8 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NationStatesSharp;
+using NationStatesSharp.Interfaces;
 using System;
 using System.Net;
 using System.Net.Http;
@@ -94,7 +96,8 @@ namespace CyborgianStates.Tests
             botService.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
             serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler.Object);
             serviceCollection.AddSingleton(typeof(IBotService), botService.Object);
-            serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
+            var requestDispatcher = new RequestDispatcher("(test)");
+            serviceCollection.AddSingleton(typeof(IRequestDispatcher), requestDispatcher);
             Launcher launcher = new Launcher();
             Program.ServiceProvider = serviceCollection.BuildServiceProvider();
             await launcher.RunAsync().ConfigureAwait(false);

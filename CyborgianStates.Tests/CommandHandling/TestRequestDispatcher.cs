@@ -1,5 +1,7 @@
 ﻿using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
+using NationStatesSharp;
+using NationStatesSharp.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,24 +10,22 @@ namespace CyborgianStates.Tests.CommandHandling
 {
     public class RequestMockWrapper
     {
-        public RequestType Type { get; init; }
         public RequestStatus Status { get; init; }
         public object Response { get; init; }
         public Exception Exception { get; init; }
-        public string FailReason { get; init; }
     }
+
     public class TestRequestDispatcher : IRequestDispatcher
     {
         private static List<RequestMockWrapper> requests = new List<RequestMockWrapper>();
-        public static void PrepareNextRequest(RequestType type, RequestStatus status = RequestStatus.Success, object response = null, Exception exception = null, string failReason = "")
+
+        public static void PrepareNextRequest(RequestStatus status = RequestStatus.Success, object response = null, Exception exception = null)
         {
             requests.Add(new RequestMockWrapper()
             {
-                Type = type,
                 Status = status,
                 Response = response,
                 Exception = exception,
-                FailReason = failReason
             });
         }
 
@@ -34,13 +34,13 @@ namespace CyborgianStates.Tests.CommandHandling
             if (!requests.Any())
             {
                 var reason = "TestDispatcher does not accept unprepared requests.";
-                request.Fail(reason, new InvalidOperationException(reason));
+                request.Fail(new InvalidOperationException(reason));
             }
             else
             {
-                if (requests.Any(r => r.Type == request.Type))
+                if (requests.Any())
                 {
-                    var mockRequest = requests.Where(r => r.Type == request.Type).Take(1).First();
+                    var mockRequest = requests.Take(1).First();
                     requests.Remove(mockRequest);
                     if (mockRequest.Status == RequestStatus.Success)
                     {
@@ -48,18 +48,21 @@ namespace CyborgianStates.Tests.CommandHandling
                     }
                     else if (mockRequest.Status == RequestStatus.Failed)
                     {
-                        request.Fail(mockRequest.FailReason, mockRequest.Exception);
+                        request.Fail(mockRequest.Exception);
                     }
                 }
                 else
                 {
-                    var reason = $"No request with type '{request.Type}' has been prepared.";
-                    request.Fail(reason, new InvalidOperationException(reason));
+                    var reason = $"No request has been prepared.";
+                    request.Fail(new InvalidOperationException(reason));
                 }
             }
         }
-        public void Register(DataSourceType dataSource, IRequestWorker requestQueue) => throw new NotImplementedException();
+
+        public void Dispatch(IEnumerable<Request> requests, int priority) => throw new NotImplementedException();
+
         public void Shutdown() => throw new NotImplementedException();
+
         public void Start() => throw new NotImplementedException();
     }
 }

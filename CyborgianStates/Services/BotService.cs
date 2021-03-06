@@ -5,9 +5,9 @@ using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NationStatesSharp.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CyborgianStates.Services
@@ -20,6 +20,7 @@ namespace CyborgianStates.Services
         private readonly IUserRepository _userRepo;
         private readonly IResponseBuilder _responseBuilder;
         private readonly AppSettings _appSettings;
+
         public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository, IResponseBuilder responseBuilder, IOptions<AppSettings> options)
         {
             if (messageHandler is null)
@@ -122,9 +123,6 @@ namespace CyborgianStates.Services
         private void Register()
         {
             RegisterCommands();
-            var dataService = new NationStatesApiDataService(Program.ServiceProvider.GetService(typeof(IHttpDataService)) as IHttpDataService);
-            var queue = new NationStatesApiRequestWorker(dataService);
-            _requestDispatcher.Register(DataSourceType.NationStatesAPI, queue);
         }
     }
 }

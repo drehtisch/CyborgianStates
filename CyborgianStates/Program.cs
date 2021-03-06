@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using NationStatesSharp;
+using NationStatesSharp.Interfaces;
 using NetEscapades.Extensions.Logging.RollingFile;
 using System;
 using System.Data.Common;
@@ -101,8 +103,10 @@ namespace CyborgianStates
             {
                 throw new InvalidOperationException($"Unknown InputChannel '{InputChannel}'");
             }
-            serviceCollection.AddSingleton<IRequestDispatcher, RequestDispatcher>();
-            serviceCollection.AddSingleton<IHttpDataService, HttpDataService>();
+            var requestDispatcher = new RequestDispatcher($"({configuration.GetSection("Configuration").GetSection("Contact").Value})");
+            //serviceCollection.AddSingleton<NationStatesSharp.Interfaces.IRequestDispatcher, RequestDispatcher>();
+            serviceCollection.AddSingleton(typeof(IRequestDispatcher), requestDispatcher);
+            serviceCollection.AddSingleton<NationStatesSharp.Interfaces.IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();
             serviceCollection.AddSingleton<DbConnection, SqliteConnection>();
             serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
