@@ -67,12 +67,6 @@ namespace CyborgianStates.Tests
         }
 
         [Fact]
-        public void TestHttpExtensionsUserAgent()
-        {
-            Assert.Throws<ArgumentNullException>(() => HttpExtensions.AddCyborgianStatesUserAgent(null, "", ""));
-        }
-
-        [Fact]
         public void TestIdMethods()
         {
             var res = Helpers.ToID("Hello World");

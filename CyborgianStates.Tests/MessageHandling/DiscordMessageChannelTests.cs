@@ -16,7 +16,7 @@ namespace CyborgianStates.Tests.MessageHandling
         public async Task WriteToTest()
         {
             var mockChannel = new Mock<Discord.IMessageChannel>(MockBehavior.Strict);
-            mockChannel.Setup(mock => mock.SendMessageAsync(It.IsAny<string>(), false, null, null))
+            mockChannel.Setup(mock => mock.SendMessageAsync(It.IsAny<string>(), false, null, null, null, null))
                 .Returns(Task.FromResult<Discord.IUserMessage>(null));
             var channel = new DiscordMessageChannel(mockChannel.Object, false);
             await channel.WriteToAsync("Test").ConfigureAwait(false);
@@ -26,11 +26,12 @@ namespace CyborgianStates.Tests.MessageHandling
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await channel.WriteToAsync(" ").ConfigureAwait(false)).ConfigureAwait(false);
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await channel.WriteToAsync((CommandResponse)null).ConfigureAwait(false)).ConfigureAwait(false);
         }
+
         [Fact]
         public async Task ReplyToTest()
         {
             var mockChannel = new Mock<Discord.IMessageChannel>(MockBehavior.Strict);
-            mockChannel.Setup(mock => mock.SendMessageAsync(It.IsAny<string>(), false, null, null))
+            mockChannel.Setup(mock => mock.SendMessageAsync(It.IsAny<string>(), false, null, null, null, null))
                 .Returns(Task.FromResult<Discord.IUserMessage>(null));
             var channel = new DiscordMessageChannel(mockChannel.Object, false);
             var message = new Message(0, "Test", channel);

@@ -95,15 +95,12 @@ namespace CyborgianStates.Commands
             var request = new Request($"region={Helpers.ToID(regionName)}&q=officers", ResponseFormat.Xml);
             _dispatcher.Dispatch(request, 0);
             await request.WaitForResponseAsync(token).ConfigureAwait(false);
-            var result = request.GetResponseAsXml();
             var doc = request.GetResponseAsXml();
 
-            var list = doc.FilterElementsByNodeNameAndValue("NATION", nationName);
+            var list = doc.GetParentsOfFilteredDescendants("NATION", nationName);
             if (list.Any())
             {
-                var office = list.First().Parent;
-                var officeName = office.Elements().Where(e => e.Name == "OFFICE");
-                return officeName.First().Value;
+                return list.First().Element("OFFICE")?.Value;
             }
             else
             {

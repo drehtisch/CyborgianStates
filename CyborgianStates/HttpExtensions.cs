@@ -8,14 +8,6 @@ namespace CyborgianStates
 {
     public static class HttpExtensions
     {
-        public static void AddCyborgianStatesUserAgent(this HttpClient client, string version, string contact)
-        {
-            if (client is null)
-                throw new ArgumentNullException(nameof(client));
-            client.DefaultRequestHeaders.Add("User-Agent", $"CyborgianStates/{version}");
-            client.DefaultRequestHeaders.Add("User-Agent", $"(contact {contact};)");
-        }
-
         public static async Task<XmlDocument> ReadXmlAsync(this HttpResponseMessage httpResponse)
         {
             if (httpResponse is null)

@@ -95,7 +95,7 @@ namespace CyborgianStates.Tests
             TestRequestDispatcher.PrepareNextRequest(response: rofficersXmlResult);
             var response = await command.Execute(message);
             response.Status.Should().Be(CommandStatus.Success);
-            var dateJoined = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(99));
+            var dateJoined = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(99.94290131428));
             response.Content.Should().StartWith($"The дСвобода Мысл of Testlandia{Environment.NewLine}{Environment.NewLine}38.068 billion Testlandians | Last active 7 hours ago{Environment.NewLine}{Environment.NewLine}Founded{Environment.NewLine}01.01.1970 (0){Environment.NewLine}{Environment.NewLine}Region                                                            Regional Officer                   {Environment.NewLine}[Testregionia](https://www.nationstates.net/region=testregionia)  &lt;h1&gt;Field Tester&lt;/h1&gt;  {Environment.NewLine}{Environment.NewLine}Resident Since{Environment.NewLine}{dateJoined:dd.MM.yyyy} (99 d){Environment.NewLine}{Environment.NewLine}New York Times Democracy{Environment.NewLine}C: Excellent (69.19) | E: Very Strong (80.00) | P: Superb (76.29){Environment.NewLine}{Environment.NewLine}WA Member{Environment.NewLine}0 endorsements | 6106.00 Influence (Eminence Grise){Environment.NewLine}{Environment.NewLine}WA Vote{Environment.NewLine}GA: UNDECIDED | SC: UNDECIDED{Environment.NewLine}{Environment.NewLine}Links{Environment.NewLine}[Dispatches](https://www.nationstates.net/page=dispatches/nation=testlandia)  |  [Cards Deck](https://www.nationstates.net/page=deck/nation=testlandia)  |  [Challenge](https://www.nationstates.net/page=challenge?entity_name=testlandia)");
         }
 

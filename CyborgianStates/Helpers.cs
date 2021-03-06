@@ -17,17 +17,6 @@ namespace CyborgianStates
             return text?.Trim().ToLower(CultureInfo.InvariantCulture).Replace('_', ' ');
         }
 
-        public static EventId GetEventIdByRequestType(RequestType requestType)
-        {
-            switch (requestType)
-            {
-                case RequestType.GetBasicNationStats:
-                    return GetEventIdByType(LoggingEvent.GetNationStats);
-                default:
-                    return new EventId(new Random().Next(), $"Unknown [{requestType}]");
-            };
-        }
-
         /// <summary>
         /// Creates a EventId from LoggingEvent
         /// </summary>
