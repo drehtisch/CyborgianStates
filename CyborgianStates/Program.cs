@@ -1,5 +1,4 @@
-﻿using CyborgianStates.CommandHandling;
-using CyborgianStates.Data;
+﻿using CyborgianStates.Data;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using CyborgianStates.Repositories;
@@ -8,11 +7,11 @@ using DataAbstractions.Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using NationStatesSharp;
 using NationStatesSharp.Interfaces;
-using NetEscapades.Extensions.Logging.RollingFile;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Data.Common;
 using System.Threading.Tasks;
@@ -78,9 +77,9 @@ namespace CyborgianStates
                 .Build();
             serviceCollection.AddOptions();
             serviceCollection.Configure<AppSettings>(configuration.GetSection("Configuration"));
-            var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
+            //var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
             serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
-            ConfigureLogging(serviceCollection, configuration, loggeroptions);
+            ConfigureLogging(serviceCollection, configuration);
             // add services
             var channel = configuration.GetSection("Configuration").GetSection("InputChannel").Value;
             if (string.IsNullOrWhiteSpace(InputChannel))
@@ -104,7 +103,7 @@ namespace CyborgianStates
                 throw new InvalidOperationException($"Unknown InputChannel '{InputChannel}'");
             }
             var requestDispatcher = new RequestDispatcher($"({configuration.GetSection("Configuration").GetSection("Contact").Value})");
-            //serviceCollection.AddSingleton<NationStatesSharp.Interfaces.IRequestDispatcher, RequestDispatcher>();
+            serviceCollection.AddSingleton(typeof(IRequestDispatcher), requestDispatcher);
             serviceCollection.AddSingleton(typeof(IRequestDispatcher), requestDispatcher);
             serviceCollection.AddSingleton<NationStatesSharp.Interfaces.IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();
@@ -115,17 +114,17 @@ namespace CyborgianStates
             return serviceCollection.BuildServiceProvider();
         }
 
-        private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration, FileLoggerOptions loggerOptions)
+        private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration)
         {
-            serviceCollection.AddLogging(loggingBuilder =>
+            var logger = new LoggerConfiguration()
+                .WriteTo.Console(theme: SystemConsoleTheme.Literate)
+                .CreateLogger();
+            serviceCollection.AddLogging(builder =>
             {
-                loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
-                loggingBuilder.SetMinimumLevel(LogLevel.Information);
-                loggingBuilder.AddConsole();
-                loggingBuilder.AddFile(options => options = loggerOptions);
+                builder.SetMinimumLevel(LogLevel.Information);
+                builder.AddSerilog(logger: logger, dispose: true);
             });
-            serviceCollection.AddSingleton(typeof(ILoggerFactory), ApplicationLogging.Factory);
-            serviceCollection.TryAddSingleton(typeof(ILogger<>), typeof(Logger<>));
+            Log.Logger = logger;
         }
     }
 }

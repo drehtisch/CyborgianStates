@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using NetEscapades.Extensions.Logging.RollingFile;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 using System;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace CyborgianStates
 {
@@ -26,18 +29,23 @@ namespace CyborgianStates
 
         private static ILoggerFactory CreateLoggerFactory()
         {
+            var logger = new LoggerConfiguration()
+                .WriteTo.Console(theme: SystemConsoleTheme.Literate)
+                .CreateLogger();
             return LoggerFactory.Create(builder =>
             {
-                builder
-                    .AddFilter("Microsoft", LogLevel.Warning)
-                    .AddFilter("System", LogLevel.Warning)
-                    .AddConsole()
-                    .SetMinimumLevel(LogLevel.Debug)
-                    .AddFile(opt =>
-                    {
-                        opt.RetainedFileCountLimit = null;
-                        opt.Periodicity = PeriodicityOptions.Daily;
-                    });
+                //builder
+                //    .AddFilter("Microsoft", LogLevel.Warning)
+                //    .AddFilter("System", LogLevel.Warning)
+                //    .AddConsole()
+                //    .SetMinimumLevel(LogLevel.Debug)
+                //    .AddFile(opt =>
+                //    {
+                //        opt.RetainedFileCountLimit = null;
+                //        opt.Periodicity = PeriodicityOptions.Daily;
+                //    });
+                builder.SetMinimumLevel(LogLevel.Information);
+                builder.AddSerilog(logger: logger, dispose: true);
             });
         }
     }
