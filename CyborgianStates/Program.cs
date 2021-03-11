@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using NationStatesSharp;
 using NationStatesSharp.Interfaces;
 using NetEscapades.Extensions.Logging.RollingFile;
+using Quartz;
 using System;
 using System.Data.Common;
 using System.Threading.Tasks;
@@ -112,6 +113,7 @@ namespace CyborgianStates
             serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
             serviceCollection.AddSingleton<IUserRepository, UserRepository>();
             serviceCollection.AddSingleton<ISqlProvider, SqliteSqlProvider>();
+            //serviceCollection.AddQuartz();
             return serviceCollection.BuildServiceProvider();
         }
 
