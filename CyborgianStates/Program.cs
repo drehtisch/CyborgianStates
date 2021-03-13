@@ -115,20 +115,15 @@ namespace CyborgianStates
 
         private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration)
         {
-            var logger = SetupLogging();
+            var logConfig = configuration.GetSection("Serilog");
+            var logger = new LoggerConfiguration().ReadFrom.Configuration(logConfig).CreateLogger();
+            Log.Logger = logger;
             serviceCollection.AddLogging(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Trace);
-                builder.AddSerilog(logger: logger, dispose: true);
+                builder.AddConfiguration(logConfig);
+                builder.AddSerilog(logger, true);
             });
-            Log.Logger = logger;
-        }
-
-        public static Logger SetupLogging()
-        {
-            return new LoggerConfiguration()
-                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-                 .CreateLogger();
         }
     }
 }
