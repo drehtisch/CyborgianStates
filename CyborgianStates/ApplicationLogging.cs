@@ -29,9 +29,7 @@ namespace CyborgianStates
 
         private static ILoggerFactory CreateLoggerFactory()
         {
-            var logger = new LoggerConfiguration()
-                .WriteTo.Console(theme: SystemConsoleTheme.Literate)
-                .CreateLogger();
+            var logger = Program.SetupLogging();
             return LoggerFactory.Create(builder =>
             {
                 //builder

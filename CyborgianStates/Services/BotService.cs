@@ -1,6 +1,5 @@
 ﻿using CyborgianStates.CommandHandling;
 using CyborgianStates.Commands;
-using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;

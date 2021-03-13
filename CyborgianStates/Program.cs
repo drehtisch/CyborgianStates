@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using NationStatesSharp;
 using NationStatesSharp.Interfaces;
 using Serilog;
+using Serilog.Core;
 using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Data.Common;
@@ -102,10 +103,8 @@ namespace CyborgianStates
             {
                 throw new InvalidOperationException($"Unknown InputChannel '{InputChannel}'");
             }
-            var requestDispatcher = new RequestDispatcher($"({configuration.GetSection("Configuration").GetSection("Contact").Value})");
+            var requestDispatcher = new RequestDispatcher($"({configuration.GetSection("Configuration").GetSection("Contact").Value})", Log.Logger);
             serviceCollection.AddSingleton(typeof(IRequestDispatcher), requestDispatcher);
-            serviceCollection.AddSingleton(typeof(IRequestDispatcher), requestDispatcher);
-            serviceCollection.AddSingleton<NationStatesSharp.Interfaces.IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();
             serviceCollection.AddSingleton<DbConnection, SqliteConnection>();
             serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
@@ -116,15 +115,20 @@ namespace CyborgianStates
 
         private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration)
         {
-            var logger = new LoggerConfiguration()
-                .WriteTo.Console(theme: SystemConsoleTheme.Literate)
-                .CreateLogger();
+            var logger = SetupLogging();
             serviceCollection.AddLogging(builder =>
             {
-                builder.SetMinimumLevel(LogLevel.Information);
+                builder.SetMinimumLevel(LogLevel.Trace);
                 builder.AddSerilog(logger: logger, dispose: true);
             });
             Log.Logger = logger;
+        }
+
+        public static Logger SetupLogging()
+        {
+            return new LoggerConfiguration()
+                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+                 .CreateLogger();
         }
     }
 }
