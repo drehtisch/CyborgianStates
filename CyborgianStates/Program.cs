@@ -1,5 +1,4 @@
-﻿using CyborgianStates.CommandHandling;
-using CyborgianStates.Data;
+﻿using CyborgianStates.Data;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using CyborgianStates.Repositories;
@@ -8,11 +7,12 @@ using DataAbstractions.Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using NationStatesSharp;
 using NationStatesSharp.Interfaces;
-using NetEscapades.Extensions.Logging.RollingFile;
+using Serilog;
+using Serilog.Core;
+using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Data.Common;
 using System.Threading.Tasks;
@@ -22,8 +22,8 @@ namespace CyborgianStates
     public static class Program
     {
         private static ILauncher Launcher = new Launcher();
-        private static IUserInput userInput = new ConsoleInput();
-        private static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
+        private static IUserInput userInput = null;
+        private static IMessageHandler messageHandler = null;
         internal static string InputChannel { get; set; }
         internal static IServiceProvider ServiceProvider { get; set; }
 
@@ -78,9 +78,9 @@ namespace CyborgianStates
                 .Build();
             serviceCollection.AddOptions();
             serviceCollection.Configure<AppSettings>(configuration.GetSection("Configuration"));
-            var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
+            //var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
             serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
-            ConfigureLogging(serviceCollection, configuration, loggeroptions);
+            ConfigureLogging(serviceCollection, configuration);
             // add services
             var channel = configuration.GetSection("Configuration").GetSection("InputChannel").Value;
             if (string.IsNullOrWhiteSpace(InputChannel))
@@ -89,6 +89,8 @@ namespace CyborgianStates
             }
             if (InputChannel == "Console")
             {
+                userInput ??= new ConsoleInput();
+                messageHandler ??= new ConsoleMessageHandler(userInput);
                 serviceCollection.AddSingleton(typeof(IUserInput), userInput);
                 serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
                 serviceCollection.AddTransient<IResponseBuilder, ConsoleResponseBuilder>();
@@ -103,10 +105,8 @@ namespace CyborgianStates
             {
                 throw new InvalidOperationException($"Unknown InputChannel '{InputChannel}'");
             }
-            var requestDispatcher = new RequestDispatcher($"({configuration.GetSection("Configuration").GetSection("Contact").Value})");
-            //serviceCollection.AddSingleton<NationStatesSharp.Interfaces.IRequestDispatcher, RequestDispatcher>();
+            var requestDispatcher = new RequestDispatcher($"({configuration.GetSection("Configuration").GetSection("Contact").Value})", Log.Logger);
             serviceCollection.AddSingleton(typeof(IRequestDispatcher), requestDispatcher);
-            serviceCollection.AddSingleton<NationStatesSharp.Interfaces.IHttpDataService, HttpDataService>();
             serviceCollection.AddSingleton<IBotService, BotService>();
             serviceCollection.AddSingleton<DbConnection, SqliteConnection>();
             serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
@@ -115,17 +115,18 @@ namespace CyborgianStates
             return serviceCollection.BuildServiceProvider();
         }
 
-        private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration, FileLoggerOptions loggerOptions)
+        private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration)
         {
-            serviceCollection.AddLogging(loggingBuilder =>
+            var logConfig = configuration.GetSection("Serilog");
+            var logger = new LoggerConfiguration().ReadFrom.Configuration(configuration, "Serilog").CreateLogger();
+            Log.Logger = logger;
+            serviceCollection.AddLogging(builder =>
             {
-                loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
-                loggingBuilder.SetMinimumLevel(LogLevel.Information);
-                loggingBuilder.AddConsole();
-                loggingBuilder.AddFile(options => options = loggerOptions);
+                builder.SetMinimumLevel(LogLevel.Trace);
+                builder.AddConfiguration(logConfig);
+                builder.AddSerilog(logger, true);
             });
-            serviceCollection.AddSingleton(typeof(ILoggerFactory), ApplicationLogging.Factory);
-            serviceCollection.TryAddSingleton(typeof(ILogger<>), typeof(Logger<>));
+            ServiceProvider = serviceCollection.BuildServiceProvider();
         }
     }
 }

@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace CyborgianStates.MessageHandling
 {
@@ -12,7 +14,7 @@ namespace CyborgianStates.MessageHandling
 
         public ConsoleMessageChannel()
         {
-            _logger = ApplicationLogging.CreateLogger(typeof(ConsoleMessageChannel));
+            _logger = Log.ForContext<ConsoleMessageChannel>();
         }
 
         public async Task ReplyToAsync(Message message, string content)
@@ -55,7 +57,7 @@ namespace CyborgianStates.MessageHandling
         {
             if (string.IsNullOrWhiteSpace(content))
                 throw new ArgumentNullException(nameof(content));
-            _logger.LogInformation(content);
+            _logger.Information(content);
             return Task.CompletedTask;
         }
 

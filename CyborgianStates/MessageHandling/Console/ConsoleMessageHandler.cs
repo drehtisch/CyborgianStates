@@ -1,7 +1,9 @@
 ﻿using CyborgianStates.Interfaces;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Threading.Tasks;
+using ILogger = Serilog.ILogger;
 
 namespace CyborgianStates.MessageHandling
 {
@@ -13,7 +15,7 @@ namespace CyborgianStates.MessageHandling
         public ConsoleMessageHandler(IUserInput input)
         {
             _input = input;
-            _logger = ApplicationLogging.CreateLogger(typeof(ConsoleMessageHandler));
+            _logger = Log.ForContext<ConsoleMessageHandler>();
         }
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
@@ -22,7 +24,7 @@ namespace CyborgianStates.MessageHandling
 
         public Task InitAsync()
         {
-            _logger.LogInformation("-- ConsoleMessageHandler Init --");
+            _logger.Information("-- ConsoleMessageHandler Init --");
             return Task.CompletedTask;
         }
 

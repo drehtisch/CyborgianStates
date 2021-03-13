@@ -8,6 +8,8 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace CyborgianStates.MessageHandling
 {
@@ -18,13 +20,14 @@ namespace CyborgianStates.MessageHandling
         private readonly AppSettings _settings;
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private SemaphoreSlim _semaphore = new SemaphoreSlim(0, 1);
+
         public DiscordMessageHandler(IOptions<AppSettings> options, DiscordClientWrapper socketClient)
         {
             if (options is null)
             {
                 throw new ArgumentNullException(nameof(options));
             }
-            _logger = ApplicationLogging.CreateLogger(typeof(DiscordMessageHandler));
+            _logger = Log.ForContext<DiscordMessageHandler>();
             ;
             _client = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _settings = options.Value;
@@ -36,7 +39,7 @@ namespace CyborgianStates.MessageHandling
 
         public async Task InitAsync()
         {
-            _logger.LogInformation("-- DiscordMessageHandler Init --");
+            _logger.Information("-- DiscordMessageHandler Init --");
             await _client.LoginAsync(TokenType.Bot, _settings.DiscordBotLoginToken).ConfigureAwait(false);
             SetupDiscordEvents();
         }
@@ -54,24 +57,23 @@ namespace CyborgianStates.MessageHandling
 
         private Task Discord_Ready()
         {
-            _logger.LogInformation("--- Discord Client Ready ---");
+            _logger.Information("--- Discord Client Ready ---");
             return Task.CompletedTask;
         }
 
         private Task Discord_LoggedOut()
         {
-            _logger.LogInformation("--- Bot logged out ---");
+            _logger.Information("--- Bot logged out ---");
             return Task.CompletedTask;
         }
 
         private Task Discord_LoggedIn()
         {
-            _logger.LogInformation("--- Bot logged in ---");
+            _logger.Information("--- Bot logged in ---");
             return Task.CompletedTask;
         }
 
         private Task Discord_MessageReceived(SocketMessage arg) => HandleMessage(arg);
-
 
         internal Task HandleMessage(IMessage message)
         {
@@ -92,6 +94,7 @@ namespace CyborgianStates.MessageHandling
             }
             return Task.CompletedTask;
         }
+
         private Task Discord_Log(LogMessage arg)
         {
             var id = Helpers.GetEventIdByType(LoggingEvent.DiscordLogEvent);
@@ -99,23 +102,23 @@ namespace CyborgianStates.MessageHandling
             switch (arg.Severity)
             {
                 case LogSeverity.Critical:
-                    _logger.LogCritical(id, message);
+                    _logger.Fatal(message);
                     break;
 
                 case LogSeverity.Error:
-                    _logger.LogError(id, message);
+                    _logger.Error(message);
                     break;
 
                 case LogSeverity.Warning:
-                    _logger.LogWarning(id, message);
+                    _logger.Warning(message);
                     break;
 
                 case LogSeverity.Info:
-                    _logger.LogInformation(id, message);
+                    _logger.Information(message);
                     break;
 
                 default:
-                    _logger.LogDebug(id, $"Severity: {arg.Severity} {message}");
+                    _logger.Debug($"Severity: {arg.Severity} {message}");
                     break;
             }
             return Task.CompletedTask;
@@ -123,13 +126,13 @@ namespace CyborgianStates.MessageHandling
 
         private Task Discord_Disconnected(Exception arg)
         {
-            _logger.LogWarning(arg, "--- Disconnected from Discord ---");
+            _logger.Warning(arg, "--- Disconnected from Discord ---");
             return Task.CompletedTask;
         }
 
         private Task Discord_Connected()
         {
-            _logger.LogInformation("--- Connected to Discord ---");
+            _logger.Information("--- Connected to Discord ---");
             return Task.CompletedTask;
         }
 
@@ -149,5 +152,4 @@ namespace CyborgianStates.MessageHandling
             _client.Dispose();
         }
     }
-
 }
