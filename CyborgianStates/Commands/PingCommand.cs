@@ -5,6 +5,8 @@ using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace CyborgianStates.Commands
 {
@@ -15,7 +17,7 @@ namespace CyborgianStates.Commands
 
         public PingCommand()
         {
-            _logger = ApplicationLogging.CreateLogger(typeof(PingCommand));
+            _logger = Log.ForContext<PingCommand>();
         }
 
         public async Task<CommandResponse> Execute(Message message)
@@ -24,7 +26,7 @@ namespace CyborgianStates.Commands
             {
                 throw new ArgumentNullException(nameof(message));
             }
-            _logger.LogDebug($"- Ping -");
+            _logger.Debug("- Ping -");
             var response = new CommandResponse(CommandStatus.Success, "Pong !");
             await message.Channel.ReplyToAsync(message, response).ConfigureAwait(false);
             return response;

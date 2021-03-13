@@ -27,24 +27,6 @@ namespace CyborgianStates.Tests
         }
 
         [Fact]
-        public void TestGetLoggerByName()
-        {
-            ILogger logger = ApplicationLogging.CreateLogger("TestLogger");
-            Type type = logger.GetType();
-            type.Name.Should().Be("Logger");
-            type.FullName.Should().Be("Microsoft.Extensions.Logging.Logger");
-        }
-
-        [Fact]
-        public void TestGetLoggerByType()
-        {
-            ILogger logger = ApplicationLogging.CreateLogger(typeof(Program));
-            Type type = logger.GetType();
-            type.Name.Should().Be("Logger");
-            type.FullName.Should().Be("Microsoft.Extensions.Logging.Logger");
-        }
-
-        [Fact]
         public async Task TestHttpExtensionsReadXml()
         {
             using (var res = new HttpResponseMessage(HttpStatusCode.OK))

@@ -22,8 +22,8 @@ namespace CyborgianStates
     public static class Program
     {
         private static ILauncher Launcher = new Launcher();
-        private static IUserInput userInput = new ConsoleInput();
-        private static IMessageHandler messageHandler = new ConsoleMessageHandler(userInput);
+        private static IUserInput userInput = null;
+        private static IMessageHandler messageHandler = null;
         internal static string InputChannel { get; set; }
         internal static IServiceProvider ServiceProvider { get; set; }
 
@@ -89,6 +89,8 @@ namespace CyborgianStates
             }
             if (InputChannel == "Console")
             {
+                userInput ??= new ConsoleInput();
+                messageHandler ??= new ConsoleMessageHandler(userInput);
                 serviceCollection.AddSingleton(typeof(IUserInput), userInput);
                 serviceCollection.AddSingleton(typeof(IMessageHandler), messageHandler);
                 serviceCollection.AddTransient<IResponseBuilder, ConsoleResponseBuilder>();
@@ -116,7 +118,7 @@ namespace CyborgianStates
         private static void ConfigureLogging(ServiceCollection serviceCollection, IConfiguration configuration)
         {
             var logConfig = configuration.GetSection("Serilog");
-            var logger = new LoggerConfiguration().ReadFrom.Configuration(logConfig).CreateLogger();
+            var logger = new LoggerConfiguration().ReadFrom.Configuration(configuration, "Serilog").CreateLogger();
             Log.Logger = logger;
             serviceCollection.AddLogging(builder =>
             {
@@ -124,6 +126,7 @@ namespace CyborgianStates
                 builder.AddConfiguration(logConfig);
                 builder.AddSerilog(logger, true);
             });
+            ServiceProvider = serviceCollection.BuildServiceProvider();
         }
     }
 }

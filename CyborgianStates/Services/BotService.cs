@@ -5,9 +5,11 @@ using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NationStatesSharp.Interfaces;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ILogger = Serilog.ILogger;
 
 namespace CyborgianStates.Services
 {
@@ -35,7 +37,7 @@ namespace CyborgianStates.Services
             _messageHandler = messageHandler;
             _requestDispatcher = requestDispatcher;
             _userRepo = userRepository;
-            _logger = ApplicationLogging.CreateLogger(typeof(BotService));
+            _logger = Log.ForContext<BotService>();
             _responseBuilder = responseBuilder;
             _appSettings = options.Value;
         }
@@ -44,7 +46,7 @@ namespace CyborgianStates.Services
 
         public async Task InitAsync()
         {
-            _logger.LogInformation("BotService Initializing");
+            _logger.Information("BotService Initializing");
             Register();
             _messageHandler.MessageReceived += async (s, e) => await ProcessMessageAsync(e).ConfigureAwait(false);
             await _messageHandler.InitAsync().ConfigureAwait(false);
@@ -52,21 +54,21 @@ namespace CyborgianStates.Services
 
         public async Task RunAsync()
         {
-            _logger.LogInformation("BotService Starting");
+            _logger.Information("BotService Starting");
             IsRunning = true;
             _requestDispatcher.Start();
-            _logger.LogInformation("BotService Running");
+            _logger.Information("BotService Running");
             await _messageHandler.RunAsync().ConfigureAwait(false);
         }
 
         public async Task ShutdownAsync()
         {
-            _logger.LogInformation("BotService Shutdown");
+            _logger.Information("BotService Shutdown");
             CommandHandler.Cancel();
             _requestDispatcher.Shutdown();
             await _messageHandler.ShutdownAsync().ConfigureAwait(false);
             IsRunning = false;
-            _logger.LogInformation("BotService Stopped");
+            _logger.Information("BotService Stopped");
         }
 
         private static void RegisterCommands()
@@ -103,7 +105,7 @@ namespace CyborgianStates.Services
                         var result = await CommandHandler.ExecuteAsync(e.Message).ConfigureAwait(false);
                         if (result == null)
                         {
-                            _logger.LogError($"Unknown command trigger {e.Message.Content}");
+                            _logger.Error($"Unknown command trigger {e.Message.Content}");
                             var response = _responseBuilder
                                 .FailWithDescription($"Unrecognized command trigger: '{e.Message.Content}'")
                                 .WithFooter(_appSettings.Footer)
@@ -115,7 +117,7 @@ namespace CyborgianStates.Services
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex, $"Unexpected error occured while Processing Message -> {e.Message}: ");
+                _logger.Fatal(ex, $"Unexpected error occured while Processing Message -> {e.Message}: ");
             }
         }
 

@@ -11,6 +11,8 @@ using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NationStatesSharp;
+using Serilog;
+using ILogger = Serilog.ILogger;
 using IRequestDispatcher = NationStatesSharp.Interfaces.IRequestDispatcher;
 
 namespace CyborgianStates.Commands
@@ -25,7 +27,7 @@ namespace CyborgianStates.Commands
 
         public NationStatsCommand()
         {
-            _logger = ApplicationLogging.CreateLogger(typeof(NationStatsCommand));
+            _logger = Log.ForContext<NationStatsCommand>();
             _dispatcher = (IRequestDispatcher) Program.ServiceProvider.GetService(typeof(IRequestDispatcher));
             _config = ((IOptions<AppSettings>) Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
             _responseBuilder = (IResponseBuilder) Program.ServiceProvider.GetService(typeof(IResponseBuilder));
@@ -39,7 +41,7 @@ namespace CyborgianStates.Commands
             }
             try
             {
-                _logger.LogDebug($"{message.Content}");
+                _logger.Debug(message.Content);
                 var parameters = message.Content.Split(" ").Skip(1);
                 if (parameters.Any())
                 {
@@ -59,17 +61,17 @@ namespace CyborgianStates.Commands
             }
             catch (TaskCanceledException e)
             {
-                _logger.LogError(e.ToString());
+                _logger.Error(e.ToString());
                 return await FailCommandAsync(message, "Request/Command has been canceled. Sorry :(").ConfigureAwait(false);
             }
             catch (HttpRequestFailedException e)
             {
-                _logger.LogError(e.ToString());
+                _logger.Error(e.ToString());
                 return await FailCommandAsync(message, e.Message).ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                _logger.LogError(e.ToString());
+                _logger.Error(e.ToString());
                 return await FailCommandAsync(message, "An unexpected error occured. Please contact the bot administrator.").ConfigureAwait(false);
             }
         }
