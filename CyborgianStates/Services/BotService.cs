@@ -21,7 +21,7 @@ namespace CyborgianStates.Services
         private readonly IUserRepository _userRepo;
         private readonly IResponseBuilder _responseBuilder;
         private readonly AppSettings _appSettings;
-
+        private readonly IBackgroundServiceRegistry _backgroundServiceRegistry;
         public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository, IResponseBuilder responseBuilder, IOptions<AppSettings> options)
         {
             if (messageHandler is null)
@@ -40,6 +40,7 @@ namespace CyborgianStates.Services
             _logger = Log.ForContext<BotService>();
             _responseBuilder = responseBuilder;
             _appSettings = options.Value;
+            _backgroundServiceRegistry = new BackgroundServiceRegistry();
         }
 
         public bool IsRunning { get; private set; }
@@ -57,6 +58,7 @@ namespace CyborgianStates.Services
             _logger.Information("BotService Starting");
             IsRunning = true;
             _requestDispatcher.Start();
+            await _backgroundServiceRegistry.StartAsync().ConfigureAwait(false);
             _logger.Information("BotService Running");
             await _messageHandler.RunAsync().ConfigureAwait(false);
         }
@@ -67,6 +69,7 @@ namespace CyborgianStates.Services
             CommandHandler.Cancel();
             _requestDispatcher.Shutdown();
             await _messageHandler.ShutdownAsync().ConfigureAwait(false);
+            await _backgroundServiceRegistry.ShutdownAsync().ConfigureAwait(false);
             IsRunning = false;
             _logger.Information("BotService Stopped");
         }
@@ -124,6 +127,7 @@ namespace CyborgianStates.Services
         private void Register()
         {
             RegisterCommands();
+            _backgroundServiceRegistry.Register(new DummyService());
         }
     }
 }

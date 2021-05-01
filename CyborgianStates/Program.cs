@@ -12,6 +12,7 @@ using NationStatesSharp;
 using NationStatesSharp.Interfaces;
 using Serilog;
 using Serilog.Core;
+using Quartz;
 using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Data.Common;
@@ -112,6 +113,7 @@ namespace CyborgianStates
             serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
             serviceCollection.AddSingleton<IUserRepository, UserRepository>();
             serviceCollection.AddSingleton<ISqlProvider, SqliteSqlProvider>();
+            //serviceCollection.AddQuartz();
             return serviceCollection.BuildServiceProvider();
         }
 
