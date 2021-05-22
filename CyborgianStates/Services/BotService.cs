@@ -2,6 +2,7 @@
 using CyborgianStates.Commands;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NationStatesSharp.Interfaces;
@@ -22,6 +23,7 @@ namespace CyborgianStates.Services
         private readonly IResponseBuilder _responseBuilder;
         private readonly AppSettings _appSettings;
         private readonly IBackgroundServiceRegistry _backgroundServiceRegistry;
+
         public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository, IResponseBuilder responseBuilder, IOptions<AppSettings> options)
         {
             if (messageHandler is null)
@@ -127,7 +129,7 @@ namespace CyborgianStates.Services
         private void Register()
         {
             RegisterCommands();
-            _backgroundServiceRegistry.Register(new DummyService());
+            _backgroundServiceRegistry.Register(new DumpRetrievalBackgroundService());
         }
     }
 }

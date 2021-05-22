@@ -1,6 +1,7 @@
 ﻿using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using NationStatesSharp;
+using NationStatesSharp.Enums;
 using NationStatesSharp.Interfaces;
 using System;
 using System.Collections.Generic;

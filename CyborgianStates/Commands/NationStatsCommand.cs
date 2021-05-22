@@ -11,6 +11,7 @@ using CyborgianStates.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NationStatesSharp;
+using NationStatesSharp.Enums;
 using Serilog;
 using ILogger = Serilog.ILogger;
 using IRequestDispatcher = NationStatesSharp.Interfaces.IRequestDispatcher;

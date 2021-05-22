@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
 using NationStatesSharp;
+using NationStatesSharp.Enums;
 using NationStatesSharp.Interfaces;
 using System;
 using System.IO;

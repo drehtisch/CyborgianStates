@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.3.0" />
+    <PackageReference Include="Discord.Net" Version="2.3.1" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
@@ -28,6 +28,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CyborgianStates\CyborgianStates.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="NationStatesSharp">
+      <HintPath>..\..\NationStatesSharp\bin\Debug\net5.0\NationStatesSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

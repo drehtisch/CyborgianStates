@@ -68,7 +68,7 @@ namespace CyborgianStates
 
         public static IServiceProvider ConfigureServices()
         {
-            ServiceCollection serviceCollection = new ServiceCollection();
+            var serviceCollection = new ServiceCollection();
             string configurationName = "production";
 #if DEBUG
             configurationName = "development";
@@ -79,7 +79,6 @@ namespace CyborgianStates
                 .Build();
             serviceCollection.AddOptions();
             serviceCollection.Configure<AppSettings>(configuration.GetSection("Configuration"));
-            //var loggeroptions = new FileLoggerOptions() { FileName = "bot-", Extension = "log", RetainedFileCountLimit = null, Periodicity = PeriodicityOptions.Daily };
             serviceCollection.AddSingleton(typeof(IConfiguration), configuration);
             ConfigureLogging(serviceCollection, configuration);
             // add services
@@ -113,7 +112,7 @@ namespace CyborgianStates
             serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
             serviceCollection.AddSingleton<IUserRepository, UserRepository>();
             serviceCollection.AddSingleton<ISqlProvider, SqliteSqlProvider>();
-            //serviceCollection.AddQuartz();
+            serviceCollection.AddSingleton<IDumpRetrievalService, DefaultDumpRetrievalService>();
             return serviceCollection.BuildServiceProvider();
         }
 
