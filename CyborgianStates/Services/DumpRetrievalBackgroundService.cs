@@ -1,11 +1,16 @@
 ﻿using CyborgianStates.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using NationStatesSharp.Enums;
 using NationStatesSharp.Interfaces;
 using Quartz;
+using Quartz.Impl.Triggers;
 using Serilog;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,10 +19,14 @@ namespace CyborgianStates.Services
     public class DumpRetrievalBackgroundService : IBackgroundService
     {
         private IDumpRetrievalService _dumpRetrievalService;
+        private ILogger _logger;
+        private AppSettings _settings;
 
         public DumpRetrievalBackgroundService()
         {
             _dumpRetrievalService = Program.ServiceProvider.GetRequiredService<IDumpRetrievalService>();
+            _logger = Log.Logger.ForContext<DumpRetrievalBackgroundService>();
+            _settings = Program.ServiceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
         }
 
         public string Identity => "Dump Retrieval";
@@ -29,37 +38,104 @@ namespace CyborgianStates.Services
         public TimeZoneInfo TimeZone => TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
 
         public bool DoStartNow => true;
+        private bool _isRetrying = false;
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var logger = Log.Logger.ForContext<DumpRetrievalBackgroundService>();
-            logger.Information("--- Start Dump Data Update ---");
-            var stopWatch = Stopwatch.StartNew();
-            if (!_dumpRetrievalService.IsLocalDumpAvailableAndUpToDate(NationStatesSharp.Enums.DumpType.Nations))
+            _logger.Information("--- Dump Data Update started ---");
+            await RetrieveDumpAsync(DumpType.Nations, context).ConfigureAwait(false);
+            if (!_isRetrying)
             {
-                logger.Debug("Download nation dump as stream took {@elapsed} to complete.", stopWatch.Elapsed);
-                using (var fileStream = new FileStream("nations.xml.gz", FileMode.Create))
+                await RetrieveDumpAsync(DumpType.Regions, context).ConfigureAwait(false);
+            }
+            _logger.Information("--- Dump Data Update completed ---");
+        }
+
+        private async Task RetrieveDumpAsync(DumpType dumpType, IJobExecutionContext context)
+        {
+            var fileName = Path.Combine(AppContext.BaseDirectory, _dumpRetrievalService.GetDumpFileNameByDumpType(dumpType));
+            string existingHash = "";
+            if (File.Exists(fileName))
+            {
+                _logger.Debug("Calculating hash from local file: {@fileName}", fileName);
+                using (var fileStream = new FileStream(fileName, FileMode.Open))
                 {
-                    using (Stream responseStream = await _dumpRetrievalService.DownloadDumpAsync(NationStatesSharp.Enums.DumpType.Nations, CancellationToken.None).ConfigureAwait(false))
+                    existingHash = await CalculateHashFromStreamAsync(fileStream).ConfigureAwait(false);
+                }
+            }
+            if (!_dumpRetrievalService.IsLocalDumpAvailableAndUpToDate(dumpType))
+            {
+                var stopWatch = Stopwatch.StartNew();
+
+                using (Stream responseStream = await _dumpRetrievalService.DownloadDumpAsync(dumpType, CancellationToken.None).ConfigureAwait(false))
+                {
+                    stopWatch.Stop();
+                    _logger.Debug("Download {@dumpType} dump as stream took {@elapsed} to complete.", dumpType, stopWatch.Elapsed);
+                    if (existingHash != await CalculateHashFromStreamAsync(responseStream).ConfigureAwait(false))
                     {
-                        await responseStream.CopyToAsync(fileStream).ConfigureAwait(false);
+                        ArchiveDump(dumpType, fileName);
+                        using (var fileStream = new FileStream(fileName, FileMode.Create))
+                        {
+                            stopWatch.Restart();
+                            responseStream.Seek(0, SeekOrigin.Begin);
+                            await responseStream.CopyToAsync(fileStream).ConfigureAwait(false);
+                            stopWatch.Stop();
+                            _logger.Debug("Writing {@dumpType} dump to local cache took {@elapsed} to complete.", dumpType, stopWatch.Elapsed);
+                        }
+                    }
+                    else
+                    {
+                        _logger.Warning("Downloaded {@dumpType} dump stream does not differ from local {@dumpType} dump. {@dumpType} dump was not updated yet.", dumpType);
+                        RerunJobAsync(context);
                     }
                 }
-                logger.Debug("Writing nation dump from local cache took {@elapsed} to complete.", stopWatch.Elapsed);
             }
-            if (!_dumpRetrievalService.IsLocalDumpAvailableAndUpToDate(NationStatesSharp.Enums.DumpType.Regions))
+        }
+
+        private void ArchiveDump(DumpType dumpType, string fileName)
+        {
+            if (_settings.ArchiveDumps)
             {
-                logger.Debug("Download region dump as stream took {@elapsed} to complete.", stopWatch.Elapsed);
-                using (var fileStream = new FileStream("regions.xml.gz", FileMode.Create))
+                var archiveDir = Path.Combine(AppContext.BaseDirectory, "dump-archive", dumpType.ToString().ToLower());
+                if (!Directory.Exists(archiveDir))
                 {
-                    using (Stream responseStream = await _dumpRetrievalService.DownloadDumpAsync(NationStatesSharp.Enums.DumpType.Regions, CancellationToken.None).ConfigureAwait(false))
-                    {
-                        await responseStream.CopyToAsync(fileStream).ConfigureAwait(false);
-                    }
+                    Directory.CreateDirectory(archiveDir);
                 }
-                logger.Debug("Writing region dump to local cache took {@elapsed} to complete.", stopWatch.Elapsed);
+                var info = new FileInfo(fileName);
+                var archiveFilename = $"{info.LastWriteTimeUtc.Year}-{info.LastWriteTimeUtc.Month:00}-{info.LastWriteTimeUtc.Day:00}-{dumpType.ToString().ToLower()}.xml.gz";
+                var targetFileName = Path.Combine(archiveDir, archiveFilename);
+                _logger.Information("Archiving {@fileName} to {@archiveFileName}", fileName, targetFileName);
+                File.Copy(fileName, targetFileName);
             }
-            logger.Information("--- Dump Data Update completed ---");
+            else
+            {
+                _logger.Debug("{@dumpType} dump archiving skipped.", dumpType);
+            }
+        }
+
+        private async Task<string> CalculateHashFromStreamAsync(Stream fileStream)
+        {
+            using (var hasher = SHA256.Create())
+            {
+                var bytes = await hasher.ComputeHashAsync(fileStream).ConfigureAwait(false);
+                var hash = string.Concat(bytes.Select(b => b.ToString("x2")));
+                _logger.Verbose("Hash: {@existingHash}", hash);
+                return hash;
+            }
+        }
+
+        private async Task RerunJobAsync(IJobExecutionContext context)
+        {
+            if (!_isRetrying)
+            {
+                var retryTrigger = TriggerBuilder.Create()
+                    .ForJob(Identity, Group)
+                    .StartAt(DateBuilder.FutureDate(30, IntervalUnit.Minute))
+                    .Build();
+                var rerun = await context.Scheduler.ScheduleJob(retryTrigger).ConfigureAwait(false);
+                _isRetrying = true;
+                _logger.Information("Dump retrieval will be retried at {@rerun}.", rerun.ToString("O"));
+            }
         }
     }
 }
