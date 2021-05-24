@@ -33,7 +33,7 @@ namespace CyborgianStates.Services
 
         public string Group => "Dump";
 
-        public string CronSchedule => "0 23 * ? * *";
+        public string CronSchedule => "0 0 23 ? * *";
 
         public TimeZoneInfo TimeZone => TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
 
@@ -86,7 +86,7 @@ namespace CyborgianStates.Services
                     else
                     {
                         _logger.Warning("Downloaded {@dumpType} dump stream does not differ from local {@dumpType} dump. {@dumpType} dump was not updated yet.", dumpType);
-                        RerunJobAsync(context);
+                        await RerunJobAsync(context).ConfigureAwait(false);
                     }
                 }
             }
