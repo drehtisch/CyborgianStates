@@ -5,6 +5,7 @@ using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
 using CyborgianStates.Services;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
 using NationStatesSharp.Interfaces;
@@ -22,6 +23,8 @@ namespace CyborgianStates.Tests.Services
         private Mock<IRequestDispatcher> requestDispatcherMock;
         private Mock<IUserRepository> userRepositoryMock;
         private Mock<IOptions<AppSettings>> appSettingsMock;
+        private Mock<IBackgroundServiceRegistry> backgroundServiceRegistryMock;
+        private Mock<IDumpRetrievalService> dumpRetrievalServiceMock;
 
         public BotServiceTests()
         {
@@ -41,23 +44,31 @@ namespace CyborgianStates.Tests.Services
             appSettingsMock
                 .Setup(m => m.Value)
                 .Returns(new AppSettings() { });
+            backgroundServiceRegistryMock = new Mock<IBackgroundServiceRegistry>(MockBehavior.Strict);
+            backgroundServiceRegistryMock.Setup(m => m.Register(It.IsAny<IBackgroundService>()));
+            backgroundServiceRegistryMock.Setup(m => m.StartAsync()).Returns(Task.CompletedTask);
+            backgroundServiceRegistryMock.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
+            dumpRetrievalServiceMock = new Mock<IDumpRetrievalService>(MockBehavior.Strict);
+            ConfigureServices();
         }
 
-        [Fact]
-        public void TestBotServiceWithNullMessageHandler()
+        private IServiceProvider ConfigureServices()
         {
-            Assert.Throws<ArgumentNullException>(() => new BotService(null, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object));
-            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, null, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object));
-            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, null, new DiscordResponseBuilder(), appSettingsMock.Object));
-            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, null, appSettingsMock.Object));
-            Assert.Throws<ArgumentNullException>(() => new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), null));
+            var services = new ServiceCollection();
+            services.AddSingleton<IMessageHandler>(msgHandlerMock.Object);
+            services.AddSingleton<IRequestDispatcher>(requestDispatcherMock.Object);
+            services.AddSingleton<IUserRepository>(userRepositoryMock.Object);
+            services.AddSingleton<IResponseBuilder, ConsoleResponseBuilder>();
+            services.AddSingleton<IOptions<AppSettings>>(appSettingsMock.Object);
+            services.AddSingleton<IBackgroundServiceRegistry>(backgroundServiceRegistryMock.Object);
+            services.AddSingleton<IDumpRetrievalService>(dumpRetrievalServiceMock.Object);
+            return services.BuildServiceProvider(new ServiceProviderOptions() { ValidateOnBuild = true });
         }
 
         [Fact]
         public async Task TestInitRunAndShutDownBotService()
         {
-            Program.ServiceProvider = Program.ConfigureServices();
-            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object);
+            var botService = new BotService(ConfigureServices());
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
             botService.IsRunning.Should().BeTrue();
@@ -68,14 +79,13 @@ namespace CyborgianStates.Tests.Services
         [Fact]
         public async Task TestIsRelevant()
         {
-            Program.ServiceProvider = Program.ConfigureServices();
             userRepositoryMock.Setup(u => u.IsUserInDbAsync(It.IsAny<ulong>())).Returns(() => Task.FromResult(false));
             userRepositoryMock.Setup(u => u.AddUserToDbAsync(It.IsAny<ulong>())).Returns(() => Task.CompletedTask);
             userRepositoryMock.Setup(u => u.IsAllowedAsync(It.IsAny<string>(), It.IsAny<ulong>())).Returns(() => Task.FromResult(true));
             msgChannelMock.Setup(m => m.WriteToAsync(It.IsAny<CommandResponse>())).Returns(Task.CompletedTask);
 
             Message message = new Message(0, "test", msgChannelMock.Object);
-            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object);
+            var botService = new BotService(ConfigureServices());
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
 
@@ -109,7 +119,7 @@ namespace CyborgianStates.Tests.Services
 
             CommandHandler.Count.Should().Be(1);
 
-            var botService = new BotService(msgHandlerMock.Object, requestDispatcherMock.Object, userRepositoryMock.Object, new DiscordResponseBuilder(), appSettingsMock.Object);
+            var botService = new BotService(ConfigureServices());
             await botService.InitAsync().ConfigureAwait(false);
             await botService.RunAsync().ConfigureAwait(false);
 
@@ -132,17 +142,7 @@ namespace CyborgianStates.Tests.Services
             commandResponse.Status.Should().Be(CommandStatus.Success);
             commandResponse.Content.Should().Be("Pong !");
 
-            message = new Message(0, "test", msgChannelMock.Object);
-            eventArgs = new MessageReceivedEventArgs(message);
-            msgHandlerMock.Raise(m => m.MessageReceived += null, this, eventArgs);
-
-            message = new Message(1, "test", msgChannelMock.Object);
-            eventArgs = new MessageReceivedEventArgs(message);
-            msgHandlerMock.Raise(m => m.MessageReceived += null, this, eventArgs);
-
             await Task.Delay(1000).ConfigureAwait(false);
-
-            commandResponse.Status.Should().Be(CommandStatus.Error);
 
             await botService.ShutdownAsync().ConfigureAwait(false);
 

@@ -21,22 +21,26 @@ namespace CyborgianStates.Tests.CommandTests
         [Fact]
         public async Task TestExecuteSuccess()
         {
-            ConfigureServices();
             var message = new Message(0, "about", new ConsoleMessageChannel());
-            var command = new AboutCommand();
+
+            var command = new AboutCommand(ConfigureServices());
             command.SetCancellationToken(CancellationToken.None);
             var response = await command.Execute(message);
             response.Status.Should().Be(CommandStatus.Success);
-            response.Content.Should().StartWith($"About CyborgianStates{Environment.NewLine}{Environment.NewLine}Contact for this instance{Environment.NewLine}contact@example.com{Environment.NewLine}{Environment.NewLine}Github{Environment.NewLine}[CyborgianStates](https://github.com/Free-Nations-Region/CyborgianStates){Environment.NewLine}{Environment.NewLine}Developed by Drehtisch{Environment.NewLine}Discord: Drehtisch#5680{Environment.NewLine}NationStates: [Tigerania](https://www.nationstates.net/nation=tigerania){Environment.NewLine}{Environment.NewLine}Support{Environment.NewLine}via [OpenCollective](https://opencollective.com/fnr){Environment.NewLine}");
+            response.Content.Should().Contain("About CyborgianStates");
+            response.Content.Should().Contain("Developed by Drehtisch");
+            response.Content.Should().Contain($"Github{Environment.NewLine}[CyborgianStates]");
+            response.Content.Should().Contain($"Support{Environment.NewLine}via [OpenCollective]");
         }
-        private void ConfigureServices()
+
+        private IServiceProvider ConfigureServices()
         {
-            var serviceCollection = new ServiceCollection();
+            var services = new ServiceCollection();
             var options = new Mock<IOptions<AppSettings>>(MockBehavior.Strict);
-            options.SetupGet(m => m.Value).Returns(new AppSettings() { SeperatorChar = '$' , Contact = "contact@example.com" });
-            serviceCollection.AddSingleton<IResponseBuilder, ConsoleResponseBuilder>();
-            serviceCollection.AddSingleton(typeof(IOptions<AppSettings>), options.Object);
-            Program.ServiceProvider = serviceCollection.BuildServiceProvider();
+            options.SetupGet(m => m.Value).Returns(new AppSettings() { SeperatorChar = '$', Contact = "contact@example.com" });
+            services.AddSingleton<IResponseBuilder, ConsoleResponseBuilder>();
+            services.AddSingleton(typeof(IOptions<AppSettings>), options.Object);
+            return services.BuildServiceProvider(new ServiceProviderOptions() { ValidateOnBuild = true });
         }
     }
 }

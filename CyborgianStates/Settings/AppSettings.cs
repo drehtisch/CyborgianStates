@@ -55,5 +55,6 @@ namespace CyborgianStates
 
         public string Locale { get; set; }
         public char SeperatorChar { get; set; }
+        public bool ArchiveDumps { get; set; }
     }
 }

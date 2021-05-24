@@ -8,9 +8,11 @@ using CyborgianStates.CommandHandling;
 using CyborgianStates.Enums;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NationStatesSharp;
+using NationStatesSharp.Enums;
 using Serilog;
 using ILogger = Serilog.ILogger;
 using IRequestDispatcher = NationStatesSharp.Interfaces.IRequestDispatcher;
@@ -25,12 +27,16 @@ namespace CyborgianStates.Commands
         private readonly ILogger _logger;
         private CancellationToken token;
 
-        public NationStatsCommand()
+        public NationStatsCommand() : this(Program.ServiceProvider)
+        {
+        }
+
+        public NationStatsCommand(IServiceProvider serviceProvider)
         {
             _logger = Log.ForContext<NationStatsCommand>();
-            _dispatcher = (IRequestDispatcher) Program.ServiceProvider.GetService(typeof(IRequestDispatcher));
-            _config = ((IOptions<AppSettings>) Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
-            _responseBuilder = (IResponseBuilder) Program.ServiceProvider.GetService(typeof(IResponseBuilder));
+            _dispatcher = serviceProvider.GetRequiredService<IRequestDispatcher>();
+            _config = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+            _responseBuilder = serviceProvider.GetRequiredService<IResponseBuilder>();
         }
 
         public async Task<CommandResponse> Execute(Message message)

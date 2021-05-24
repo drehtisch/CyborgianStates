@@ -2,9 +2,11 @@
 using CyborgianStates.Commands;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NationStatesSharp.Interfaces;
+using Quartz;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -21,25 +23,21 @@ namespace CyborgianStates.Services
         private readonly IUserRepository _userRepo;
         private readonly IResponseBuilder _responseBuilder;
         private readonly AppSettings _appSettings;
+        private readonly IBackgroundServiceRegistry _backgroundServiceRegistry;
 
-        public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository, IResponseBuilder responseBuilder, IOptions<AppSettings> options)
+        public BotService() : this(Program.ServiceProvider)
         {
-            if (messageHandler is null)
-                throw new ArgumentNullException(nameof(messageHandler));
-            if (requestDispatcher is null)
-                throw new ArgumentNullException(nameof(requestDispatcher));
-            if (userRepository is null)
-                throw new ArgumentNullException(nameof(requestDispatcher));
-            if (responseBuilder is null)
-                throw new ArgumentNullException(nameof(responseBuilder));
-            if (options is null)
-                throw new ArgumentNullException(nameof(options));
-            _messageHandler = messageHandler;
-            _requestDispatcher = requestDispatcher;
-            _userRepo = userRepository;
+        }
+
+        public BotService(IServiceProvider serviceProvider)
+        {
+            _messageHandler = serviceProvider.GetRequiredService<IMessageHandler>();
+            _requestDispatcher = serviceProvider.GetRequiredService<IRequestDispatcher>();
+            _userRepo = serviceProvider.GetRequiredService<IUserRepository>();
             _logger = Log.ForContext<BotService>();
-            _responseBuilder = responseBuilder;
-            _appSettings = options.Value;
+            _responseBuilder = serviceProvider.GetRequiredService<IResponseBuilder>();
+            _appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+            _backgroundServiceRegistry = serviceProvider.GetRequiredService<IBackgroundServiceRegistry>();
         }
 
         public bool IsRunning { get; private set; }
@@ -57,6 +55,7 @@ namespace CyborgianStates.Services
             _logger.Information("BotService Starting");
             IsRunning = true;
             _requestDispatcher.Start();
+            await _backgroundServiceRegistry.StartAsync().ConfigureAwait(false);
             _logger.Information("BotService Running");
             await _messageHandler.RunAsync().ConfigureAwait(false);
         }
@@ -67,6 +66,7 @@ namespace CyborgianStates.Services
             CommandHandler.Cancel();
             _requestDispatcher.Shutdown();
             await _messageHandler.ShutdownAsync().ConfigureAwait(false);
+            await _backgroundServiceRegistry.ShutdownAsync().ConfigureAwait(false);
             IsRunning = false;
             _logger.Information("BotService Stopped");
         }
@@ -106,11 +106,6 @@ namespace CyborgianStates.Services
                         if (result == null)
                         {
                             _logger.Error($"Unknown command trigger {e.Message.Content}");
-                            var response = _responseBuilder
-                                .FailWithDescription($"Unrecognized command trigger: '{e.Message.Content}'")
-                                .WithFooter(_appSettings.Footer)
-                                .Build();
-                            await e.Message.Channel.ReplyToAsync(e.Message, response).ConfigureAwait(false);
                         }
                     }
                 }
@@ -124,6 +119,7 @@ namespace CyborgianStates.Services
         private void Register()
         {
             RegisterCommands();
+            _backgroundServiceRegistry.Register(new DumpRetrievalBackgroundService());
         }
     }
 }
