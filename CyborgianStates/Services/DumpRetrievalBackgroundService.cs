@@ -22,11 +22,15 @@ namespace CyborgianStates.Services
         private ILogger _logger;
         private AppSettings _settings;
 
-        public DumpRetrievalBackgroundService()
+        public DumpRetrievalBackgroundService() : this(Program.ServiceProvider)
         {
-            _dumpRetrievalService = Program.ServiceProvider.GetRequiredService<IDumpRetrievalService>();
+        }
+
+        public DumpRetrievalBackgroundService(IServiceProvider serviceProvider)
+        {
             _logger = Log.Logger.ForContext<DumpRetrievalBackgroundService>();
-            _settings = Program.ServiceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+            _dumpRetrievalService = serviceProvider.GetRequiredService<IDumpRetrievalService>();
+            _settings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
         }
 
         public string Identity => "Dump Retrieval";
@@ -42,13 +46,20 @@ namespace CyborgianStates.Services
 
         public async Task Execute(IJobExecutionContext context)
         {
-            _logger.Information("--- Dump Data Update started ---");
-            await RetrieveDumpAsync(DumpType.Nations, context).ConfigureAwait(false);
-            if (!_isRetrying)
+            try
             {
-                await RetrieveDumpAsync(DumpType.Regions, context).ConfigureAwait(false);
+                _logger.Information("--- Dump Retrieval started ---");
+                await RetrieveDumpAsync(DumpType.Nations, context).ConfigureAwait(false);
+                if (!_isRetrying)
+                {
+                    await RetrieveDumpAsync(DumpType.Regions, context).ConfigureAwait(false);
+                }
+                _logger.Information("--- Dump Retrieval completed ---");
             }
-            _logger.Information("--- Dump Data Update completed ---");
+            catch (Exception ex)
+            {
+                _logger.Fatal(ex, "Dump Retrieval failed with an unexpected fatal error.");
+            }
         }
 
         private async Task RetrieveDumpAsync(DumpType dumpType, IJobExecutionContext context)

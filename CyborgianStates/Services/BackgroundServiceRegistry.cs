@@ -13,7 +13,10 @@ namespace CyborgianStates.Services
         private ISchedulerFactory _factory;
         private IScheduler _scheduler;
 
-        public BackgroundServiceRegistry() => _factory = new StdSchedulerFactory();
+        public BackgroundServiceRegistry(ISchedulerFactory schedulerFactory)
+        {
+            _factory = schedulerFactory;
+        }
 
         public void Register(IBackgroundService service) => _backgroundServices.Add(service);
 
@@ -34,12 +37,14 @@ namespace CyborgianStates.Services
                 IJobDetail job = JobBuilder.Create(type)
                     .WithIdentity(service.Identity, service.Group)
                     .Build();
-                var time = await _scheduler.ScheduleJob(job, trigger).ConfigureAwait(false);
+                if (!await _scheduler.CheckExists(job.Key).ConfigureAwait(false))
+                {
+                    await _scheduler.ScheduleJob(job, trigger).ConfigureAwait(false);
+                }
                 if (service.DoStartNow)
                 {
                     await _scheduler.TriggerJob(new JobKey(service.Identity, service.Group)).ConfigureAwait(false);
                 }
-                Console.WriteLine(time);
             }
         }
     }

@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NationStatesSharp.Interfaces;
+using Quartz;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -24,25 +25,19 @@ namespace CyborgianStates.Services
         private readonly AppSettings _appSettings;
         private readonly IBackgroundServiceRegistry _backgroundServiceRegistry;
 
-        public BotService(IMessageHandler messageHandler, IRequestDispatcher requestDispatcher, IUserRepository userRepository, IResponseBuilder responseBuilder, IOptions<AppSettings> options)
+        public BotService() : this(Program.ServiceProvider)
         {
-            if (messageHandler is null)
-                throw new ArgumentNullException(nameof(messageHandler));
-            if (requestDispatcher is null)
-                throw new ArgumentNullException(nameof(requestDispatcher));
-            if (userRepository is null)
-                throw new ArgumentNullException(nameof(requestDispatcher));
-            if (responseBuilder is null)
-                throw new ArgumentNullException(nameof(responseBuilder));
-            if (options is null)
-                throw new ArgumentNullException(nameof(options));
-            _messageHandler = messageHandler;
-            _requestDispatcher = requestDispatcher;
-            _userRepo = userRepository;
+        }
+
+        public BotService(IServiceProvider serviceProvider)
+        {
+            _messageHandler = serviceProvider.GetRequiredService<IMessageHandler>();
+            _requestDispatcher = serviceProvider.GetRequiredService<IRequestDispatcher>();
+            _userRepo = serviceProvider.GetRequiredService<IUserRepository>();
             _logger = Log.ForContext<BotService>();
-            _responseBuilder = responseBuilder;
-            _appSettings = options.Value;
-            _backgroundServiceRegistry = new BackgroundServiceRegistry();
+            _responseBuilder = serviceProvider.GetRequiredService<IResponseBuilder>();
+            _appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+            _backgroundServiceRegistry = serviceProvider.GetRequiredService<IBackgroundServiceRegistry>();
         }
 
         public bool IsRunning { get; private set; }
@@ -111,11 +106,6 @@ namespace CyborgianStates.Services
                         if (result == null)
                         {
                             _logger.Error($"Unknown command trigger {e.Message.Content}");
-                            var response = _responseBuilder
-                                .FailWithDescription($"Unrecognized command trigger: '{e.Message.Content}'")
-                                .WithFooter(_appSettings.Footer)
-                                .Build();
-                            await e.Message.Channel.ReplyToAsync(e.Message, response).ConfigureAwait(false);
                         }
                     }
                 }

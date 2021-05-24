@@ -14,7 +14,9 @@ namespace CyborgianStates.MessageHandling
         protected readonly CommandResponse _response;
         protected readonly Dictionary<FieldKey, string> _properties = new();
         protected readonly Dictionary<string, (string, bool)> _fields = new();
+
         public abstract CommandResponse Build();
+
         public BaseResponseBuilder()
         {
             _response = new CommandResponse();
@@ -47,6 +49,11 @@ namespace CyborgianStates.MessageHandling
 
         public IResponseBuilder WithField(string key, string value, bool isInline = false)
         {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value), $"Key: {key}");
+            }
+
             _fields[key] = (value, isInline);
             return this;
         }

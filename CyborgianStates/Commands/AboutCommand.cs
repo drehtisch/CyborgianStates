@@ -1,11 +1,9 @@
 ﻿using CyborgianStates.CommandHandling;
 using CyborgianStates.Interfaces;
 using CyborgianStates.MessageHandling;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,11 +13,17 @@ namespace CyborgianStates.Commands
     {
         private readonly AppSettings _config;
         private readonly IResponseBuilder _responseBuilder;
-        public AboutCommand()
+
+        public AboutCommand() : this(Program.ServiceProvider)
         {
-            _responseBuilder = (IResponseBuilder) Program.ServiceProvider.GetService(typeof(IResponseBuilder));
-            _config = ((IOptions<AppSettings>) Program.ServiceProvider.GetService(typeof(IOptions<AppSettings>))).Value;
         }
+
+        public AboutCommand(IServiceProvider serviceProvider)
+        {
+            _responseBuilder = serviceProvider.GetRequiredService<IResponseBuilder>();
+            _config = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+        }
+
         public async Task<CommandResponse> Execute(Message message)
         {
             var response = _responseBuilder.Success()
@@ -32,6 +36,9 @@ namespace CyborgianStates.Commands
             await message.Channel.ReplyToAsync(message, response).ConfigureAwait(false);
             return response;
         }
-        public void SetCancellationToken(CancellationToken cancellationToken) { }
+
+        public void SetCancellationToken(CancellationToken cancellationToken)
+        {
+        }
     }
 }
