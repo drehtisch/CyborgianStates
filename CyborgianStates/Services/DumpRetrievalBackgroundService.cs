@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using NationStatesSharp.Enums;
 using NationStatesSharp.Interfaces;
 using Quartz;
-using Quartz.Impl.Triggers;
 using Serilog;
 using System;
 using System.Diagnostics;
@@ -18,9 +17,10 @@ namespace CyborgianStates.Services
 {
     public class DumpRetrievalBackgroundService : IBackgroundService
     {
-        private IDumpRetrievalService _dumpRetrievalService;
-        private ILogger _logger;
-        private AppSettings _settings;
+        private readonly IDumpRetrievalService _dumpRetrievalService;
+        private readonly IDumpDataService _dumpDataService;
+        private readonly ILogger _logger;
+        private readonly AppSettings _settings;
 
         public DumpRetrievalBackgroundService() : this(Program.ServiceProvider)
         {
@@ -31,30 +31,32 @@ namespace CyborgianStates.Services
             _logger = Log.Logger.ForContext<DumpRetrievalBackgroundService>();
             _dumpRetrievalService = serviceProvider.GetRequiredService<IDumpRetrievalService>();
             _settings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+            _dumpDataService = serviceProvider.GetRequiredService<IDumpDataService>();
         }
 
         public string Identity => "Dump Retrieval";
 
         public string Group => "Dump";
 
-        public string CronSchedule => "0 0 23 ? * *";
+        public string CronSchedule => "0 30 22 ? * *";
 
         public TimeZoneInfo TimeZone => TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
 
         public bool DoStartNow => true;
         private bool _isRetrying = false;
-
+        private bool? _successfullyUpdated = null;
         public async Task Execute(IJobExecutionContext context)
         {
             try
             {
                 _logger.Information("--- Dump Retrieval started ---");
                 await RetrieveDumpAsync(DumpType.Nations, context).ConfigureAwait(false);
-                if (!_isRetrying)
-                {
-                    await RetrieveDumpAsync(DumpType.Regions, context).ConfigureAwait(false);
-                }
+                await RetrieveDumpAsync(DumpType.Regions, context).ConfigureAwait(false);
                 _logger.Information("--- Dump Retrieval completed ---");
+                if (_successfullyUpdated ?? false)
+                {
+                    await _dumpDataService.UpdateAsync().ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
@@ -93,13 +95,24 @@ namespace CyborgianStates.Services
                             stopWatch.Stop();
                             _logger.Debug("Writing {@dumpType} dump to local cache took {@elapsed} to complete.", dumpType, stopWatch.Elapsed);
                         }
+                        _isRetrying = false;
+                        //Set only to true if there is no value, if it is true no need to change, if it is false keep it at false
+                        if (!_successfullyUpdated.HasValue)
+                        {
+                            _successfullyUpdated = true;
+                        }
                     }
                     else
                     {
                         _logger.Warning("Downloaded {@dumpType} dump stream does not differ from local {@dumpType} dump. {@dumpType} dump was not updated yet.", dumpType);
                         await RerunJobAsync(context).ConfigureAwait(false);
+                        _successfullyUpdated = false;
                     }
                 }
+            }
+            else
+            {
+                _successfullyUpdated = true;
             }
         }
 
