@@ -25,6 +25,7 @@ namespace CyborgianStates.Tests.Services
         private Mock<IOptions<AppSettings>> appSettingsMock;
         private Mock<IBackgroundServiceRegistry> backgroundServiceRegistryMock;
         private Mock<IDumpRetrievalService> dumpRetrievalServiceMock;
+        private Mock<IDumpDataService> dumpDataServiceMock;
 
         public BotServiceTests()
         {
@@ -49,6 +50,7 @@ namespace CyborgianStates.Tests.Services
             backgroundServiceRegistryMock.Setup(m => m.StartAsync()).Returns(Task.CompletedTask);
             backgroundServiceRegistryMock.Setup(m => m.ShutdownAsync()).Returns(Task.CompletedTask);
             dumpRetrievalServiceMock = new Mock<IDumpRetrievalService>(MockBehavior.Strict);
+            dumpDataServiceMock = new Mock<IDumpDataService>(MockBehavior.Strict);
             ConfigureServices();
         }
 
@@ -62,6 +64,7 @@ namespace CyborgianStates.Tests.Services
             services.AddSingleton<IOptions<AppSettings>>(appSettingsMock.Object);
             services.AddSingleton<IBackgroundServiceRegistry>(backgroundServiceRegistryMock.Object);
             services.AddSingleton<IDumpRetrievalService>(dumpRetrievalServiceMock.Object);
+            services.AddSingleton<IDumpDataService>(dumpDataServiceMock.Object);
             return services.BuildServiceProvider(new ServiceProviderOptions() { ValidateOnBuild = true });
         }
 
