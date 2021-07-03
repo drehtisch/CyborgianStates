@@ -112,6 +112,7 @@ namespace CyborgianStates
             serviceCollection.AddSingleton<IDataAccessor, DataAccessor>();
             serviceCollection.AddSingleton<IUserRepository, UserRepository>();
             serviceCollection.AddSingleton<ISqlProvider, SqliteSqlProvider>();
+            serviceCollection.AddSingleton<IDumpDataService, DumpDataService>();
             serviceCollection.AddSingleton<IDumpRetrievalService, DefaultDumpRetrievalService>();
             serviceCollection.AddQuartz();
             serviceCollection.AddSingleton<IBackgroundServiceRegistry, BackgroundServiceRegistry>();

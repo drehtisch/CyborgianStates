@@ -24,20 +24,21 @@ namespace CyborgianStates.Services
         private readonly IResponseBuilder _responseBuilder;
         private readonly AppSettings _appSettings;
         private readonly IBackgroundServiceRegistry _backgroundServiceRegistry;
-
+        private readonly IServiceProvider _serviceProvider;
         public BotService() : this(Program.ServiceProvider)
         {
         }
 
         public BotService(IServiceProvider serviceProvider)
         {
-            _messageHandler = serviceProvider.GetRequiredService<IMessageHandler>();
-            _requestDispatcher = serviceProvider.GetRequiredService<IRequestDispatcher>();
-            _userRepo = serviceProvider.GetRequiredService<IUserRepository>();
-            _logger = Log.ForContext<BotService>();
-            _responseBuilder = serviceProvider.GetRequiredService<IResponseBuilder>();
-            _appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
-            _backgroundServiceRegistry = serviceProvider.GetRequiredService<IBackgroundServiceRegistry>();
+            _serviceProvider = serviceProvider;
+            _messageHandler = _serviceProvider.GetRequiredService<IMessageHandler>();
+            _requestDispatcher = _serviceProvider.GetRequiredService<IRequestDispatcher>();
+            _userRepo = _serviceProvider.GetRequiredService<IUserRepository>();
+            _logger = Log.Logger.ForContext<BotService>();
+            _responseBuilder = _serviceProvider.GetRequiredService<IResponseBuilder>();
+            _appSettings = _serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+            _backgroundServiceRegistry = _serviceProvider.GetRequiredService<IBackgroundServiceRegistry>();
         }
 
         public bool IsRunning { get; private set; }
@@ -119,7 +120,7 @@ namespace CyborgianStates.Services
         private void Register()
         {
             RegisterCommands();
-            _backgroundServiceRegistry.Register(new DumpRetrievalBackgroundService());
+            _backgroundServiceRegistry.Register(new DumpRetrievalBackgroundService(_serviceProvider));
         }
     }
 }

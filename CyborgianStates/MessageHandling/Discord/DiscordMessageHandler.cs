@@ -18,8 +18,8 @@ namespace CyborgianStates.MessageHandling
         private readonly ILogger _logger;
         private readonly DiscordClientWrapper _client;
         private readonly AppSettings _settings;
-        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        private SemaphoreSlim _semaphore = new SemaphoreSlim(0, 1);
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private readonly SemaphoreSlim _semaphore = new(0, 1);
 
         public DiscordMessageHandler(IOptions<AppSettings> options, DiscordClientWrapper socketClient)
         {
