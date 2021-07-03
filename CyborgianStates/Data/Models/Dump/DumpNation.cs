@@ -6,25 +6,10 @@ namespace CyborgianStates.Data.Models.Dump
     public class DumpNation
     {
         public string Name { get; set; }
+        public string RegionName { get; set; }
+        public string UnescapedName { get; set; }
         public bool IsWAMember { get; set; }
+        public string Influence { get; set; }
         public List<string> Endorsements { get; set; }
-        private DumpRegion _region;
-        public DumpRegion Region
-        {
-            get => _region;
-            set
-            {
-                _region = value;
-
-                if (_region != null)
-                {
-                    if (_region.Nations == null)
-                    {
-                        _region.Nations = new ConcurrentBag<DumpNation>();
-                    }
-                    _region.Nations.Add(this);
-                }
-            }
-        }
     }
 }

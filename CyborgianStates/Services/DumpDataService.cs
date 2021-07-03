@@ -5,6 +5,7 @@ using NationStatesSharp.Enums;
 using NationStatesSharp.Interfaces;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
@@ -68,9 +69,11 @@ namespace CyborgianStates.Services
                             return new DumpRegion()
                             {
                                 Name = Helpers.ToID(e.Element("NAME").Value),
+                                UnescapedName = e.Element("NAME").Value,
                                 NationNames = e.Element("NATIONS").Value.Split(":").ToHashSet(),
                                 Delegate = e.Element("DELEGATE").Value,
-                                Founder = e.Element("FOUNDER").Value
+                                Founder = e.Element("FOUNDER").Value,
+                                Flag = e.Element("FLAG").Value
                             };
                         }).ToImmutableHashSet();
                     }
@@ -94,14 +97,20 @@ namespace CyborgianStates.Services
                     using (var stream = new GZipStream(fileStream, CompressionMode.Decompress))
                     {
                         var doc = XDocument.Load(stream);
-                        Nations = doc.Root.Descendants().Where(e => e.Name == "NATION").AsParallel().Select(e =>
+                        Nations = doc.Root.Descendants()
+                            .Where(e => e.Name == "NATION")
+                            .AsParallel()
+                            .Select(e =>
                         {
+                            var nationName = e.Element("NAME").Value;
                             return new DumpNation()
                             {
-                                Name = Helpers.ToID(e.Element("NAME").Value),
-                                Region = GetRegionInternal(Helpers.ToID(e.Element("REGION").Value)),
+                                Name = Helpers.ToID(nationName),
+                                RegionName = Helpers.ToID(e.Element("REGION").Value),
+                                UnescapedName = nationName,
                                 IsWAMember = e.Element("UNSTATUS").Value is "WA Member" or "WA Delegate",
-                                Endorsements = e.Element("ENDORSEMENTS").Value.Split(",").ToList()
+                                Endorsements = e.Element("ENDORSEMENTS").Value.Split(",").ToList(),
+                                Influence = e.Element("INFLUENCE").Value
                             };
                         }).ToImmutableHashSet();
                     }
@@ -114,6 +123,13 @@ namespace CyborgianStates.Services
             }
         }
 
-        private DumpRegion GetRegionInternal(string name) => Regions.FirstOrDefault(r => r.Name == name);
+        private DumpRegion GetRegionInternal(string name) => Regions.FirstOrDefault(r => r.Name == Helpers.ToID(name));
+        private DumpNation GetNationInternal(string name) => Nations.FirstOrDefault(n => n.Name == Helpers.ToID(name));
+        public DumpRegion GetRegionByName(string name) => GetRegionInternal(name);
+        public DumpNation GetNationByName(string name) => GetNationInternal(name);
+        public List<DumpNation> GetNationsByRegionName(string name) => Nations.Where(n => n.RegionName == Helpers.ToID(name)).ToList();
+        public List<DumpNation> GetWANationsByRegionName(string name) => Nations.Where(n => n.RegionName == Helpers.ToID(name) && n.IsWAMember).ToList();
+        public int GetEndoSumByRegionName(string name) => GetWANationsByRegionName(name).Sum(n => n.Endorsements.Count);
+
     }
 }
